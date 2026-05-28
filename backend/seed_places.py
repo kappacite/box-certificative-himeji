@@ -243,7 +243,13 @@ def seed():
             # Check if place already exists to avoid duplicates
             exists = PlaceModel.query.filter_by(name=name, owner_id=1).first()
             if not exists:
-                place = PlaceModel(name=name, latitude=lat, longitude=lon, owner_id=1)
+                place = PlaceModel(
+                    name=name,
+                    latitude=lat,
+                    longitude=lon,
+                    owner_id=1,
+                    visibility="public",
+                )
                 db.session.add(place)
                 places_added += 1
             else:

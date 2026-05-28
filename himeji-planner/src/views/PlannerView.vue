@@ -52,6 +52,8 @@
             </div>
           </li>
         </ul>
+
+        <button>Save my travel</button>
       </section>
     </div>
   </div>

@@ -1,7 +1,3 @@
-/* =========================================================================
-   FUTURES FONCTIONS POUR LES ITINÉRAIRES (TOURS)
-   Basées sur la documentation de l'API (Endpoints /api/tours/*)
-   =========================================================================
 
 import client from './client'
 
@@ -38,4 +34,3 @@ export const toursApi = {
   // Permet à n'importe quel internaute d'accéder via l'UUID de partage[cite: 4]
   getSharedTour: (shareToken) => client.get(`/api/tours/shared/${shareToken}`)
 }
-*/

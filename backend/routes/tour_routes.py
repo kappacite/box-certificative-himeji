@@ -26,8 +26,17 @@ def create_tour():
     name = data.get("name")
     place_ids = data.get("place_ids", [])
     visibility = data.get("visibility", "private")
+    locked_positions = data.get("locked_positions")
+    locked_places = data.get("locked_places")
 
-    tour = tour_service.create_tour(name, place_ids, g.current_user.id, visibility)
+    tour = tour_service.create_tour(
+        name=name,
+        place_ids=place_ids,
+        owner_id=g.current_user.id,
+        visibility=visibility,
+        locked_positions=locked_positions,
+        locked_places=locked_places,
+    )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 201
 
 
@@ -59,13 +68,17 @@ def patch_tour(tour_id):
     visibility = data.get("visibility")
     places_id = data.get("places_id") or data.get("place_ids") or data.get("places")
     name = data.get("name")
+    locked_positions = data.get("locked_positions")
+    locked_places = data.get("locked_places")
 
     tour = tour_service.patch_tour(
         tour_id=tour_id,
         visibility=visibility,
         places_id=places_id,
         name=name,
-        owner_id=g.current_user.id
+        owner_id=g.current_user.id,
+        locked_positions=locked_positions,
+        locked_places=locked_places,
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 

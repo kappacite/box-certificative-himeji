@@ -47,6 +47,7 @@ class TourPlaceModel(db.Model):
         db.Integer, db.ForeignKey("places.id", ondelete="CASCADE"), primary_key=True
     )
     position = db.Column(db.Integer, nullable=False)
+    locked = db.Column(db.Boolean, nullable=False, default=False)
 
     # Relationship to access the Place entity directly
     place = db.relationship("PlaceModel", lazy="joined")

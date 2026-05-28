@@ -44,7 +44,10 @@ class TourDAO(BaseDAO[Tour, int]):
                 )
 
             assoc = TourPlaceModel(
-                tour_id=tour_model.id, place_id=place.id, position=index
+                tour_id=tour_model.id,
+                place_id=place.id,
+                position=index,
+                locked=place.locked,
             )
             db.session.add(assoc)
 
@@ -74,7 +77,10 @@ class TourDAO(BaseDAO[Tour, int]):
                 )
 
             assoc = TourPlaceModel(
-                tour_id=tour_model.id, place_id=place.id, position=index
+                tour_id=tour_model.id,
+                place_id=place.id,
+                position=index,
+                locked=place.locked,
             )
             db.session.add(assoc)
 
@@ -137,6 +143,7 @@ class TourDAO(BaseDAO[Tour, int]):
                 longitude=tp.place.longitude,
                 owner_id=tp.place.owner_id,
                 visibility=tp.place.visibility,
+                locked=getattr(tp, "locked", False),
             )
             places.append(place_do)
 

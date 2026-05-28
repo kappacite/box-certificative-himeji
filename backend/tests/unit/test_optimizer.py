@@ -42,3 +42,22 @@ def test_optimize_multiple_places():
     opt_dist = _calculate_total_distance(tour)
     sub_opt_dist = _calculate_total_distance(places)
     assert opt_dist <= sub_opt_dist
+
+
+def test_optimize_with_locked_positions():
+    """Test optimizer respecting locked positions."""
+    p1 = Place(name="A", latitude=0.0, longitude=0.0, owner_id=1, id=1)
+    p2 = Place(name="B", latitude=0.0, longitude=10.0, owner_id=1, id=2)
+    p3 = Place(name="C", latitude=10.0, longitude=10.0, owner_id=1, id=3)
+    p4 = Place(name="D", latitude=10.0, longitude=0.0, owner_id=1, id=4)
+
+    # Let's say input is [p1, p2, p3, p4]
+    # We want to force C (id=3) to be at position 1, and A (id=1) to be at position 0
+    locked_positions = {3: 1, 1: 0}
+    tour = optimize([p1, p2, p3, p4], locked_positions=locked_positions)
+
+    assert len(tour) == 4
+    # Check that A (id=1) is at index 0
+    assert tour[0].id == 1
+    # Check that C (id=3) is at index 1
+    assert tour[1].id == 3

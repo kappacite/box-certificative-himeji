@@ -218,3 +218,47 @@ def test_tour_visibility_toggling(client, auth_headers, mock_geocoding):
     )
     assert res_patch4.status_code == 200
     assert res_patch4.get_json()["data"]["tour"]["visibility"] == "private"
+
+
+def test_create_tour_with_locked_positions(client, auth_headers, mock_geocoding):
+    """Test generating a tour with some steps locked at specific positions."""
+    # 1. Create three places
+    res_p1 = client.post("/api/places", headers=auth_headers, json={"name": "Paris 1"})
+    res_p2 = client.post("/api/places", headers=auth_headers, json={"name": "Lyon"})
+    res_p3 = client.post("/api/places", headers=auth_headers, json={"name": "Paris 2"})
+
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+    p3_id = res_p3.get_json()["data"]["place"]["id"]
+
+    # 2. Generate optimized tour with p2_id (Lyon) locked at position 1 (second place)
+    # and p3_id (Paris 2) locked at position 0 (start place)
+    res_tour = client.post(
+        "/api/tours",
+        headers=auth_headers,
+        json={
+            "name": "Locked Tour",
+            "place_ids": [p1_id, p2_id, p3_id],
+            "locked_positions": {
+                str(p3_id): 0,
+                str(p2_id): 1
+            }
+        },
+    )
+
+    assert res_tour.status_code == 201
+    tour_data = res_tour.get_json()["data"]["tour"]
+    # For a 3-place tour with return-to-start, the places list has length 4
+    assert len(tour_data["places"]) == 4
+    # Paris 2 (p3_id) must be at position 0 (and at the end due to closed loop)
+    assert tour_data["places"][0]["id"] == p3_id
+    assert tour_data["places"][-1]["id"] == p3_id
+    # Lyon (p2_id) must be at position 1
+    assert tour_data["places"][1]["id"] == p2_id
+    # The place at position 2 must be Paris 1 (p1_id)
+    assert tour_data["places"][2]["id"] == p1_id
+
+    # Also check that the locked status is returned in the places
+    assert tour_data["places"][0]["locked"] is True
+    assert tour_data["places"][1]["locked"] is True
+    assert tour_data["places"][2]["locked"] is False

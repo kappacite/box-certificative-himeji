@@ -53,22 +53,26 @@ class TourService:
         place_ids: List[int],
         owner_id: int,
         visibility: str = "private",
+        locked_positions: dict = None,
+        locked_places: list = None,
     ) -> Tour:
-        """Generate an optimized tour from a list of place IDs.
+        """Generate an optimized tour from a list of place IDs, optionally locking some steps.
 
         Args:
             name: The name of the tour.
-            place_ids: A list of place IDs to include.
+            place_ids: A list of place IDs (or dicts containing 'id' and
+              optionally 'locked'/'position') to include.
             owner_id: The ID of the owner user.
             visibility: The sharing visibility ('private' or 'public').
+            locked_positions: Dict mapping place_id (as str) to target position.
+            locked_places: List of place_ids to lock at their input positions.
 
         Returns:
             The created and persisted Tour.
 
         Raises:
             ValidationException: If there are fewer than 2 places or validation fails.
-            ForbiddenException: If the user doesn't own all specified places
-                (unless they are public).
+            ForbiddenException: If the user doesn't own all specified places.
         """
         if not name or not name.strip():
             raise ValidationException("Tour name is required")
@@ -79,9 +83,45 @@ class TourService:
         if visibility not in ["private", "public"]:
             raise ValidationException("Visibility must be either 'private' or 'public'")
 
+        # Parse place_ids and locks
+        parsed_place_ids = []
+        locked_map = {}  # place_id -> position
+
+        for index, item in enumerate(place_ids):
+            if isinstance(item, dict):
+                pid = item.get("id")
+                if pid is not None:
+                    parsed_place_ids.append(pid)
+                    if item.get("locked") or item.get("position") is not None:
+                        locked_map[pid] = item.get("position", index)
+            else:
+                try:
+                    parsed_place_ids.append(int(item))
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid place ID format")
+
+        # Merge separately passed locked_positions
+        if locked_positions:
+            for pid_str, pos in locked_positions.items():
+                try:
+                    pid = int(pid_str)
+                    locked_map[pid] = int(pos)
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid locked_positions format")
+
+        # Merge separately passed locked_places
+        if locked_places:
+            for pid in locked_places:
+                try:
+                    pid = int(pid)
+                    if pid in parsed_place_ids:
+                        locked_map[pid] = parsed_place_ids.index(pid)
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid locked_places format")
+
         # Retrieve and validate all places belong to the owner or are public
         places = []
-        for pid in place_ids:
+        for pid in parsed_place_ids:
             place = self.place_dao.get_by_id(pid)
             if not place:
                 raise ValidationException(f"Place with ID {pid} does not exist")
@@ -91,8 +131,12 @@ class TourService:
                 )
             places.append(place)
 
-        # Optimize the place ordering using nearest neighbour + 2-opt
-        optimized_places = optimize(places)
+        # Optimize the place ordering respecting locks
+        optimized_places = optimize(places, locked_map)
+
+        # Apply locked property on returned place objects
+        for place in optimized_places:
+            place.locked = (place.id in locked_map)
 
         # Calculate total distance (closed loop)
         total_dist = self.calculate_tour_distance(optimized_places)
@@ -140,6 +184,8 @@ class TourService:
         places_id: Optional[List[int]],
         name: Optional[str],
         owner_id: int,
+        locked_positions: Optional[dict] = None,
+        locked_places: Optional[list] = None,
     ) -> Tour:
         """Update tour.
 
@@ -149,6 +195,8 @@ class TourService:
             places_id: New list of place IDs, or None to keep.
             name: New tour name, or None to keep.
             owner_id: The ID of the current user.
+            locked_positions: Optional new locked positions mapping.
+            locked_places: Optional new locked places list.
 
         Returns:
             The updated Tour.
@@ -165,13 +213,69 @@ class TourService:
                 raise ValidationException("Invalid visibility value.")
             tour.visibility = visibility
 
-        if places_id is not None:
-            if len(places_id) < 2:
+        # Re-calculate routing if place list or locks are updated
+        if (
+            places_id is not None
+            or locked_positions is not None
+            or locked_places is not None
+        ):
+            if places_id is not None:
+                raw_pids = places_id
+            else:
+                raw_pids = [p.id for p in tour.places]
+
+            parsed_place_ids = []
+            locked_map = {}
+
+            for index, item in enumerate(raw_pids):
+                if isinstance(item, dict):
+                    pid = item.get("id")
+                    if pid is not None:
+                        parsed_place_ids.append(pid)
+                        if item.get("locked") or item.get("position") is not None:
+                            locked_map[pid] = item.get("position", index)
+                else:
+                    try:
+                        parsed_place_ids.append(int(item))
+                    except (ValueError, TypeError):
+                        raise ValidationException("Invalid place ID format")
+
+            # Merge separately passed locked_positions
+            if locked_positions is not None:
+                for pid_str, pos in locked_positions.items():
+                    try:
+                        pid = int(pid_str)
+                        locked_map[pid] = int(pos)
+                    except (ValueError, TypeError):
+                        raise ValidationException("Invalid locked_positions format")
+
+            # Merge separately passed locked_places
+            if locked_places is not None:
+                for pid in locked_places:
+                    try:
+                        pid = int(pid)
+                        if pid in parsed_place_ids:
+                            locked_map[pid] = parsed_place_ids.index(pid)
+                    except (ValueError, TypeError):
+                        raise ValidationException("Invalid locked_places format")
+
+            # If we did not pass new locks, preserve existing locks that are still in the list
+            if (
+                locked_positions is None
+                and locked_places is None
+                and places_id is None
+            ):
+                for p in tour.places:
+                    if p.locked and p.id in parsed_place_ids:
+                        locked_map[p.id] = parsed_place_ids.index(p.id)
+
+            if len(parsed_place_ids) < 2:
                 raise ValidationException(
                     "At least 2 places are required to generate a tour"
                 )
+
             places = []
-            for pid in places_id:
+            for pid in parsed_place_ids:
                 place = self.place_dao.get_by_id(pid)
                 if not place:
                     raise ValidationException(f"Place with ID {pid} does not exist")
@@ -181,7 +285,12 @@ class TourService:
                     )
                 places.append(place)
 
-            optimized_places = optimize(places)
+            optimized_places = optimize(places, locked_map)
+
+            # Apply locked property on returned place objects
+            for place in optimized_places:
+                place.locked = (place.id in locked_map)
+
             tour.places = optimized_places
             tour.total_distance = self.calculate_tour_distance(optimized_places)
 

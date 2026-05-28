@@ -15,6 +15,8 @@
 import BaseCard from '@/components/BaseCard.vue'
 import PlaceCard from '@/components/places/PlaceCard.vue';
 import { usePlacesStore } from '@/stores/placesStore';
+import { placesApi } from '../../api/placesApi';
+import { onMounted, ref } from 'vue';
 
 const placesList = ref()
 async function placesFunction() {

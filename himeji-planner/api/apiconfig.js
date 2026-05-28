@@ -6,4 +6,5 @@ const apiTravel = axios.create({
     headers: {}
 })
 
+
 export default apiTravel;

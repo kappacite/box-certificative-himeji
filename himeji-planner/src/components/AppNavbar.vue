@@ -19,6 +19,9 @@
           <RouterLink :to="{ name: 'places' }" class="nav-link">
             <span>Places to visit</span>
           </RouterLink>
+          <RouterLink :to="{ name: 'planner' }" class="nav-link">
+            <span>Planify Travel</span>
+          </RouterLink>
         </template>
 
         <!-- Guest Navigation -->

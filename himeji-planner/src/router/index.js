@@ -5,6 +5,7 @@ import Register from '@/views/Register.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import Places from '@/views/Places.vue'
 import NotFound from '@/views/NotFound.vue'
+import PlannerView from '@/views/PlannerView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -40,6 +41,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+    path: '/planner',
+      name: 'planner',
+      component: PlannerView,
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: NotFound
@@ -49,7 +56,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'login' })
   } else if (to.meta.requiresGuest && authStore.isAuthenticated) {

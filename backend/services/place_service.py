@@ -189,7 +189,9 @@ class PlaceService:
         }
         params = {"q": name, "format": "json", "limit": 1}
         try:
-            response = requests.get(
+            session = requests.Session()
+            session.trust_env = False
+            response = session.get(
                 self.geocoding_url, headers=headers, params=params, timeout=10
             )
             response.raise_for_status()

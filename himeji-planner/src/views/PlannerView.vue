@@ -12,21 +12,9 @@
     <div class="planner-content">
       <section class="selection-section">
         <h2>1. Select Places</h2>
-        <div v-if="availablePlaces.length === 0" class="empty-state">
-          No places available. Please add places first.
-        </div>
-        
-        <div v-else class="places-list">
-          <label 
-            v-for="place in availablePlaces" 
-            :key="place.id" 
-            class="place-item"
-          >
-            <input
-              type="checkbox"
-              :value="place.id"
-              v-model="selectedPlaceIds"
-            />
+        <div class="places-list">
+          <label v-for="place in availablePlaces" :key="place.id" class="place-item">
+            <input type="checkbox" :value="place.id" v-model="selectedPlaceIds" />
             <div class="place-info">
               <strong>{{ place.name }}</strong>
               <span class="coordinates">Lat: {{ place.latitude }} | Lng: {{ place.longitude }}</span>
@@ -34,17 +22,10 @@
           </label>
         </div>
 
-        <button
-          @click="handleGenerateTour"
-          :disabled="loading || selectedPlaceIds.length < 2"
-          class="generate-btn"
-        >
+        <button @click="handleGenerateTour" :disabled="loading || selectedPlaceIds.length < 2" class="generate-btn">
           <span v-if="loading">⏳ Generating optimal route...</span>
           <span v-else>🚀 Generate Optimized Tour</span>
         </button>
-        <p v-if="selectedPlaceIds.length < 2" class="help-text">
-          * Please select at least 2 places to generate a tour.
-        </p>
       </section>
 
       <section v-if="activeTour && !loading" class="result-section">
@@ -56,9 +37,15 @@
           </p>
         </div>
 
+        <div class="map-section">
+          <TourMap :route="activeTour.route" />
+        </div>
+
         <ul class="tour-route">
           <li v-for="(stop, index) in activeTour.route" :key="index" class="route-stop">
-            <span class="stop-number">{{ index + 1 }}</span>
+            <div class="stop-indicator">
+              <span class="stop-number">{{ index + 1 }}</span>
+            </div>
             <div class="stop-details">
               <h3>{{ stop.name }}</h3>
               <p>Lat: {{ stop.latitude }} | Lng: {{ stop.longitude }}</p>
@@ -72,53 +59,30 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import TourMap from '@/views/TourMap.vue'
 
-/* =========================================================================
-   VRAIE LOGIQUE API (EN ATTENTE)
-   Décommentez ces lignes une fois le backend et les composables prêts.
-   =========================================================================
-import { usePlacesStore } from '@/stores/placesStore'
-import { useTours } from '@/composables/useTours'
-import AlertBanner from '@/components/ui/AlertBanner.vue'
-
-const placesStore = usePlacesStore()
-const { generateTour, loading, error } = useTours()
-const availablePlaces = computed(() => placesStore.places)
-*/
-
-// =========================================================================
-// DONNÉES FACTICES POUR LA VISUALISATION (MOCK)
-// À supprimer une fois la vraie logique décommentée.
-// =========================================================================
-
-// 1. Faux lieux pour tester la sélection
+// ... [Garder toute la logique JavaScript / Mock data précédente] ...
 const availablePlaces = ref([
   { id: 1, name: 'Himeji Castle', latitude: 34.8394, longitude: 134.6939 },
   { id: 2, name: 'Koko-en Garden', latitude: 34.8373, longitude: 134.6888 },
   { id: 3, name: 'Mount Shosha', latitude: 34.8912, longitude: 134.6558 }
 ])
 
-// 2. Faux états pour remplacer le composable useTours()
 const loading = ref(false)
 const error = ref(null)
 const selectedPlaceIds = ref([])
 const activeTour = ref(null)
 
-// 3. Fausse action pour simuler le comportement du bouton
 const handleGenerateTour = () => {
   if (selectedPlaceIds.value.length < 2) return
-
   loading.value = true
   error.value = null
   activeTour.value = null
 
-  // Simulation d'un délai réseau de 1.5 secondes
   setTimeout(() => {
     loading.value = false
-    
-    // Faux résultat généré pour tester l'affichage de la section 2
     activeTour.value = {
-      totalDistance: 12.4, // Distance factice
+      totalDistance: 12.4,
       route: availablePlaces.value.filter(p => selectedPlaceIds.value.includes(p.id))
     }
   }, 1500)
@@ -126,141 +90,45 @@ const handleGenerateTour = () => {
 </script>
 
 <style scoped>
-/* Les styles restent identiques, j'ai juste ajouté une classe temporaire pour l'erreur */
-.planner-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  padding: 1rem 0;
-}
+/* ... [Garder les styles précédents] ... */
 
-.planner-header h1 {
-  font-size: 2.25rem;
-  color: #111827;
-  font-weight: 800;
-  margin-bottom: 0.5rem;
-}
-
-.planner-header p {
-  color: #6b7280;
-  font-size: 1.05rem;
-}
-
-.planner-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-}
-
-@media (min-width: 768px) {
-  .planner-content {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.selection-section, .result-section {
-  background: #ffffff;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 1.25rem;
-  border-bottom: 2px solid #f3f4f6;
-  padding-bottom: 0.5rem;
-}
-
-.places-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.place-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.place-item:hover {
-  background-color: #f9fafb;
-}
-
-.place-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.coordinates {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-family: monospace;
-}
-
-.generate-btn {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.generate-btn:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.generate-btn:hover:not(:disabled) {
-  background-color: #1d4ed8;
-}
-
-.help-text {
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-top: 0.5rem;
-  text-align: center;
-}
-
-.tour-summary {
-  background-color: #ecfdf5;
-  border: 1px solid #10b981;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.distance-metric {
-  color: #065f46;
-  font-size: 1.1rem;
+/* --- NOUVEAUX STYLES POUR LA TIMELINE --- */
+.map-section {
+  margin-bottom: 2rem;
 }
 
 .tour-route {
   list-style: none;
   padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
 .route-stop {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Align top so the line starts exactly at the circle */
   gap: 1rem;
+  position: relative;
+  padding-bottom: 1.5rem; /* Space between the stops */
+}
+
+/* The vertical line connecting the dots */
+.route-stop:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 2rem; /* Start just below the number circle */
+  left: 1rem; /* Center of the 2rem circle */
+  width: 2px;
+  height: calc(100% - 2rem); /* Stretch to the bottom of the padding */
+  background-color: #cbd5e1; /* Light gray line */
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.stop-indicator {
+  position: relative;
+  z-index: 1; /* Keep the circle above the line */
 }
 
 .stop-number {
@@ -275,24 +143,20 @@ h2 {
   font-weight: bold;
 }
 
+.stop-details {
+  padding-top: 0.25rem; /* Vertically align text with the circle */
+}
+
 .stop-details h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #1f2937;
+  font-weight: 700;
 }
 
 .stop-details p {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #6b7280;
-}
-
-/* Style temporaire pour remplacer le AlertBanner */
-.temp-error-banner {
-  background-color: #fee2e2;
-  color: #991b1b;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid #f87171;
 }
 </style>

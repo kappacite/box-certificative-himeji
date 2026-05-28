@@ -1,0 +1,72 @@
+from flask import Blueprint, request, jsonify, g
+from services.place_service import PlaceService
+from middleware.auth_middleware import require_auth, require_owner
+
+place_bp = Blueprint("places", __name__, url_prefix="/api/places")
+place_service = PlaceService()
+
+
+@place_bp.route("", methods=["GET"])
+@require_auth
+def get_places():
+    """Retrieve all places owned by the authenticated user."""
+    places = place_service.get_places_by_owner(g.current_user.id)
+    return (
+        jsonify(
+            {"status": "success", "data": {"places": [p.to_dict() for p in places]}}
+        ),
+        200,
+    )
+
+
+@place_bp.route("", methods=["POST"])
+@require_auth
+def create_place():
+    """Create a new place. Resolves coordinates via Nominatim if not provided."""
+    data = request.get_json() or {}
+    name = data.get("name")
+    latitude = data.get("latitude")
+    longitude = data.get("longitude")
+
+    # If coordinates are passed as empty strings, convert to None
+    lat = float(latitude) if latitude is not None and latitude != "" else None
+    lon = float(longitude) if longitude is not None and longitude != "" else None
+
+    place = place_service.create_place(name, g.current_user.id, lat, lon)
+    return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 201
+
+
+@place_bp.route("/<int:place_id>", methods=["GET"])
+@require_auth
+@require_owner("place")
+def get_place(place_id):
+    """Retrieve a specific place."""
+    place = place_service.get_place_by_id(place_id, g.current_user.id)
+    return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 200
+
+
+@place_bp.route("/<int:place_id>", methods=["PUT"])
+@require_auth
+@require_owner("place")
+def update_place(place_id):
+    """Update a specific place."""
+    data = request.get_json() or {}
+    name = data.get("name")
+    latitude = data.get("latitude")
+    longitude = data.get("longitude")
+
+    lat = float(latitude) if latitude is not None and latitude != "" else None
+    lon = float(longitude) if longitude is not None and longitude != "" else None
+
+    place = place_service.update_place(place_id, name, g.current_user.id, lat, lon)
+    return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 200
+
+
+@place_bp.route("/<int:place_id>", methods=["DELETE"])
+@require_auth
+@require_owner("place")
+def delete_place(place_id):
+    """Delete a specific place."""
+    place_service.delete_place(place_id, g.current_user.id)
+    # According to rules, successful update/delete with no body is 204
+    return "", 204

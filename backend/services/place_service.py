@@ -8,8 +8,7 @@ from exceptions import NotFoundException, ForbiddenException, ValidationExceptio
 class PlaceService:
     """Business logic service for managing Places and calling external Geocoding API."""
 
-    @staticmethod
-    def parse_coordinate(value, coord_name: str) -> Optional[float]:
+    def parse_coordinate(self, value, coord_name: str) -> Optional[float]:
         """Safely parse a coordinate to float and validate its valid geographical range.
 
         Args:

@@ -63,13 +63,20 @@ Cette contrainte est assurée de la manière suivante dans le code :
 
 ## 1.6. Gestion des Étapes Verrouillées (Locked Steps)
 
-L'API permet de verrouiller certains lieux à des positions d'index fixes de l'itinéraire (par exemple, exiger que le lieu d'ID 48 reste exactement à la 48ème étape). 
+L'API permet de verrouiller certains lieux à des positions d'index fixes de l'itinéraire (par exemple, exiger que le lieu d'ID 48 reste exactement à la 48ème étape).
 
-Pour éviter les freezes de recherche locale (timeouts ou échecs du solveur sous contraintes trop fortes) et garantir des temps de réponse ultra-rapides et des distances optimales sur de grands réseaux (comme 200 lieux), nous employons une stratégie robuste d'**optimisation par sous-tours et insertion** :
-1. **Extraction** : Nous filtrons tous les lieux ayant des contraintes de verrouillage et nous les retirons temporairement de la liste principale.
-2. **Optimisation du sous-tour** : Nous faisons tourner OR-Tools pour ordonner de façon optimale uniquement la liste des lieux restants libres/non verrouillés (ce qui résout un problème TSP pur très rapidement, sans contraintes de cumul d'étapes).
-3. **Reconstruction & Insertion** : Nous réinsérons les lieux verrouillés précisément à leurs index cibles respectifs dans la liste finale. Les positions verrouillées sont ainsi garanties à 100% sans dégrader l'optimisation globale du reste de la boucle.
-4. **Sécurité temporelle** : Une limite de temps absolue de **3 secondes** est paramétrée dans OR-Tools pour s'assurer que le calcul de l'itinéraire ne bloque jamais le fil d'exécution de l'API.
+Pour résoudre ce problème de manière optimale sur de grands réseaux (comme 200 lieux) tout en évitant les échecs du solveur sous contraintes strictes, le backend utilise une **stratégie hybride de démarrage à chaud (Warm-Start)** :
+
+1. **Génération de la solution initiale (Démarrage à chaud)** :
+   - Nous filtrons temporairement les lieux verrouillés de la liste principale.
+   - Nous résolvons un TSP pur et non contraint sur les lieux libres en utilisant OR-Tools.
+   - Nous réinsérons les lieux verrouillés précisément à leurs index cibles respectifs pour reconstituer un parcours complet et valide (faisable) respectant tous les verrous.
+2. **Optimisation locale (Warm-Start OR-Tools)** :
+   - Ce parcours complet est injecté en tant que solution de départ dans le solveur OR-Tools avec `ReadAssignmentFromRoutes()`.
+   - On applique une **dimension cumulative de pas (`Steps`)** pour contraindre les index cibles du solveur, mais cette fois-ci, OR-Tools commence la recherche à partir d'un état déjà 100% faisable.
+   - Nous activons la métaheuristique **Guided Local Search** pour affiner et optimiser localement les segments de l'itinéraire (en modifiant l'ordre des lieux libres et en trouvant les raccourcis optimaux sans briser les verrous).
+3. **Sécurité et performance** :
+   - L'algorithme renvoie toujours la solution améliorée d'OR-Tools. Si le temps limite de **3 secondes** est dépassé ou si une erreur survient, il bascule de manière transparente sur la solution initiale faisable calculée à l'étape 1, qui est déjà de très bonne qualité.
 
 ---
 

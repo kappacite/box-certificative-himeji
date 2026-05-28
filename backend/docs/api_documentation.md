@@ -154,6 +154,30 @@ Invalide (côté client) la session en cours.
 
 ---
 
+### 👤 Obtenir l'utilisateur connecté **[Auth Requise]**
+Renvoie les détails du profil de l'utilisateur actuellement authentifié par son JWT.
+
+* **Méthode** : `GET`
+* **URL** : `/api/auth/me`
+* **Corps de la requête (JSON)** : Aucun (transmettre le header d'Auth)
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Profil récupéré avec succès.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "user": {
+          "id": 1,
+          "username": "monpseudo",
+          "email": "user@example.com"
+        }
+      }
+    }
+    ```
+  * **`401 Unauthorized`** : Token manquant ou invalide.
+
+---
+
 ## 📍 2. Gestion des Lieux (`/api/places/*`)
 
 ### 📋 Lister mes lieux **[Auth Requise]**
@@ -180,6 +204,52 @@ Renvoie tous les lieux personnels créés par l'utilisateur connecté.
       }
     }
     ```
+
+---
+
+### 🗺️ Rechercher les coordonnées d'un lieu (GET)
+Récupère les coordonnées (latitude et longitude) d'une adresse ou d'un nom de lieu via le service Nominatim, sans enregistrer le lieu en base de données.
+
+* **Méthode** : `GET`
+* **URL** : `/api/places/search?q=<nom_du_lieu>`
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Recherche réussie.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "latitude": 48.8566,
+        "longitude": 2.3522
+      }
+    }
+    ```
+  * **`400 Bad Request`** : Paramètre `q` manquant ou vide, ou géolocalisation impossible.
+
+---
+
+### 🗺️ Prévisualiser les coordonnées d'un lieu (POST)
+Identique à la route de recherche GET, mais via un corps de requête POST. Utile pour envoyer des noms complexes.
+
+* **Méthode** : `POST`
+* **URL** : `/api/places/geocode`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "name": "Paris"
+  }
+  ```
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Géocodage réussi.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "latitude": 48.8566,
+        "longitude": 2.3522
+      }
+    }
+    ```
+  * **`400 Bad Request`** : Champ `name` manquant, ou géolocalisation impossible.
 
 ---
 
@@ -253,14 +323,22 @@ Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitu
 
 ---
 
-### 🔍 Obtenir les détails d'un lieu **[Auth Requise]**
-Affiche les informations d'un lieu par son ID.
+### 🔍 Obtenir les détails d'un lieu **[Accès Public si public / Auth Requise si privé]**
+Affiche les informations d'un lieu par son ID. Si le lieu est marqué public, n'importe qui (sans jeton) peut y accéder. S'il est privé, l'utilisateur doit être connecté et être le propriétaire du lieu.
 
 * **Méthode** : `GET`
 * **URL** : `/api/places/<int:place_id>`
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Détails envoyés.
-  * **`403 Forbidden`** : Le lieu est marqué privé et n'appartient pas à l'utilisateur connecté.
+  * **`401 Unauthorized`** : Le lieu est privé et l'utilisateur n'est pas authentifié.
+    ```json
+    {
+      "status": "error",
+      "message": "Authentication required",
+      "code": "UNAUTHORIZED"
+    }
+    ```
+  * **`403 Forbidden`** : Le lieu est privé et n'appartient pas à l'utilisateur connecté.
     ```json
     {
       "status": "error",
@@ -296,6 +374,26 @@ Met à jour les informations d'un lieu. Si le nom est modifié et que les coordo
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Modification validée et persistée.
   * **`403 Forbidden`** : L'utilisateur n'est pas le créateur de ce lieu.
+  * **`404 Not Found`** : Le lieu n'existe pas.
+
+---
+
+### ✏️ Modifier partiellement un lieu **[Auth Requise / Propriétaire uniquement]**
+Permet de modifier un ou plusieurs champs d'un lieu (nom, coordonnées ou visibilité) sans avoir à ré-envoyer l'ensemble des données. Si le nom est modifié et que les coordonnées ne sont pas fournies, une nouvelle géolocalisation automatique s'effectue.
+
+* **Méthode** : `PATCH`
+* **URL** : `/api/places/<int:place_id>`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "visibility": "public"
+  }
+  ```
+  *(Vous pouvez spécifier "name", "latitude", "longitude" ou "visibility")*
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Modification partielle enregistrée avec succès.
+  * **`401 Unauthorized`** : Token absent ou invalide.
+  * **`403 Forbidden`** : L'utilisateur n'est pas le propriétaire du lieu.
   * **`404 Not Found`** : Le lieu n'existe pas.
 
 ---
@@ -417,6 +515,53 @@ L'API supporte le **verrouillage de certaines étapes** (lieux) à des positions
       "code": "FORBIDDEN"
     }
     ```
+
+---
+
+### 🧩 Prévisualiser un itinéraire optimisé (sans sauvegarde) **[Auth Requise]**
+Identique à la création d'itinéraire (`POST /api/tours`), mais **ne persiste pas** l'itinéraire en base de données. Renvoie la liste ordonnée optimisée des lieux et la distance totale calculée.
+
+* **Méthode** : `POST`
+* **URL** : `/api/tours/preview`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "place_ids": [
+      1,
+      {"id": 201, "locked": true},
+      {"id": 202, "position": 0}
+    ],
+    "locked_positions": {
+      "202": 0
+    },
+    "locked_places": [201]
+  }
+  ```
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Aperçu calculé avec succès. (Le champ `id` retourné est à `null`).
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "tour": {
+          "id": null,
+          "name": "Preview",
+          "owner_id": 2,
+          "places": [
+            { "id": 202, "name": "Lyon", "locked": true },
+            { "id": 201, "name": "Mon Lieu Privé", "locked": true },
+            { "id": 1, "name": "Tour Eiffel, Paris", "locked": false },
+            { "id": 202, "name": "Lyon", "locked": true }
+          ],
+          "total_distance": 783.52,
+          "visibility": "private",
+          "share_token": ""
+        }
+      }
+    }
+    ```
+  * **`400 Bad Request`** : Moins de 2 points fournis, ou ID de lieu inexistant.
+  * **`403 Forbidden`** : Contient un lieu appartenant à autrui qui n'est **pas** configuré en visibilité `"public"`.
 
 ---
 

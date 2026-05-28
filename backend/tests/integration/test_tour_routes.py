@@ -109,3 +109,63 @@ def test_create_tour_validation_too_few_places(client, auth_headers, mock_geocod
     json_data = response.get_json()
     assert json_data["status"] == "error"
     assert "At least 2 places" in json_data["message"]
+
+
+def test_tour_creation_with_public_and_private_places(
+    client, auth_headers, other_auth_headers, mock_geocoding
+):
+    """Test tour creation with other user's public and private places."""
+    # User 1 creates one public place and one private place
+    res_pub = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Paris", "visibility": "public"}
+    )
+    res_priv = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Lyon", "visibility": "private"}
+    )
+    pub_place_id = res_pub.get_json()["data"]["place"]["id"]
+    priv_place_id = res_priv.get_json()["data"]["place"]["id"]
+
+    # User 2 creates their own place
+    res_own = client.post(
+        "/api/places",
+        headers=other_auth_headers,
+        json={"name": "Paris"}
+    )
+    own_place_id = res_own.get_json()["data"]["place"]["id"]
+
+    # User 2 tries to create a tour with their own place + User 1's public place (should work)
+    res_tour_ok = client.post(
+        "/api/tours",
+        headers=other_auth_headers,
+        json={
+            "name": "Mixed Tour",
+            "place_ids": [own_place_id, pub_place_id],
+            "visibility": "public"
+        }
+    )
+    assert res_tour_ok.status_code == 201
+    tour_data = res_tour_ok.get_json()["data"]["tour"]
+    assert tour_data["visibility"] == "public"
+    tour_id = tour_data["id"]
+
+    # User 2 tries to create a tour with their own place + User 1's private place (should be Forbidden)
+    res_tour_forbidden = client.post(
+        "/api/tours",
+        headers=other_auth_headers,
+        json={
+            "name": "Forbidden Tour",
+            "place_ids": [own_place_id, priv_place_id]
+        }
+    )
+    assert res_tour_forbidden.status_code == 403
+
+    # Retrieve all public tours (no headers needed)
+    res_public_list = client.get("/api/tours/public")
+    assert res_public_list.status_code == 200
+    tours = res_public_list.get_json()["data"]["tours"]
+    assert any(t["id"] == tour_id for t in tours)
+

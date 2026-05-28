@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 from dao.tour_dao import TourDAO
 from dao.place_dao import PlaceDAO
 from dataobject.tour import Tour
@@ -134,13 +134,13 @@ class TourService:
         return self.tour_dao.delete(tour_id)
 
     def update_share_visibility(
-        self, tour_id: int, visibility: str, owner_id: int
+        self, tour_id: int, visibility: Optional[str], owner_id: int
     ) -> Tour:
         """Update tour sharing visibility (private vs public).
 
         Args:
             tour_id: The ID of the tour.
-            visibility: Either 'private' or 'public'.
+            visibility: Either 'private' or 'public', or None to toggle.
             owner_id: The ID of the current user.
 
         Returns:
@@ -149,11 +149,18 @@ class TourService:
         Raises:
             ValidationException: If visibility value is invalid.
         """
-        if visibility not in ["private", "public"]:
-            raise ValidationException("Visibility must be either 'private' or 'public'")
-
         tour = self.get_tour_by_id(tour_id, owner_id)
-        tour.visibility = visibility
+
+        if visibility is None:
+            new_visibility = "private" if tour.visibility == "public" else "public"
+        else:
+            if visibility not in ["private", "public"]:
+                raise ValidationException(
+                    "Visibility must be either 'private' or 'public'"
+                )
+            new_visibility = visibility
+
+        tour.visibility = new_visibility
         return self.tour_dao.update(tour)
 
     def get_shared_tour(self, share_token: str) -> Tour:

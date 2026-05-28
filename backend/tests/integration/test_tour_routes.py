@@ -164,3 +164,55 @@ def test_tour_creation_with_public_and_private_places(
     assert res_public_list.status_code == 200
     tours = res_public_list.get_json()["data"]["tours"]
     assert any(t["id"] == tour_id for t in tours)
+
+
+def test_tour_visibility_toggling(client, auth_headers, mock_geocoding):
+    """Test toggling tour sharing visibility."""
+    # 1. Create two places and a tour
+    res_p1 = client.post("/api/places", headers=auth_headers, json={"name": "Paris"})
+    res_p2 = client.post("/api/places", headers=auth_headers, json={"name": "Lyon"})
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+
+    res_tour = client.post(
+        "/api/tours",
+        headers=auth_headers,
+        json={"name": "French Tour", "place_ids": [p1_id, p2_id]},
+    )
+    tour_id = res_tour.get_json()["data"]["tour"]["id"]
+
+    # 2. Make it public (explicitly passing visibility)
+    res_patch1 = client.patch(
+        f"/api/tours/{tour_id}/share",
+        headers=auth_headers,
+        json={"visibility": "public"},
+    )
+    assert res_patch1.status_code == 200
+    assert res_patch1.get_json()["data"]["tour"]["visibility"] == "public"
+
+    # 3. Toggle back to private (making request on public tour with visibility = private)
+    res_patch2 = client.patch(
+        f"/api/tours/{tour_id}/share",
+        headers=auth_headers,
+        json={"visibility": "private"},
+    )
+    assert res_patch2.status_code == 200
+    assert res_patch2.get_json()["data"]["tour"]["visibility"] == "private"
+
+    # 4. Make public again (toggling by sending empty payload)
+    res_patch3 = client.patch(
+        f"/api/tours/{tour_id}/share",
+        headers=auth_headers,
+        json={},
+    )
+    assert res_patch3.status_code == 200
+    assert res_patch3.get_json()["data"]["tour"]["visibility"] == "public"
+
+    # 5. Toggle back to private (by sending empty payload)
+    res_patch4 = client.patch(
+        f"/api/tours/{tour_id}/share",
+        headers=auth_headers,
+        json={},
+    )
+    assert res_patch4.status_code == 200
+    assert res_patch4.get_json()["data"]["tour"]["visibility"] == "private"

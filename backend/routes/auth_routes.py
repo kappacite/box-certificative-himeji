@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from services.auth_service import AuthService
 from middleware.auth_middleware import require_auth
 
@@ -69,3 +69,10 @@ def logout():
         jsonify({"status": "success", "data": {"message": "Logged out successfully"}}),
         200,
     )
+
+
+@auth_bp.route("/me", methods=["GET"])
+@require_auth
+def get_current_user():
+    """Retrieve the profile of the currently authenticated user."""
+    return jsonify({"status": "success", "data": {"user": g.current_user.to_dict()}}), 200

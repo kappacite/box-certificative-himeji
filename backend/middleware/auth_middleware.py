@@ -92,3 +92,34 @@ def require_owner(resource_type: str):
         return decorated
 
     return decorator
+
+
+def optional_auth(f):
+    """Decorator to optionally decode a JWT authentication token.
+
+    If a valid token is present in the Authorization header, it is decoded
+    and the user is stored in flask.g.current_user. If not, g.current_user remains None.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        g.current_user = None
+        auth_header = request.headers.get("Authorization")
+        if auth_header:
+            parts = auth_header.split()
+            if len(parts) == 2 and parts[0].lower() == "bearer":
+                token = parts[1]
+
+                # Check if the token was blacklisted (logged out)
+                from dao.models import RevokedTokenModel
+                is_revoked = RevokedTokenModel.query.filter_by(token=token).first() is not None
+                if not is_revoked:
+                    try:
+                        auth_service = AuthService()
+                        # verify_token returns the User object if valid
+                        g.current_user = auth_service.verify_token(token)
+                    except Exception:
+                        pass
+
+        return f(*args, **kwargs)
+
+    return decorated

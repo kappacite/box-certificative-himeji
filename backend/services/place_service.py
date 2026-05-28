@@ -2,7 +2,12 @@ import requests
 from typing import List, Optional, Tuple
 from dao.place_dao import PlaceDAO
 from dataobject.place import Place
-from exceptions import NotFoundException, ForbiddenException, ValidationException
+from exceptions import (
+    NotFoundException,
+    ForbiddenException,
+    ValidationException,
+    UnauthorizedException,
+)
 
 
 class PlaceService:
@@ -62,12 +67,15 @@ class PlaceService:
 
         Raises:
             NotFoundException: If the place does not exist.
+            UnauthorizedException: If the user is unauthenticated and resource is private.
             ForbiddenException: If the place does not belong to the user.
         """
         place = self.place_dao.get_by_id(place_id)
         if not place:
             raise NotFoundException("Place not found")
         if place.owner_id != owner_id and place.visibility != "public":
+            if owner_id is None:
+                raise UnauthorizedException("Authentication required")
             raise ForbiddenException("You do not have access to this place")
         return place
 
@@ -163,6 +171,78 @@ class PlaceService:
             place.longitude = longitude
         # If the name changed and coordinates were not provided, re-geocode
         elif place.name != old_name:
+            lat, lon = self.geocode_place_name(place.name)
+            place.latitude = lat
+            place.longitude = lon
+
+        return self.place_dao.update(place)
+
+    def patch_place(
+        self,
+        place_id: int,
+        owner_id: int,
+        name: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        visibility: Optional[str] = None,
+        update_name: bool = False,
+        update_coords: bool = False,
+        update_visibility: bool = False,
+    ) -> Place:
+        """Partially update a place.
+
+        Args:
+            place_id: The ID of the place.
+            owner_id: The ID of the current user.
+            name: Optional updated name.
+            latitude: Optional updated latitude.
+            longitude: Optional updated longitude.
+            visibility: Optional updated visibility.
+            update_name: True if name should be updated.
+            update_coords: True if coordinates should be updated.
+            update_visibility: True if visibility should be updated.
+
+        Returns:
+            The updated Place data object.
+
+        Raises:
+            NotFoundException: If the place does not exist.
+            ForbiddenException: If the place does not belong to the user.
+            ValidationException: If validation or geocoding fails.
+        """
+        place = self.place_dao.get_by_id(place_id)
+        if not place:
+            raise NotFoundException("Place not found")
+        if place.owner_id != owner_id:
+            raise ForbiddenException("You do not own this place")
+
+        if update_name:
+            if not name or not name.strip():
+                raise ValidationException("Place name is required")
+            old_name = place.name
+            place.name = name.strip()
+        else:
+            old_name = place.name
+
+        if update_visibility:
+            if visibility not in ["private", "public"]:
+                raise ValidationException(
+                    "Visibility must be either 'private' or 'public'"
+                )
+            place.visibility = visibility
+
+        if update_coords:
+            if latitude is not None and longitude is not None:
+                place.latitude = latitude
+                place.longitude = longitude
+            else:
+                # If they updated coordinates but passed None,
+                # trigger geocoding using the current name
+                lat, lon = self.geocode_place_name(place.name)
+                place.latitude = lat
+                place.longitude = lon
+        elif update_name and place.name != old_name:
+            # If name changed but coordinates were not explicitly updated, re-geocode
             lat, lon = self.geocode_place_name(place.name)
             place.latitude = lat
             place.longitude = lon

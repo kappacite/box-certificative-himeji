@@ -102,3 +102,38 @@ def test_route_logout_and_revocation(client):
     res_places_after = client.get("/api/places", headers=headers)
     assert res_places_after.status_code == 401
     assert res_places_after.get_json()["code"] == "UNAUTHORIZED"
+
+
+def test_route_me_success(client):
+    """Test GET /api/auth/me success path."""
+    # 1. Register and login
+    client.post(
+        "/api/auth/register",
+        json={
+            "username": "meuser",
+            "email": "meuser@example.com",
+            "password": "password123",
+        },
+    )
+    res_login = client.post(
+        "/api/auth/login",
+        json={"email": "meuser@example.com", "password": "password123"},
+    )
+    token = res_login.get_json()["data"]["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 2. Call /api/auth/me
+    response = client.get("/api/auth/me", headers=headers)
+    assert response.status_code == 200
+    json_data = response.get_json()
+    assert json_data["status"] == "success"
+    assert json_data["data"]["user"]["username"] == "meuser"
+    assert json_data["data"]["user"]["email"] == "meuser@example.com"
+    assert "password_hash" not in json_data["data"]["user"]
+
+
+def test_route_me_unauthorized(client):
+    """Test GET /api/auth/me when unauthenticated."""
+    response = client.get("/api/auth/me")
+    assert response.status_code == 401
+    assert response.get_json()["status"] == "error"

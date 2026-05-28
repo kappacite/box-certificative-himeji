@@ -40,6 +40,24 @@ def create_tour():
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 201
 
 
+@tour_bp.route("/preview", methods=["POST"])
+@require_auth
+def preview_tour():
+    """Preview an optimized tour from place IDs without saving."""
+    data = request.get_json(silent=True) or {}
+    place_ids = data.get("place_ids", [])
+    locked_positions = data.get("locked_positions")
+    locked_places = data.get("locked_places")
+
+    tour = tour_service.preview_tour(
+        place_ids=place_ids,
+        owner_id=g.current_user.id,
+        locked_positions=locked_positions,
+        locked_places=locked_places,
+    )
+    return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
+
+
 @tour_bp.route("/<int:tour_id>", methods=["GET"])
 @require_auth
 @require_owner("tour")

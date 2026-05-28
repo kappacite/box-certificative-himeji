@@ -262,3 +262,33 @@ def test_create_tour_with_locked_positions(client, auth_headers, mock_geocoding)
     assert tour_data["places"][0]["locked"] is True
     assert tour_data["places"][1]["locked"] is True
     assert tour_data["places"][2]["locked"] is False
+
+
+def test_preview_tour(client, auth_headers, mock_geocoding):
+    """Test generating a tour preview without saving it to database."""
+    # 1. Create two places
+    res_p1 = client.post("/api/places", headers=auth_headers, json={"name": "Paris"})
+    res_p2 = client.post("/api/places", headers=auth_headers, json={"name": "Lyon"})
+
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+
+    # 2. Preview tour
+    res_preview = client.post(
+        "/api/tours/preview",
+        headers=auth_headers,
+        json={"place_ids": [p1_id, p2_id]},
+    )
+
+    assert res_preview.status_code == 200
+    preview_data = res_preview.get_json()["data"]["tour"]
+    assert preview_data["name"] == "Preview"
+    assert preview_data["id"] is None
+    assert preview_data["total_distance"] > 0.0
+    assert len(preview_data["places"]) == 3
+
+    # 3. Check that it was not persisted
+    res_tours_list = client.get("/api/tours", headers=auth_headers)
+    assert res_tours_list.status_code == 200
+    tours = res_tours_list.get_json()["data"]["tours"]
+    assert len(tours) == 0

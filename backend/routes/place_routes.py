@@ -23,7 +23,7 @@ def get_places():
 @require_auth
 def create_place():
     """Create a new place. Resolves coordinates via Nominatim if not provided."""
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     name = data.get("name")
     latitude = data.get("latitude")
     longitude = data.get("longitude")
@@ -50,7 +50,7 @@ def get_place(place_id):
 @require_owner("place")
 def update_place(place_id):
     """Update a specific place."""
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     name = data.get("name")
     latitude = data.get("latitude")
     longitude = data.get("longitude")

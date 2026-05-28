@@ -21,7 +21,7 @@ def get_tours():
 @require_auth
 def create_tour():
     """Generate and save an optimized tour from list of place IDs."""
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     name = data.get("name")
     place_ids = data.get("place_ids", [])
 
@@ -52,7 +52,7 @@ def delete_tour(tour_id):
 @require_owner("tour")
 def share_tour(tour_id):
     """Toggle visibility (public/private) for a tour."""
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     visibility = data.get("visibility")
 
     tour = tour_service.update_share_visibility(tour_id, visibility, g.current_user.id)

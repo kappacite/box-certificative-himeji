@@ -16,7 +16,7 @@ def register():
     Returns:
         Standard envelope with registered User.
     """
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     username = data.get("username")
     email = data.get("email")
     password = data.get("password")
@@ -35,7 +35,7 @@ def login():
     Returns:
         Standard envelope with JWT token and User.
     """
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     email = data.get("email")
     password = data.get("password")
 

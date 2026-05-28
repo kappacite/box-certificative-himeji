@@ -137,7 +137,7 @@ class TourService:
         self,
         tour_id: int,
         visibility: Optional[str],
-        places: Optional[Place],
+        places_id: List[int],
         name: Optional[str],
         owner_id: int,
     ) -> Tour:
@@ -155,14 +155,26 @@ class TourService:
         """
         tour = self.get_tour_by_id(tour_id, owner_id)
 
-        if visibility is not None:
+        if 'name' is not None:
+            if not (name and name.strip()):
+                raise ValidationException("Name cannot be empty.")
+            tour.name = name
+
+        if 'visibility' is not None:
+            if visibility not in ["private", "public"]:
+                raise ValidationException("Invalid visibility value.")
             tour.visibility = visibility
 
-        if places is not None:
-            tour.places = places
-
-        if name is not None:
-            tour.name = name
+        places = []
+        for pid in places_id:
+            place = self.place_dao.get_by_id(pid)
+            if not place:
+                raise ValidationException(f"Place with ID {pid} does not exist")
+            if place.owner_id != owner_id and place.visibility != "public":
+                raise ForbiddenException(
+                    f"You do not own the place with ID {pid} and it is not public"
+                )
+            places.append(place)
 
         return self.tour_dao.update(tour)
 

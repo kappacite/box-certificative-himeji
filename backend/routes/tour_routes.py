@@ -61,14 +61,6 @@ def patch_tour(tour_id):
     places = data.get("places")
     name = data.get("name")
 
-    if 'name' in data:
-        if not (name and name.strip()):
-            raise ValidationException("Name cannot be empty.")
-
-    if 'visibility' in data:
-        if visibility not in ["private", "public"]:
-            raise ValidationException("Invalid visibility value.")
-
     tour = tour_service.patch_tour(
         tour_id=tour_id,
         visibility=visibility,
@@ -79,28 +71,23 @@ def patch_tour(tour_id):
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 
 
-@tour_bp.route("/<int:tour_id>/share", methods=["PATCH"])
+@tour_bp.route("/<int:tour_id>", methods=["PATCH"])
 @require_auth
 @require_owner("tour")
 def share_tour(tour_id):
-    """Toggle visibility (public/private) for a tour."""
+    """Change data for a tour."""
     data = request.get_json(silent=True) or {}
     visibility = data.get("visibility")
+    name = data.get("name")
+    places = data.get("places")
 
     tour = tour_service.get_tour_by_id(tour_id, g.current_user.id)
 
-    if visibility is None:
-        new_visibility = "private" if tour.visibility == "public" else "public"
-    else:
-        if visibility not in ["private", "public"]:
-            raise ValidationException("Visibility must be either 'private' or 'public'")
-        new_visibility = visibility
-
     tour = tour_service.patch_tour(
         tour_id=tour_id,
-        visibility=new_visibility,
-        places=None,
-        name=None,
+        visibility=visibility,
+        places=places,
+        name=name,
         owner_id=g.current_user.id
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200

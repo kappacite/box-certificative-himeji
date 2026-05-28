@@ -44,6 +44,7 @@ class PlaceService:
             raise ForbiddenException("You do not have access to this place")
         return place
 
+    def create_place(
         self,
         name: str,
         owner_id: int,
@@ -84,6 +85,7 @@ class PlaceService:
         )
         return self.place_dao.create(new_place)
 
+    def update_place(
         self,
         place_id: int,
         name: str,

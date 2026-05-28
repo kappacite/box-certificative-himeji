@@ -319,3 +319,109 @@ Toutes les réponses de l'API doivent correspondre au format enveloppe JSON stan
        curl -X GET http://localhost:5000/api/tours/shared/<SHARE_TOKEN_UUID>
        ```
      - *Résultat attendu* : Code 404, `"code": "NOT_FOUND"`. Le serveur masque l'existence du jeton pour des raisons de confidentialité.
+
+---
+
+## ⚡ 4. Nouvelles Routes Utiles (Utilitaires & Optimisations)
+
+### 4.1 Profil Courant (`GET /api/auth/me`)
+* **Description** : Renvoie le profil de l'utilisateur connecté à partir de son JWT.
+* **Préconditions** : Requiert l'en-tête `Authorization: Bearer <token>`.
+* **Cas à tester** :
+  1. **Succès (200 OK)** :
+     - *Commande* :
+       ```bash
+       curl -X GET http://localhost:5000/api/auth/me \
+            -H "Authorization: Bearer <TOKEN>"
+       ```
+     - *Résultat attendu* : Code 200, profil de l'utilisateur retourné (id, username, email).
+
+---
+
+### 4.2 Modification Partielle de Lieu (`PATCH /api/places/<id>`)
+* **Description** : Permet de modifier uniquement certains champs d'un lieu (ex. la visibilité ou les coordonnées).
+* **Préconditions** : Requiert l'en-tête `Authorization: Bearer <token>`.
+* **Cas à tester** :
+  1. **Succès (200 OK)** : Modification de la visibilité uniquement.
+     - *Commande* :
+       ```bash
+       curl -X PATCH http://localhost:5000/api/places/1 \
+            -H "Authorization: Bearer <TOKEN>" \
+            -H "Content-Type: application/json" \
+            -d '{"visibility": "public"}'
+       ```
+     - *Résultat attendu* : Code 200, le lieu est mis à jour en public sans exiger de fournir à nouveau le nom ou les coordonnées.
+
+---
+
+### 4.3 Recalculer un Itinéraire (`POST /api/tours/<id>/recalculate`)
+* **Description** : Force le recalcul de l'itinéraire (ordre optimal et distance totale) suite à un changement de coordonnées des lieux.
+* **Préconditions** : Requiert l'en-tête `Authorization: Bearer <token>` et la propriété du parcours.
+* **Cas à tester** :
+  1. **Succès (200 OK)** :
+     - *Commande* :
+       ```bash
+       curl -X POST http://localhost:5000/api/tours/1/recalculate \
+            -H "Authorization: Bearer <TOKEN>"
+       ```
+     - *Résultat attendu* : Code 200, l'itinéraire recalculé avec ses nouvelles coordonnées et la nouvelle distance totale.
+
+---
+
+### 4.4 Dupliquer un Itinéraire (`POST /api/tours/<id>/duplicate`)
+* **Description** : Permet de copier un itinéraire public ou possédé dans son espace personnel en clonant les lieux privés d'autrui.
+* **Préconditions** : Requiert l'en-tête `Authorization: Bearer <token>`.
+* **Cas à tester** :
+  1. **Succès (201 Created)** :
+     - *Commande* :
+       ```bash
+       curl -X POST http://localhost:5000/api/tours/2/duplicate \
+            -H "Authorization: Bearer <TOKEN>"
+       ```
+     - *Résultat attendu* : Code 201, un nouveau parcours cloné privé est créé pour l'utilisateur.
+
+---
+
+### 4.5 Optimisation Standalone de Lieux (`POST /api/tours/optimize`)
+* **Description** : Calcule l'ordre optimal et la distance d'un parcours pour une liste de lieux et de verrous, sans sauvegarde.
+* **Préconditions** : Requiert l'en-tête `Authorization: Bearer <token>`.
+* **Cas à tester** :
+  1. **Succès (200 OK)** :
+     - *Commande* :
+       ```bash
+       curl -X POST http://localhost:5000/api/tours/optimize \
+            -H "Authorization: Bearer <TOKEN>" \
+            -H "Content-Type: application/json" \
+            -d '{"place_ids": [1, 2, 3], "locked_positions": {"3": 1}}'
+       ```
+     - *Résultat attendu* : Code 200, liste ordonnée des lieux (Marseille d'ID 3 est à l'index 1) et distance totale calculée.
+
+---
+
+### 4.6 Recherche et Pagination de Lieux/Itinéraires (`GET /api/places` / `GET /api/tours/public`)
+* **Description** : Permet de chercher et paginer les résultats.
+* **Cas à tester** :
+  1. **Lieux publics paginés (200 OK)** :
+     - *Commande* :
+       ```bash
+       curl -X GET "http://localhost:5000/api/places?visibility=public&q=Paris&page=1&limit=2"
+       ```
+     - *Résultat attendu* : Liste paginée filtrée contenant au plus 2 éléments.
+  2. **Itinéraires publics paginés (200 OK)** :
+     - *Commande* :
+       ```bash
+       curl -X GET "http://localhost:5000/api/tours/public?q=Voyage&page=1&limit=5"
+       ```
+     - *Résultat attendu* : Liste paginée des itinéraires publics filtrés par le terme "Voyage".
+
+---
+
+### 4.7 Santé Réseau et Base de Données (`GET /api/health/ready`)
+* **Description** : Healthcheck complet testant la connectivité SQLite/PostgreSQL.
+* **Cas à tester** :
+  1. **Succès (200 OK)** :
+     - *Commande* :
+       ```bash
+       curl -X GET http://localhost:5000/api/health/ready
+       ```
+     - *Résultat attendu* : Code 200, base de données joignable.

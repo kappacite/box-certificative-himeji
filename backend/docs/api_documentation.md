@@ -683,6 +683,65 @@ Copie un itinéraire public (ou appartenant à l'utilisateur) dans son espace pe
 
 ---
 
+### ⚡ Optimiser un itinéraire (sans sauvegarde) **[Auth Requise]**
+Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sans créer ni enregistrer de tournée en base de données. Il permet également de tester l'impact de verrous de position ou de lieux spécifiques.
+
+* **Méthode** : `POST`
+* **URL** : `/api/tours/optimize`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "place_ids": [1, 2, 3], // Liste d'identifiants de lieux à inclure (ou objets {"id": 1, "locked": true, "position": 0})
+    "locked_positions": {   // Optionnel (dictionnaire identifiant_lieu_str -> position_int)
+      "3": 1
+    },
+    "locked_places": [1]    // Optionnel (liste d'identifiants à verrouiller à leur index d'entrée dans place_ids)
+  }
+  ```
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Calcul d'optimisation réussi.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "places": [
+          {
+            "id": 1,
+            "name": "Paris",
+            "latitude": 48.8566,
+            "longitude": 2.3522,
+            "owner_id": 1,
+            "visibility": "private",
+            "locked": true
+          },
+          {
+            "id": 3,
+            "name": "Marseille",
+            "latitude": 43.2964,
+            "longitude": 5.3697,
+            "owner_id": 1,
+            "visibility": "private",
+            "locked": true
+          },
+          {
+            "id": 2,
+            "name": "Lyon",
+            "latitude": 45.7640,
+            "longitude": 4.8357,
+            "owner_id": 1,
+            "visibility": "private",
+            "locked": false
+          }
+        ],
+        "total_distance": 783.52
+      }
+    }
+    ```
+  * **`400 Bad Request`** : Moins de 2 lieux fournis ou ID non valides.
+  * **`403 Forbidden`** : L'un des lieux spécifiés est privé et appartient à un tiers.
+
+---
+
 ### 🔗 Accéder à un itinéraire partagé
 Permet à n'importe quel internaute d'accéder aux détails d'un itinéraire via son UUID de partage (`share_token`). Aucune authentification n'est requise.
 

@@ -116,6 +116,15 @@ class TourDAO(BaseDAO[Tour, int]):
             return None
         return self._to_dataobject(tour_model)
 
+    def get_public(self) -> List[Tour]:
+        """Retrieve all public tours.
+
+        Returns:
+            A list of Tour data objects.
+        """
+        tour_models = TourModel.query.filter_by(visibility="public").all()
+        return [self._to_dataobject(tm) for tm in tour_models]
+
     def _to_dataobject(self, model: TourModel) -> Tour:
         """Helper to convert TourModel (ORM) to Tour (DataObject) with resolved Places."""
         places = []
@@ -127,6 +136,7 @@ class TourDAO(BaseDAO[Tour, int]):
                 latitude=tp.place.latitude,
                 longitude=tp.place.longitude,
                 owner_id=tp.place.owner_id,
+                visibility=tp.place.visibility,
             )
             places.append(place_do)
 

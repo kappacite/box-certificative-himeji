@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 from dao.tour_dao import TourDAO
 from dao.place_dao import PlaceDAO
 from dataobject.tour import Tour
@@ -47,20 +47,28 @@ class TourService:
             raise ForbiddenException("You do not own this tour")
         return tour
 
-    def create_tour(self, name: str, place_ids: List[int], owner_id: int) -> Tour:
+    def create_tour(
+        self,
+        name: str,
+        place_ids: List[int],
+        owner_id: int,
+        visibility: str = "private",
+    ) -> Tour:
         """Generate an optimized tour from a list of place IDs.
 
         Args:
             name: The name of the tour.
             place_ids: A list of place IDs to include.
             owner_id: The ID of the owner user.
+            visibility: The sharing visibility ('private' or 'public').
 
         Returns:
             The created and persisted Tour.
 
         Raises:
             ValidationException: If there are fewer than 2 places or validation fails.
-            ForbiddenException: If the user doesn't own all specified places.
+            ForbiddenException: If the user doesn't own all specified places
+                (unless they are public).
         """
         if not name or not name.strip():
             raise ValidationException("Tour name is required")
@@ -68,15 +76,19 @@ class TourService:
             raise ValidationException(
                 "At least 2 places are required to generate a tour"
             )
+        if visibility not in ["private", "public"]:
+            raise ValidationException("Visibility must be either 'private' or 'public'")
 
-        # Retrieve and validate all places belong to the owner
+        # Retrieve and validate all places belong to the owner or are public
         places = []
         for pid in place_ids:
             place = self.place_dao.get_by_id(pid)
             if not place:
                 raise ValidationException(f"Place with ID {pid} does not exist")
-            if place.owner_id != owner_id:
-                raise ForbiddenException(f"You do not own the place with ID {pid}")
+            if place.owner_id != owner_id and place.visibility != "public":
+                raise ForbiddenException(
+                    f"You do not own the place with ID {pid} and it is not public"
+                )
             places.append(place)
 
         # Optimize the place ordering using nearest neighbour + 2-opt
@@ -93,11 +105,19 @@ class TourService:
             owner_id=owner_id,
             places=optimized_places,
             total_distance=total_dist,
-            visibility="private",
+            visibility=visibility,
             share_token=share_token,
         )
 
         return self.tour_dao.create(new_tour)
+
+    def get_public_tours(self) -> List[Tour]:
+        """Retrieve all public tours.
+
+        Returns:
+            A list of Tour data objects.
+        """
+        return self.tour_dao.get_public()
 
     def delete_tour(self, tour_id: int, owner_id: int) -> bool:
         """Delete a tour, verifying ownership.
@@ -114,13 +134,13 @@ class TourService:
         return self.tour_dao.delete(tour_id)
 
     def update_share_visibility(
-        self, tour_id: int, visibility: str, owner_id: int
+        self, tour_id: int, visibility: Optional[str], owner_id: int
     ) -> Tour:
         """Update tour sharing visibility (private vs public).
 
         Args:
             tour_id: The ID of the tour.
-            visibility: Either 'private' or 'public'.
+            visibility: Either 'private' or 'public', or None to toggle.
             owner_id: The ID of the current user.
 
         Returns:
@@ -129,11 +149,18 @@ class TourService:
         Raises:
             ValidationException: If visibility value is invalid.
         """
-        if visibility not in ["private", "public"]:
-            raise ValidationException("Visibility must be either 'private' or 'public'")
-
         tour = self.get_tour_by_id(tour_id, owner_id)
-        tour.visibility = visibility
+
+        if visibility is None:
+            new_visibility = "private" if tour.visibility == "public" else "public"
+        else:
+            if visibility not in ["private", "public"]:
+                raise ValidationException(
+                    "Visibility must be either 'private' or 'public'"
+                )
+            new_visibility = visibility
+
+        tour.visibility = new_visibility
         return self.tour_dao.update(tour)
 
     def get_shared_tour(self, share_token: str) -> Tour:

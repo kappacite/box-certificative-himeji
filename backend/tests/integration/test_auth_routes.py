@@ -1,4 +1,3 @@
-
 def test_route_register_success(client):
     """Test POST /api/auth/register success path."""
     response = client.post(

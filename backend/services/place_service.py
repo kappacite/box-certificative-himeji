@@ -40,8 +40,8 @@ class PlaceService:
         place = self.place_dao.get_by_id(place_id)
         if not place:
             raise NotFoundException("Place not found")
-        if place.owner_id != owner_id:
-            raise ForbiddenException("You do not own this place")
+        if place.owner_id != owner_id and place.visibility != "public":
+            raise ForbiddenException("You do not have access to this place")
         return place
 
     def create_place(
@@ -50,6 +50,7 @@ class PlaceService:
         owner_id: int,
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
+        visibility: str = "private",
     ) -> Place:
         """Create a new place, optionally geocoding its name if coordinates are omitted.
 
@@ -58,6 +59,7 @@ class PlaceService:
             owner_id: The ID of the owner.
             latitude: Optional latitude.
             longitude: Optional longitude.
+            visibility: The sharing visibility ('private' or 'public').
 
         Returns:
             The created Place.
@@ -67,13 +69,19 @@ class PlaceService:
         """
         if not name or not name.strip():
             raise ValidationException("Place name is required")
+        if visibility not in ["private", "public"]:
+            raise ValidationException("Visibility must be either 'private' or 'public'")
 
         # Resolve coordinates via Nominatim if not provided
         if latitude is None or longitude is None:
             latitude, longitude = self.geocode_place_name(name)
 
         new_place = Place(
-            name=name.strip(), latitude=latitude, longitude=longitude, owner_id=owner_id
+            name=name.strip(),
+            latitude=latitude,
+            longitude=longitude,
+            owner_id=owner_id,
+            visibility=visibility,
         )
         return self.place_dao.create(new_place)
 
@@ -84,6 +92,7 @@ class PlaceService:
         owner_id: int,
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
+        visibility: Optional[str] = None,
     ) -> Place:
         """Update a place. Re-geocodes the name if it changes and coordinates are not provided.
 
@@ -93,6 +102,7 @@ class PlaceService:
             owner_id: The ID of the current user.
             latitude: Optional updated latitude.
             longitude: Optional updated longitude.
+            visibility: Optional updated visibility.
 
         Returns:
             The updated Place data object.
@@ -102,13 +112,23 @@ class PlaceService:
             ForbiddenException: If the place does not belong to the user.
             ValidationException: If validation or geocoding fails.
         """
-        place = self.get_place_by_id(place_id, owner_id)
+        # Ensure user owns the place before modifying it
+        place = self.place_dao.get_by_id(place_id)
+        if not place:
+            raise NotFoundException("Place not found")
+        if place.owner_id != owner_id:
+            raise ForbiddenException("You do not own this place")
 
         if not name or not name.strip():
             raise ValidationException("Place name is required")
+        if visibility is not None and visibility not in ["private", "public"]:
+            raise ValidationException("Visibility must be either 'private' or 'public'")
 
         old_name = place.name
         place.name = name.strip()
+
+        if visibility is not None:
+            place.visibility = visibility
 
         # If coordinates are explicitly given, use them
         if latitude is not None and longitude is not None:
@@ -132,9 +152,21 @@ class PlaceService:
         Returns:
             True if deletion was successful.
         """
-        # Triggers ownership checks
-        self.get_place_by_id(place_id, owner_id)
+        # Triggers ownership checks (only the owner can delete)
+        place = self.place_dao.get_by_id(place_id)
+        if not place:
+            raise NotFoundException("Place not found")
+        if place.owner_id != owner_id:
+            raise ForbiddenException("You do not own this place")
         return self.place_dao.delete(place_id)
+
+    def get_public_places(self) -> List[Place]:
+        """Retrieve all public places.
+
+        Returns:
+            A list of Place data objects.
+        """
+        return self.place_dao.get_public()
 
     def geocode_place_name(self, name: str) -> Tuple[float, float]:
         """Call OpenStreetMap Nominatim API to resolve a name to coordinates.
@@ -157,7 +189,9 @@ class PlaceService:
         }
         params = {"q": name, "format": "json", "limit": 1}
         try:
-            response = requests.get(
+            session = requests.Session()
+            session.trust_env = False
+            response = session.get(
                 self.geocoding_url, headers=headers, params=params, timeout=10
             )
             response.raise_for_status()

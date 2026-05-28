@@ -1,5 +1,16 @@
+from services.algorithm.optimizer import optimize
+from services.algorithm.distance import haversine
 from dataobject.place import Place
-from services.algorithm.optimizer import optimize, _calculate_total_distance
+
+
+def _calculate_total_distance(tour: list[Place]) -> float:
+    if len(tour) <= 1:
+        return 0.0
+    total = 0.0
+    for i in range(len(tour) - 1):
+        total += haversine(tour[i], tour[i + 1])
+    total += haversine(tour[-1], tour[0])
+    return total
 
 
 def test_optimize_empty_or_single_place():

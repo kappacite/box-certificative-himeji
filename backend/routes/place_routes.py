@@ -27,13 +27,26 @@ def create_place():
     name = data.get("name")
     latitude = data.get("latitude")
     longitude = data.get("longitude")
+    visibility = data.get("visibility", "private")
 
     # If coordinates are passed as empty strings, convert to None
     lat = float(latitude) if latitude is not None and latitude != "" else None
     lon = float(longitude) if longitude is not None and longitude != "" else None
 
-    place = place_service.create_place(name, g.current_user.id, lat, lon)
+    place = place_service.create_place(name, g.current_user.id, lat, lon, visibility)
     return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 201
+
+
+@place_bp.route("/public", methods=["GET"])
+def get_public_places():
+    """Retrieve all public places."""
+    places = place_service.get_public_places()
+    return (
+        jsonify(
+            {"status": "success", "data": {"places": [p.to_dict() for p in places]}}
+        ),
+        200,
+    )
 
 
 @place_bp.route("/<int:place_id>", methods=["GET"])
@@ -54,11 +67,14 @@ def update_place(place_id):
     name = data.get("name")
     latitude = data.get("latitude")
     longitude = data.get("longitude")
+    visibility = data.get("visibility")
 
     lat = float(latitude) if latitude is not None and latitude != "" else None
     lon = float(longitude) if longitude is not None and longitude != "" else None
 
-    place = place_service.update_place(place_id, name, g.current_user.id, lat, lon)
+    place = place_service.update_place(
+        place_id, name, g.current_user.id, lat, lon, visibility
+    )
     return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 200
 
 

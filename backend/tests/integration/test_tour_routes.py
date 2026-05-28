@@ -292,3 +292,129 @@ def test_preview_tour(client, auth_headers, mock_geocoding):
     assert res_tours_list.status_code == 200
     tours = res_tours_list.get_json()["data"]["tours"]
     assert len(tours) == 0
+
+
+def test_recalculate_tour(client, auth_headers, mock_geocoding):
+    """Test recalculating a tour's distance and order after place coordinates change."""
+    # 1. Create two places and a tour
+    res_p1 = client.post("/api/places", headers=auth_headers, json={"name": "Paris"})
+    res_p2 = client.post("/api/places", headers=auth_headers, json={"name": "Lyon"})
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+
+    res_tour = client.post(
+        "/api/tours",
+        headers=auth_headers,
+        json={"name": "Tour to Recalculate", "place_ids": [p1_id, p2_id]},
+    )
+    tour_id = res_tour.get_json()["data"]["tour"]["id"]
+    old_distance = res_tour.get_json()["data"]["tour"]["total_distance"]
+
+    # 2. Modify one place's coordinates via PATCH (Paris to new latitude)
+    client.patch(
+        f"/api/places/{p1_id}",
+        headers=auth_headers,
+        json={"latitude": 10.0, "longitude": 20.0},
+    )
+
+    # 3. Recalculate tour
+    res_recalc = client.post(
+        f"/api/tours/{tour_id}/recalculate",
+        headers=auth_headers,
+    )
+    assert res_recalc.status_code == 200
+    new_distance = res_recalc.get_json()["data"]["tour"]["total_distance"]
+    assert new_distance != old_distance
+
+
+def test_duplicate_tour(client, auth_headers, other_auth_headers, mock_geocoding):
+    """Test duplicating a public tour and verifying place cloning."""
+    # 1. User 1 creates a private place and a public place
+    res_p1 = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Paris", "visibility": "private"},
+    )
+    res_p2 = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Lyon", "visibility": "public"},
+    )
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+
+    # 2. User 1 creates a public tour with both places
+    res_tour = client.post(
+        "/api/tours",
+        headers=auth_headers,
+        json={
+            "name": "User1 Tour",
+            "place_ids": [p1_id, p2_id],
+            "visibility": "public",
+        },
+    )
+    tour_id = res_tour.get_json()["data"]["tour"]["id"]
+
+    # 3. User 2 duplicates the public tour
+    res_dup = client.post(
+        f"/api/tours/{tour_id}/duplicate",
+        headers=other_auth_headers,
+    )
+    assert res_dup.status_code == 201
+    dup_tour = res_dup.get_json()["data"]["tour"]
+    assert dup_tour["name"] == "User1 Tour (Copy)"
+    assert dup_tour["visibility"] == "private"
+    assert len(dup_tour["places"]) == 3  # closed loop: start, intermediate, start
+
+    # 4. Verify that User 1's private place was cloned for User 2
+    cloned_place_id = dup_tour["places"][0]["id"]
+    assert cloned_place_id != p1_id  # It must be a new place ID
+    # Check that User 2 has access to it
+    res_fetch_place = client.get(
+        f"/api/places/{cloned_place_id}",
+        headers=other_auth_headers,
+    )
+    assert res_fetch_place.status_code == 200
+    assert res_fetch_place.get_json()["data"]["place"]["name"] == "Paris"
+
+
+def test_tours_search_and_pagination(client, auth_headers, mock_geocoding):
+    """Test search query and pagination on tours endpoints."""
+    # 1. Create two places
+    res_p1 = client.post("/api/places", headers=auth_headers, json={"name": "Paris"})
+    res_p2 = client.post("/api/places", headers=auth_headers, json={"name": "Lyon"})
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+
+    # 2. Create multiple tours
+    client.post(
+        "/api/tours",
+        headers=auth_headers,
+        json={
+            "name": "France Route 1",
+            "place_ids": [p1_id, p2_id],
+            "visibility": "public",
+        },
+    )
+    client.post(
+        "/api/tours",
+        headers=auth_headers,
+        json={
+            "name": "France Route 2",
+            "place_ids": [p1_id, p2_id],
+            "visibility": "private",
+        },
+    )
+
+    # 3. Filter by search query q=Route 1
+    res_q = client.get("/api/tours?q=Route 1", headers=auth_headers)
+    assert res_q.status_code == 200
+    tours_q = res_q.get_json()["data"]["tours"]
+    assert len(tours_q) == 1
+    assert tours_q[0]["name"] == "France Route 1"
+
+    # 4. Paginate public list: page=1, limit=1
+    res_pub = client.get("/api/tours/public?page=1&limit=1")
+    assert res_pub.status_code == 200
+    tours_pub = res_pub.get_json()["data"]["tours"]
+    assert len(tours_pub) == 1

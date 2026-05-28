@@ -1,17 +1,40 @@
 from flask import Blueprint, request, jsonify, g
 from services.place_service import PlaceService
 from middleware.auth_middleware import require_auth, require_owner, optional_auth
-from exceptions.app_exceptions import ValidationException
+from exceptions import ValidationException, UnauthorizedException
 
 place_bp = Blueprint("places", __name__, url_prefix="/api/places")
 place_service = PlaceService()
 
 
 @place_bp.route("", methods=["GET"])
-@require_auth
+@optional_auth
 def get_places():
-    """Retrieve all places owned by the authenticated user."""
-    places = place_service.get_places_by_owner(g.current_user.id)
+    """Retrieve places with filters and pagination."""
+    visibility = request.args.get("visibility")
+    q = request.args.get("q")
+    try:
+        page = int(request.args.get("page", 1))
+        limit_val = request.args.get("limit")
+        limit = int(limit_val) if limit_val is not None else None
+    except ValueError:
+        raise ValidationException("Invalid page or limit parameter")
+
+    # If requesting private (or default) places, require auth
+    if visibility != "public":
+        if not g.current_user:
+            raise UnauthorizedException("Authentication required")
+        owner_id = g.current_user.id
+    else:
+        owner_id = None
+
+    places = place_service.get_places(
+        owner_id=owner_id,
+        visibility=visibility,
+        q=q,
+        page=page,
+        limit=limit
+    )
     return (
         jsonify(
             {"status": "success", "data": {"places": [p.to_dict() for p in places]}}
@@ -61,11 +84,25 @@ def geocode_place():
 
 @place_bp.route("/public", methods=["GET"])
 def get_public_places():
-    """Retrieve all public places."""
-    places = place_service.get_public_places()
+    """Retrieve all public places with optional search and pagination."""
+    q = request.args.get("q")
+    try:
+        page = int(request.args.get("page", 1))
+        limit_val = request.args.get("limit")
+        limit = int(limit_val) if limit_val is not None else None
+    except ValueError:
+        raise ValidationException("Invalid page or limit parameter")
+
+    places = place_service.get_places(
+        owner_id=None,
+        visibility="public",
+        q=q,
+        page=page,
+        limit=limit
+    )
     return jsonify(
-            {"status": "success", "data": {"places": [p.to_dict() for p in places]}}
-        ), 200
+        {"status": "success", "data": {"places": [p.to_dict() for p in places]}}
+    ), 200
 
 
 @place_bp.route("/public/<int:place_id>", methods=["GET"])

@@ -253,3 +253,42 @@ def test_geocode_and_search_preview(client, mock_geocoding):
     # 4. Test geocode with missing name
     res_geocode_fail = client.post("/api/places/geocode", json={})
     assert res_geocode_fail.status_code == 400
+
+
+def test_places_search_and_pagination(client, auth_headers, mock_geocoding):
+    """Test searching and paginating user places and public places."""
+    # 1. Create multiple places
+    client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Paris", "visibility": "public"},
+    )
+    client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Lyon", "visibility": "private"},
+    )
+    client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Paris", "visibility": "private"},
+    )
+
+    # 2. Filter user's places by q=Paris
+    res_q = client.get("/api/places?q=Paris", headers=auth_headers)
+    assert res_q.status_code == 200
+    places_q = res_q.get_json()["data"]["places"]
+    assert len(places_q) == 2
+    assert all("Paris" in p["name"] for p in places_q)
+
+    # 3. Paginate user's places: page=1, limit=1
+    res_page1 = client.get("/api/places?page=1&limit=1", headers=auth_headers)
+    assert res_page1.status_code == 200
+    places_p1 = res_page1.get_json()["data"]["places"]
+    assert len(places_p1) == 1
+
+    # 4. Paginate public places: limit=1
+    res_pub_page = client.get("/api/places/public?limit=1")
+    assert res_pub_page.status_code == 200
+    places_pub = res_pub_page.get_json()["data"]["places"]
+    assert len(places_pub) <= 1

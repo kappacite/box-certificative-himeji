@@ -251,13 +251,117 @@ class TourService:
             id=None,
         )
 
-    def get_public_tours(self) -> List[Tour]:
-        """Retrieve all public tours.
+    def get_public_tours(
+        self,
+        q: Optional[str] = None,
+        page: int = 1,
+        limit: Optional[int] = None,
+    ) -> List[Tour]:
+        """Retrieve all public tours with optional search and pagination.
+
+        Args:
+            q: Optional search query.
+            page: Page number.
+            limit: Maximum number of tours to retrieve.
 
         Returns:
             A list of Tour data objects.
         """
-        return self.tour_dao.get_public()
+        return self.tour_dao.query_tours(visibility="public", q=q, page=page, limit=limit)
+
+    def get_tours(
+        self,
+        owner_id: int,
+        q: Optional[str] = None,
+        page: int = 1,
+        limit: Optional[int] = None,
+    ) -> List[Tour]:
+        """Retrieve user tours with optional search and pagination.
+
+        Args:
+            owner_id: Owner user ID.
+            q: Optional search query.
+            page: Page number.
+            limit: Maximum number of tours to retrieve.
+
+        Returns:
+            A list of Tour data objects.
+        """
+        return self.tour_dao.query_tours(owner_id=owner_id, q=q, page=page, limit=limit)
+
+    def duplicate_tour(self, tour_id: int, owner_id: int) -> Tour:
+        """Duplicate a tour (if public or owned) into the user's personal space.
+
+        Args:
+            tour_id: The ID of the tour to copy.
+            owner_id: The user ID duplicating the tour.
+
+        Returns:
+            The newly created Tour data object.
+
+        Raises:
+            NotFoundException: If the tour doesn't exist.
+            ForbiddenException: If the user cannot access the tour.
+        """
+        tour = self.tour_dao.get_by_id(tour_id)
+        if not tour:
+            raise NotFoundException("Tour not found")
+        if tour.owner_id != owner_id and tour.visibility != "public":
+            raise ForbiddenException("You do not have access to duplicate this tour")
+
+        duplicated_places = []
+        for place in tour.places:
+            if place.owner_id == owner_id or place.visibility == "public":
+                duplicated_places.append(place)
+            else:
+                cloned_place = Place(
+                    name=place.name,
+                    latitude=place.latitude,
+                    longitude=place.longitude,
+                    owner_id=owner_id,
+                    visibility="private",
+                )
+                saved_place = self.place_dao.create(cloned_place)
+                saved_place.locked = place.locked
+                duplicated_places.append(saved_place)
+
+        share_token = str(uuid.uuid4())
+        new_tour = Tour(
+            name=f"{tour.name} (Copy)",
+            owner_id=owner_id,
+            places=duplicated_places,
+            total_distance=tour.total_distance,
+            visibility="private",
+            share_token=share_token,
+        )
+        return self.tour_dao.create(new_tour)
+
+    def recalculate_tour(self, tour_id: int, owner_id: int) -> Tour:
+        """Recalculate the optimized routing and distance of a tour.
+
+        Args:
+            tour_id: The ID of the tour to recalculate.
+            owner_id: The user ID of the owner.
+
+        Returns:
+            The updated Tour.
+        """
+        tour = self.get_tour_by_id(tour_id, owner_id)
+
+        locked_map = {}
+        for index, place in enumerate(tour.places):
+            if place.locked:
+                locked_map[place.id] = index
+
+        optimized_places = optimize(tour.places, locked_map)
+
+        for place in optimized_places:
+            place.locked = (place.id in locked_map)
+
+        tour.places = optimized_places
+        tour.total_distance = self.calculate_tour_distance(optimized_places)
+
+        return self.tour_dao.update(tour)
 
     def delete_tour(self, tour_id: int, owner_id: int) -> bool:
         """Delete a tour, verifying ownership.

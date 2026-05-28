@@ -76,6 +76,43 @@ class PlaceDAO(BaseDAO[Place, int]):
         place_models = PlaceModel.query.filter_by(visibility="public").all()
         return [self._to_dataobject(pm) for pm in place_models]
 
+    def query_places(
+        self,
+        owner_id: Optional[int] = None,
+        visibility: Optional[str] = None,
+        q: Optional[str] = None,
+        page: int = 1,
+        limit: Optional[int] = None,
+    ) -> List[Place]:
+        """Query places with filters and pagination.
+
+        Args:
+            owner_id: Optional owner user ID filter.
+            visibility: Optional visibility ('public' or 'private') filter.
+            q: Optional search query for place name (case-insensitive).
+            page: Page number for pagination (starts at 1).
+            limit: Maximum number of places to retrieve.
+
+        Returns:
+            A list of Place data objects.
+        """
+        query = PlaceModel.query
+
+        if visibility is not None:
+            query = query.filter(PlaceModel.visibility == visibility)
+        if owner_id is not None:
+            query = query.filter(PlaceModel.owner_id == owner_id)
+        if q:
+            query = query.filter(PlaceModel.name.ilike(f"%{q}%"))
+
+        # Pagination
+        if limit is not None and limit > 0:
+            offset = (page - 1) * limit
+            query = query.limit(limit).offset(offset)
+
+        place_models = query.all()
+        return [self._to_dataobject(pm) for pm in place_models]
+
     def _to_dataobject(self, model: PlaceModel) -> Place:
         """Helper to convert PlaceModel (ORM) to Place (DataObject)."""
         return Place(

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, g
 from services.tour_service import TourService
 from middleware.auth_middleware import require_auth, require_owner
+from exceptions import ValidationException
 
 
 tour_bp = Blueprint("tours", __name__, url_prefix="/api/tours")
@@ -10,8 +11,21 @@ tour_service = TourService()
 @tour_bp.route("", methods=["GET"])
 @require_auth
 def get_tours():
-    """Retrieve all tours owned by the authenticated user."""
-    tours = tour_service.get_tours_by_owner(g.current_user.id)
+    """Retrieve all tours owned by the authenticated user with optional search/pagination."""
+    q = request.args.get("q")
+    try:
+        page = int(request.args.get("page", 1))
+        limit_val = request.args.get("limit")
+        limit = int(limit_val) if limit_val is not None else None
+    except ValueError:
+        raise ValidationException("Invalid page or limit parameter")
+
+    tours = tour_service.get_tours(
+        owner_id=g.current_user.id,
+        q=q,
+        page=page,
+        limit=limit
+    )
     return (
         jsonify({"status": "success", "data": {"tours": [t.to_dict() for t in tours]}}),
         200,
@@ -125,8 +139,16 @@ def share_tour(tour_id):
 
 @tour_bp.route("/public", methods=["GET"])
 def get_public_tours():
-    """Retrieve all public tours. No authentication required."""
-    tours = tour_service.get_public_tours()
+    """Retrieve all public tours with optional search and pagination."""
+    q = request.args.get("q")
+    try:
+        page = int(request.args.get("page", 1))
+        limit_val = request.args.get("limit")
+        limit = int(limit_val) if limit_val is not None else None
+    except ValueError:
+        raise ValidationException("Invalid page or limit parameter")
+
+    tours = tour_service.get_public_tours(q=q, page=page, limit=limit)
     return (
         jsonify({"status": "success", "data": {"tours": [t.to_dict() for t in tours]}}),
         200,
@@ -138,3 +160,20 @@ def get_shared_tour(share_token):
     """Retrieve a public tour by share token. No authentication required."""
     tour = tour_service.get_shared_tour(share_token)
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
+
+
+@tour_bp.route("/<int:tour_id>/recalculate", methods=["POST"])
+@require_auth
+@require_owner("tour")
+def recalculate_tour(tour_id):
+    """Recalculate distance and place order of a tour after place modifications."""
+    tour = tour_service.recalculate_tour(tour_id, g.current_user.id)
+    return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
+
+
+@tour_bp.route("/<int:tour_id>/duplicate", methods=["POST"])
+@require_auth
+def duplicate_tour(tour_id):
+    """Duplicate a public or owned tour into the current user's space."""
+    tour = tour_service.duplicate_tour(tour_id, g.current_user.id)
+    return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 201

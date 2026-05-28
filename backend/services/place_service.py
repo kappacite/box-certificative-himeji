@@ -55,6 +55,35 @@ class PlaceService:
         """
         return self.place_dao.get_by_owner(owner_id)
 
+    def get_places(
+        self,
+        owner_id: Optional[int] = None,
+        visibility: Optional[str] = None,
+        q: Optional[str] = None,
+        page: int = 1,
+        limit: Optional[int] = None,
+    ) -> List[Place]:
+        """Retrieve places with optional visibility filter, search query, and pagination.
+
+        Args:
+            owner_id: Optional owner user ID filter.
+            visibility: Optional visibility filter.
+            q: Optional search query.
+            page: Page number for pagination.
+            limit: Maximum number of places to retrieve.
+
+        Returns:
+            A list of Place data objects.
+        """
+        if visibility == "public":
+            return self.place_dao.query_places(
+                visibility="public", q=q, page=page, limit=limit
+            )
+        else:
+            return self.place_dao.query_places(
+                owner_id=owner_id, visibility=visibility, q=q, page=page, limit=limit
+            )
+
     def get_place_by_id(self, place_id: int, owner_id: int) -> Place:
         """Retrieve a specific place by ID, verifying ownership.
 

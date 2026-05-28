@@ -148,7 +148,13 @@ class PlaceService:
         Raises:
             ValidationException: If Nominatim cannot resolve the place.
         """
-        headers = {"User-Agent": "TravelPlannerApp/1.0 (robyn@example.com)"}
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        }
         params = {"q": name, "format": "json", "limit": 1}
         try:
             response = requests.get(

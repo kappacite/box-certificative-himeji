@@ -80,9 +80,14 @@ class AuthService:
             raise UnauthorizedException("Invalid email or password")
 
         # Verify password
-        if not bcrypt.checkpw(
-            password.encode("utf-8"), user.password_hash.encode("utf-8")
-        ):
+        try:
+            is_correct = bcrypt.checkpw(
+                password.encode("utf-8"), user.password_hash.encode("utf-8")
+            )
+        except ValueError:
+            is_correct = False
+
+        if not is_correct:
             raise UnauthorizedException("Invalid email or password")
 
         token = self.generate_token(user.id)

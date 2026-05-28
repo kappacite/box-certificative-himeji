@@ -24,8 +24,9 @@ def create_tour():
     data = request.get_json(silent=True) or {}
     name = data.get("name")
     place_ids = data.get("place_ids", [])
+    visibility = data.get("visibility", "private")
 
-    tour = tour_service.create_tour(name, place_ids, g.current_user.id)
+    tour = tour_service.create_tour(name, place_ids, g.current_user.id, visibility)
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 201
 
 
@@ -57,6 +58,16 @@ def share_tour(tour_id):
 
     tour = tour_service.update_share_visibility(tour_id, visibility, g.current_user.id)
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
+
+
+@tour_bp.route("/public", methods=["GET"])
+def get_public_tours():
+    """Retrieve all public tours. No authentication required."""
+    tours = tour_service.get_public_tours()
+    return (
+        jsonify({"status": "success", "data": {"tours": [t.to_dict() for t in tours]}}),
+        200,
+    )
 
 
 @tour_bp.route("/shared/<string:share_token>", methods=["GET"])

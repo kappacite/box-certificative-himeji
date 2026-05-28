@@ -7,6 +7,7 @@
       :value="modelValue"
       :placeholder="placeholder"
       :required="required"
+      :disabled="disabled"
       class="form-input"
       @input="$emit('update:modelValue', $event.target.value)"
     />
@@ -36,6 +37,10 @@ defineProps({
     default: ''
   },
   required: {
+    type: Boolean,
+    default: false
+  },
+  disabled: {
     type: Boolean,
     default: false
   }

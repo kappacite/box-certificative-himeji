@@ -235,8 +235,12 @@ def seed():
             db.session.commit()
             print("Default User 'admin' (ID: 1) created successfully.")
         else:
-            print("User with ID 1 exists. Updating password hash to ensure valid bcrypt format...")
-            owner.password_hash = "$2b$12$a/f1mi8CW1xqCK2PEYvIcO7URvoGxcvBTW9gqa3Y7m1C.bRvXeVa."
+            print(
+                "User with ID 1 exists. Updating password hash to ensure valid bcrypt format..."
+            )
+            owner.password_hash = (
+                "$2b$12$a/f1mi8CW1xqCK2PEYvIcO7URvoGxcvBTW9gqa3Y7m1C.bRvXeVa."
+            )
             db.session.commit()
 
         # 2. Add places

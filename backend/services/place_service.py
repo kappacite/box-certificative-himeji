@@ -8,6 +8,34 @@ from exceptions import NotFoundException, ForbiddenException, ValidationExceptio
 class PlaceService:
     """Business logic service for managing Places and calling external Geocoding API."""
 
+    @staticmethod
+    def parse_coordinate(value, coord_name: str) -> Optional[float]:
+        """Safely parse a coordinate to float and validate its valid geographical range.
+
+        Args:
+            value: The raw coordinate input.
+            coord_name: Either 'latitude' or 'longitude'.
+
+        Returns:
+            The float value, or None if empty.
+
+        Raises:
+            ValidationException: If parsing fails or coordinate is out of bounds.
+        """
+        if value is None or value == "":
+            return None
+        try:
+            val = float(value)
+        except (ValueError, TypeError):
+            raise ValidationException(f"Invalid {coord_name} format. Must be a number.")
+
+        if coord_name == "latitude" and not (-90.0 <= val <= 90.0):
+            raise ValidationException("Latitude must be between -90 and 90 degrees.")
+        if coord_name == "longitude" and not (-180.0 <= val <= 180.0):
+            raise ValidationException("Longitude must be between -180 and 180 degrees.")
+
+        return val
+
     def __init__(self, place_dao: PlaceDAO = None):
         self.place_dao = place_dao or PlaceDAO()
         self.geocoding_url = "https://nominatim.openstreetmap.org/search"

@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify, g
 from services.tour_service import TourService
 from middleware.auth_middleware import require_auth, require_owner
 
+from exceptions.app_exceptions import ValidationException
+
 tour_bp = Blueprint("tours", __name__, url_prefix="/api/tours")
 tour_service = TourService()
 
@@ -48,6 +50,35 @@ def delete_tour(tour_id):
     return "", 204
 
 
+@tour_bp.route("/<int:tour_id>", methods=["PATCH"])
+@require_auth
+@require_owner("tour")
+def patch_tour(tour_id):
+    """Change attribute(s) for a tour."""
+    data = request.get_json(silent=True) or {}
+
+    visibility = data.get("visibility")
+    places = data.get("places")
+    name = data.get("name")
+
+    if 'name' in data:
+        if not (name and name.strip()):
+            raise ValidationException("Name cannot be empty.")
+
+    if 'visibility' in data:
+        if visibility not in ["private", "public"]:
+            raise ValidationException("Invalid visibility value.")
+
+    tour = tour_service.patch_tour(
+        tour_id=tour_id,
+        visibility=visibility,
+        places=places,
+        name=name,
+        owner_id=g.current_user.id
+    )
+    return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
+
+
 @tour_bp.route("/<int:tour_id>/share", methods=["PATCH"])
 @require_auth
 @require_owner("tour")
@@ -56,7 +87,22 @@ def share_tour(tour_id):
     data = request.get_json(silent=True) or {}
     visibility = data.get("visibility")
 
-    tour = tour_service.update_share_visibility(tour_id, visibility, g.current_user.id)
+    tour = tour_service.get_tour_by_id(tour_id, g.current_user.id)
+
+    if visibility is None:
+        new_visibility = "private" if tour.visibility == "public" else "public"
+    else:
+        if visibility not in ["private", "public"]:
+            raise ValidationException("Visibility must be either 'private' or 'public'")
+        new_visibility = visibility
+
+    tour = tour_service.patch_tour(
+        tour_id=tour_id,
+        visibility=new_visibility,
+        places=None,
+        name=None,
+        owner_id=g.current_user.id
+    )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 
 

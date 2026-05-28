@@ -168,6 +168,27 @@ class PlaceService:
         """
         return self.place_dao.get_public()
 
+    def get_public_place_by_id(self, place_id: int) -> Place:
+        """Retrieve a specific place by ID, verifying ownership.
+
+        Args:
+            place_id: The ID of the place.
+            owner_id: The ID of the current user.
+
+        Returns:
+            The Place data object.
+
+        Raises:
+            NotFoundException: If the place does not exist.
+            ForbiddenException: If the place does not belong to the user.
+        """
+        place = self.place_dao.get_by_id(place_id)
+        if not place:
+            raise NotFoundException("Place not found")
+        if place.visibility != "public":
+            raise ForbiddenException("You do not have access to this place")
+        return place
+
     def geocode_place_name(self, name: str) -> Tuple[float, float]:
         """Call OpenStreetMap Nominatim API to resolve a name to coordinates.
 

@@ -229,7 +229,7 @@ def seed():
                 id=1,
                 username="admin",
                 email="admin@example.com",
-                password_hash="pbkdf2:sha256:default_hashed_pwd",  # dummy hash
+                password_hash="$2b$12$a/f1mi8CW1xqCK2PEYvIcO7URvoGxcvBTW9gqa3Y7m1C.bRvXeVa.",
             )
             db.session.add(owner)
             db.session.commit()

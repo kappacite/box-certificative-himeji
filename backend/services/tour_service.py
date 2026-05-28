@@ -137,7 +137,7 @@ class TourService:
         self,
         tour_id: int,
         visibility: Optional[str],
-        places_id: List[int],
+        places_id: Optional[List[int]],
         name: Optional[str],
         owner_id: int,
     ) -> Tour:
@@ -145,9 +145,9 @@ class TourService:
 
         Args:
             tour_id: The ID of the tour.
-            visibility: Either 'private' or 'public', or None to toggle.
-            places: New list of places
-            name: New tour name
+            visibility: Either 'private' or 'public', or None to toggle/keep.
+            places_id: New list of place IDs, or None to keep.
+            name: New tour name, or None to keep.
             owner_id: The ID of the current user.
 
         Returns:
@@ -155,26 +155,35 @@ class TourService:
         """
         tour = self.get_tour_by_id(tour_id, owner_id)
 
-        if 'name' is not None:
-            if not (name and name.strip()):
+        if name is not None:
+            if not name.strip():
                 raise ValidationException("Name cannot be empty.")
-            tour.name = name
+            tour.name = name.strip()
 
-        if 'visibility' is not None:
+        if visibility is not None:
             if visibility not in ["private", "public"]:
                 raise ValidationException("Invalid visibility value.")
             tour.visibility = visibility
 
-        places = []
-        for pid in places_id:
-            place = self.place_dao.get_by_id(pid)
-            if not place:
-                raise ValidationException(f"Place with ID {pid} does not exist")
-            if place.owner_id != owner_id and place.visibility != "public":
-                raise ForbiddenException(
-                    f"You do not own the place with ID {pid} and it is not public"
+        if places_id is not None:
+            if len(places_id) < 2:
+                raise ValidationException(
+                    "At least 2 places are required to generate a tour"
                 )
-            places.append(place)
+            places = []
+            for pid in places_id:
+                place = self.place_dao.get_by_id(pid)
+                if not place:
+                    raise ValidationException(f"Place with ID {pid} does not exist")
+                if place.owner_id != owner_id and place.visibility != "public":
+                    raise ForbiddenException(
+                        f"You do not own the place with ID {pid} and it is not public"
+                    )
+                places.append(place)
+
+            optimized_places = optimize(places)
+            tour.places = optimized_places
+            tour.total_distance = self.calculate_tour_distance(optimized_places)
 
         return self.tour_dao.update(tour)
 

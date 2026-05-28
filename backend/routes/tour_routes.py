@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify, g
 from services.tour_service import TourService
 from middleware.auth_middleware import require_auth, require_owner
 
-from exceptions.app_exceptions import ValidationException
 
 tour_bp = Blueprint("tours", __name__, url_prefix="/api/tours")
 tour_service = TourService()
@@ -58,36 +57,36 @@ def patch_tour(tour_id):
     data = request.get_json(silent=True) or {}
 
     visibility = data.get("visibility")
-    places = data.get("places")
+    places_id = data.get("places_id") or data.get("place_ids") or data.get("places")
     name = data.get("name")
 
     tour = tour_service.patch_tour(
         tour_id=tour_id,
         visibility=visibility,
-        places=places,
+        places_id=places_id,
         name=name,
         owner_id=g.current_user.id
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 
 
-@tour_bp.route("/<int:tour_id>", methods=["PATCH"])
+@tour_bp.route("/<int:tour_id>/share", methods=["PATCH"])
 @require_auth
 @require_owner("tour")
 def share_tour(tour_id):
-    """Change data for a tour."""
+    """Change visibility of a tour, supporting toggling if not specified."""
     data = request.get_json(silent=True) or {}
     visibility = data.get("visibility")
-    name = data.get("name")
-    places = data.get("places")
 
     tour = tour_service.get_tour_by_id(tour_id, g.current_user.id)
+    if visibility is None:
+        visibility = "public" if tour.visibility == "private" else "private"
 
     tour = tour_service.patch_tour(
         tour_id=tour_id,
         visibility=visibility,
-        places=places,
-        name=name,
+        places_id=None,
+        name=None,
         owner_id=g.current_user.id
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200

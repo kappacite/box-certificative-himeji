@@ -20,7 +20,7 @@ class MockResponse:
 def mock_geocoding(monkeypatch):
     """Fixture to mock geocoding API calls during place creation."""
 
-    def mock_get(url, *args, **kwargs):
+    def mock_get(self, url, *args, **kwargs):
         # Check if we are querying Nominatim
         if "nominatim" in url:
             query = kwargs.get("params", {}).get("q", "")
@@ -32,7 +32,7 @@ def mock_geocoding(monkeypatch):
                 return MockResponse([])  # No results found
         return MockResponse([], 404)
 
-    monkeypatch.setattr("requests.get", mock_get)
+    monkeypatch.setattr("requests.Session.get", mock_get)
 
 
 @pytest.fixture

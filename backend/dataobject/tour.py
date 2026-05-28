@@ -21,11 +21,15 @@ class Tour:
         Returns:
             A dictionary representation of the Tour.
         """
+        places_dict = [p.to_dict() for p in self.places]
+        if self.places:
+            places_dict.append(self.places[0].to_dict())
+
         return {
             "id": self.id,
             "name": self.name,
             "owner_id": self.owner_id,
-            "places": [p.to_dict() for p in self.places],
+            "places": places_dict,
             "total_distance": self.total_distance,
             "visibility": self.visibility,
             "share_token": self.share_token,
@@ -43,6 +47,12 @@ class Tour:
         """
         raw_places = data.get("places", [])
         places = [Place.from_dict(p) if isinstance(p, dict) else p for p in raw_places]
+        if len(places) > 1 and (
+            (places[0].id is not None and places[0].id == places[-1].id)
+            or (places[0] == places[-1])
+        ):
+            places = places[:-1]
+
         return cls(
             name=data.get("name"),
             owner_id=data.get("owner_id"),

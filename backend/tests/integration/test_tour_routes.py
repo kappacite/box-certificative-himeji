@@ -17,15 +17,16 @@ class MockResponse:
 def mock_geocoding(monkeypatch):
     """Fixture to mock geocoding for place generation."""
 
-    def mock_get(url, *args, **kwargs):
-        query = kwargs.get("params", {}).get("q", "")
-        if "Paris" in query:
-            return MockResponse([{"lat": "48.8566", "lon": "2.3522"}])
-        elif "Lyon" in query:
-            return MockResponse([{"lat": "45.7640", "lon": "4.8357"}])
+    def mock_get(self, url, *args, **kwargs):
+        if "nominatim" in url or "search" in url:
+            query = kwargs.get("params", {}).get("q", "")
+            if "Paris" in query:
+                return MockResponse([{"lat": "48.8566", "lon": "2.3522"}])
+            elif "Lyon" in query:
+                return MockResponse([{"lat": "45.7640", "lon": "4.8357"}])
         return MockResponse([])
 
-    monkeypatch.setattr("requests.get", mock_get)
+    monkeypatch.setattr("requests.Session.get", mock_get)
 
 
 @pytest.fixture
@@ -71,7 +72,8 @@ def test_create_and_share_tour(client, auth_headers, mock_geocoding):
     assert tour_data["name"] == "French Tour"
     assert tour_data["visibility"] == "private"
     assert tour_data["total_distance"] > 0.0
-    assert len(tour_data["places"]) == 2
+    assert len(tour_data["places"]) == 3
+    assert tour_data["places"][0]["id"] == tour_data["places"][-1]["id"]
 
     tour_id = tour_data["id"]
     share_token = tour_data["share_token"]

@@ -8,10 +8,12 @@
 
       <form @submit.prevent="handleSubmit" class="auth-form">
         <BaseInput
-          id="username"
-          v-model="username"
-          label="Username"
-          placeholder="e.g. HimejiTraveler"
+          id="email"
+          v-model="email"
+          type="email"
+          label="Email Address"
+          placeholder="e.g. traveler@example.com"
+          :disabled="loading"
           required
         />
 
@@ -21,18 +23,19 @@
           type="password"
           label="Password"
           placeholder="••••••••"
+          :disabled="loading"
           required
         />
 
         <div class="test-user-info">
-          ⚙️ <strong>Demo Mode</strong>: The test credentials above are pre-filled for a quick trial.
+          ⚙️ <strong>Production Mode</strong>: Connect using your registered account credentials.
         </div>
 
         <div v-if="error" class="error-message">
-          {{ error }}
+          {{ getFriendlyErrorMessage(error.code) }}
         </div>
 
-        <BaseButton type="submit" :loading="isLoading">
+        <BaseButton type="submit" :loading="loading">
           Log in
         </BaseButton>
       </form>
@@ -49,39 +52,31 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuth } from '@/composables/useAuth'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseInput from '@/components/BaseInput.vue'
 import BaseButton from '@/components/BaseButton.vue'
 
-const router = useRouter()
-const authStore = useAuthStore()
+const { loading, error, loginUser } = useAuth()
 
-const username = ref('Test Traveler')
-const password = ref('password123')
-const error = ref('')
-const isLoading = ref(false)
+const email = ref('')
+const password = ref('')
 
 const handleSubmit = async () => {
-  if (!username.value || !password.value) {
-    error.value = 'Please fill in all fields.'
-    return
-  }
+  await loginUser({
+    email: email.value,
+    password: password.value
+  })
+}
 
-  isLoading.value = true
-  error.value = ''
-
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    authStore.login(username.value, password.value)
-    router.push({ name: 'dashboard' })
-  } catch (err) {
-    error.value = 'Invalid credentials.'
-  } finally {
-    isLoading.value = false
+const getFriendlyErrorMessage = (code) => {
+  const errorMessages = {
+    'UNAUTHORIZED': 'Invalid email or password. Please verify your credentials.',
+    'VALIDATION_ERROR': 'Please ensure all fields are correctly formatted.',
+    'INVALID_AUTH_RESPONSE': 'The server response is incomplete. Please try again later.',
+    'UNKNOWN_ERROR': 'Unable to connect to the server. Please check your network connection.'
   }
+  return errorMessages[code] || errorMessages['UNKNOWN_ERROR']
 }
 </script>
 

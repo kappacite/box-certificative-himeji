@@ -1,8 +1,3 @@
-/* =========================================================================
-   FUTURES FONCTIONS D'AUTHENTIFICATION
-   Basées sur la documentation de l'API (Endpoints /api/auth/*)
-   =========================================================================
-
 import client from './client'
 
 export const authApi = {
@@ -22,4 +17,3 @@ export const authApi = {
   // Aucun corps de requête, nécessite le header d'Auth[cite: 4]
   logout: () => client.post('/api/auth/logout')
 }
-*/

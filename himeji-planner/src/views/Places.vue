@@ -6,56 +6,18 @@
     </header>
 
     <div class="places-grid">
-      <!-- Place 1 -->
-      <BaseCard hoverable class="place-card">
-        <div class="place-image castle-img">
-          <span class="place-tag">Must-See</span>
-        </div>
-        <div class="place-content">
-          <h3>Himeji Castle (Himeji-jo)</h3>
-          <p>Nicknamed the "White Heron Castle" due to its brilliant white exterior walls. It is one of Japan's twelve original surviving castles and is recognized as a registered UNESCO World Heritage site.</p>
-          <div class="place-meta">
-            <span class="meta-item">⏱️ Visit: 2-3h</span>
-            <span class="meta-item">⭐ 4.9/5</span>
-          </div>
-        </div>
-      </BaseCard>
-
-      <!-- Place 2 -->
-      <BaseCard hoverable class="place-card">
-        <div class="place-image garden-img">
-          <span class="place-tag">Nature</span>
-        </div>
-        <div class="place-content">
-          <h3>Koko-en Garden</h3>
-          <p>A compact complex of nine beautiful traditional Japanese gardens adjoining the castle grounds. Recreating authentic Edo-period landscape styles, they feature gorgeous waterfalls and tea ceremony houses.</p>
-          <div class="place-meta">
-            <span class="meta-item">⏱️ Visit: 1-2h</span>
-            <span class="meta-item">⭐ 4.7/5</span>
-          </div>
-        </div>
-      </BaseCard>
-
-      <!-- Place 3 -->
-      <BaseCard hoverable class="place-card">
-        <div class="place-image temple-img">
-          <span class="place-tag">Culture</span>
-        </div>
-        <div class="place-content">
-          <h3>Mount Shosha & Engyo-ji Temple</h3>
-          <p>Located atop Mount Shosha, this sprawling Buddhist temple complex founded over 1,000 years ago offers a spiritual and peaceful atmosphere, made famous internationally as a filming location for "The Last Samurai".</p>
-          <div class="place-meta">
-            <span class="meta-item">⏱️ Visit: Half day</span>
-            <span class="meta-item">⭐ 4.8/5</span>
-          </div>
-        </div>
-      </BaseCard>
+      <PlaceCard v-for="place in placesList" :key="place.id" :name="place.name.split(', ')[0]" :latitude="place.latitude" :longitude="place.longitude" :city="place.name.split(', ')[1]"/>
     </div>
   </div>
 </template>
 
 <script setup>
 import BaseCard from '@/components/BaseCard.vue'
+import PlaceCard from '@/components/places/PlaceCard.vue';
+import { usePlacesStore } from '@/stores/placesStore';
+
+const placesStore = usePlacesStore()
+const placesList = placesStore.places
 </script>
 
 <style scoped>
@@ -84,11 +46,10 @@ import BaseCard from '@/components/BaseCard.vue'
 .places-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2.5rem;
+  gap: 1.5rem;
 }
 
 .place-card {
-  padding: 0 !important;
   overflow: hidden;
   gap: 0 !important;
 }

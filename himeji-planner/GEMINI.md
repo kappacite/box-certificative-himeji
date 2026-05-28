@@ -18,7 +18,7 @@ frontend/
 ├── index.html
 ├── vite.config.js
 ├── package.json
-├── .env                        # VITE_API_BASE_URL=http://localhost:5000/api
+├── .env                        # VITE_API_BASE_URL=http://localhost:5173/api
 ├── .env.example
 │
 └── src/
@@ -399,10 +399,10 @@ Keep `<template>` free of business logic. Extract conditions to `computed` prope
 
 ```
 # .env
-VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_BASE_URL=http://localhost:5173/api
 
 # .env.example  (committed to git)
-VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_BASE_URL=http://localhost:5173/api
 ```
 
 - Prefix all custom variables with `VITE_` for Vite to expose them to the client bundle.

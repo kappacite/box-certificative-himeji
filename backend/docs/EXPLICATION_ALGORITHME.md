@@ -55,8 +55,21 @@ Cette contrainte est assurée de la manière suivante dans le code :
   # On ajoute le retour obligatoire vers le point initial (tour[0])
   total += haversine(tour[-1], tour[0])
   ```
+* **Représentation JSON (API)** : Lors de la sérialisation de l'itinéraire via `Tour.to_dict()`, le point de départ (le premier élément de la liste) est dynamiquement dupliqué et ajouté à la fin du tableau `places`. Une tournée de $N$ lieux uniques retournera donc une liste de $N + 1$ étapes, où le premier et le dernier élément sont identiques (par exemple `[A, B, C, A]`). Lors de la désérialisation via `Tour.from_dict()`, le point de fin dupliqué est automatiquement retiré pour garder la liste interne propre.
 * **Moteur de routage OR-Tools** : Le manager d'index d'OR-Tools est instancié avec un dépôt (`0`), ce qui contraint intrinsèquement le solveur à ramener le véhicule à son point d'origine à la fin de sa tournée.
 * **Held-Karp (Programmation dynamique)** : La fonction récursive évalue les sous-trajets et ajoute le retour à la ville d'origine (la ville `0`) comme condition de terminaison lors du parcours complet.
+
+---
+
+## 1.6. Gestion des Étapes Verrouillées (Locked Steps)
+
+L'API permet de verrouiller certains lieux à des positions d'index fixes de l'itinéraire (par exemple, exiger que le lieu d'ID 48 reste exactement à la 48ème étape). 
+
+Pour éviter les freezes de recherche locale (timeouts ou boucles infinies de recherche sous contrainte forte de dimension sur de grands réseaux comme 200 lieux), nous employons une stratégie robuste d'**optimisation par sous-tours et insertion** :
+1. **Extraction** : Nous filtrons tous les lieux ayant des contraintes de verrouillage et nous les retirons de la liste principale.
+2. **Optimisation du sous-tour** : Nous faisons tourner OR-Tools pour ordonner de façon optimale uniquement les lieux restants non verrouillés (ce qui s'exécute en moins d'une seconde pour 200 lieux).
+3. **Reconstruction & Insertion** : Nous réinsérons les lieux verrouillés précisément à leurs index cibles respectifs dans la liste finale.
+4. **Sécurité temporelle** : Une limite de temps absolue de **3 secondes** est paramétrée dans OR-Tools pour s'assurer que le calcul de l'itinéraire ne bloque jamais le fil d'exécution de l'API.
 
 ---
 

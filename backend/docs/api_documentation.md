@@ -355,18 +355,31 @@ Affiche tous les itinéraires de la plateforme configurés avec une visibilité 
 ### 🧩 Générer et créer un itinéraire optimisé **[Auth Requise]**
 Prend une liste d'IDs de lieux (qui doivent appartenir à l'utilisateur, ou être publics), calcule l'ordre optimal pour parcourir ces points (problème TSP résolu par Google OR-Tools) et enregistre l'itinéraire résultant en circuit fermé (retour au point de départ).
 
+L'API supporte le **verrouillage de certaines étapes** (lieux) à des positions fixes de l'itinéraire.
+
 * **Méthode** : `POST`
 * **URL** : `/api/tours`
 * **Corps de la requête (JSON)** :
   ```json
   {
     "name": "Mon Circuit Opti",
-    "place_ids": [1, 201, 202],
-    "visibility": "public"       // Optionnel ("private" ou "public", défaut: "private")
+    "place_ids": [
+      1,
+      {"id": 201, "locked": true}, // Reste à sa position d'entrée (index 1)
+      {"id": 202, "position": 0}   // Reste à l'index 0 (départ de la boucle)
+    ],
+    // Optionnel : dictionnaire de verrous (ID lieu -> Position cible)
+    "locked_positions": {
+      "202": 0
+    },
+    // Optionnel : liste des IDs des lieux à figer à leur index d'entrée
+    "locked_places": [201],
+    "visibility": "public" // Optionnel ("private" ou "public", défaut: "private")
   }
   ```
 * **Codes HTTP de réponse** :
   * **`201 Created`** : Itinéraire généré et persisté avec succès.
+    * *Note sur la boucle fermée* : Le tableau `places` renvoyé comporte $N + 1$ éléments. Le premier et le dernier élément sont identiques (par exemple `[A, B, C, A]`) afin de matérialiser le retour au point de départ.
     ```json
     {
       "status": "success",
@@ -376,9 +389,10 @@ Prend une liste d'IDs de lieux (qui doivent appartenir à l'utilisateur, ou êtr
           "name": "Mon Circuit Opti",
           "owner_id": 2,
           "places": [
-            { "id": 1, "name": "Tour Eiffel, Paris", ... },
-            { "id": 202, "name": "Lyon", ... },
-            { "id": 201, "name": "Mon Lieu Privé", ... }
+            { "id": 202, "name": "Lyon", "locked": true, ... },
+            { "id": 201, "name": "Mon Lieu Privé", "locked": true, ... },
+            { "id": 1, "name": "Tour Eiffel, Paris", "locked": false, ... },
+            { "id": 202, "name": "Lyon", "locked": true, ... }
           ],
           "total_distance": 783.52,
           "visibility": "public",
@@ -403,6 +417,31 @@ Prend une liste d'IDs de lieux (qui doivent appartenir à l'utilisateur, ou êtr
       "code": "FORBIDDEN"
     }
     ```
+
+---
+
+### ✏️ Modifier un itinéraire **[Auth Requise / Propriétaire uniquement]**
+Permet de modifier les informations d'un itinéraire (nom, visibilité, liste de lieux et contraintes de verrous). Si la liste des lieux ou les verrous sont modifiés, l'itinéraire est ré-optimisé. Si aucun verrou n'est spécifié, les verrous existants encore présents dans la liste de lieux sont conservés par défaut.
+
+* **Méthode** : `PATCH`
+* **URL** : `/api/tours/<int:tour_id>`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "name": "Mon Nouveau Nom",                   // Optionnel
+    "visibility": "private",                      // Optionnel ("private" ou "public")
+    "place_ids": [1, 201, 202, 203],              // Optionnel (nouvelle liste de lieux)
+    "locked_positions": {                         // Optionnel (nouveau dictionnaire de verrous)
+      "203": 0
+    },
+    "locked_places": [201]                        // Optionnel (nouvelle liste de verrous d'origine)
+  }
+  ```
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Modification appliquée et tournée recalculée si nécessaire.
+  * **`400 Bad Request`** : Données invalides.
+  * **`403 Forbidden`** : L'utilisateur n'est pas le propriétaire de cet itinéraire.
+  * **`404 Not Found`** : L'itinéraire n'existe pas.
 
 ---
 

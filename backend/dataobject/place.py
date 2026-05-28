@@ -10,6 +10,7 @@ class Place:
     latitude: float
     longitude: float
     owner_id: int
+    visibility: str = "private"  # "private" or "public"
     id: Optional[int] = None
 
     def to_dict(self) -> dict:
@@ -35,5 +36,6 @@ class Place:
             latitude=float(data.get("latitude")),
             longitude=float(data.get("longitude")),
             owner_id=data.get("owner_id"),
+            visibility=data.get("visibility", "private"),
             id=data.get("id"),
         )

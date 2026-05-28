@@ -16,8 +16,15 @@ import BaseCard from '@/components/BaseCard.vue'
 import PlaceCard from '@/components/places/PlaceCard.vue';
 import { usePlacesStore } from '@/stores/placesStore';
 
-const placesStore = usePlacesStore()
-const placesList = placesStore.places
+const placesList = ref()
+async function placesFunction() {
+  const placesReq = await placesApi.getPublicPlaces()
+  placesList.value = placesReq.data.data.places
+}
+
+onMounted(async () => {
+        await placesFunction();
+  })
 </script>
 
 <style scoped>

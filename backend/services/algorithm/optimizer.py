@@ -23,37 +23,38 @@ def optimize(places: List[Place]) -> List[Place]:
 
     num_places = len(places)
 
-    # 1. Create the routing index manager:
+    # 1. Precompute the distance matrix in meters (integer values)
+    # This avoids crossing the Python-C++ language boundary inside the solver loop.
+    dist_matrix = [
+        [int(haversine(places[i], places[j]) * 1000) for j in range(num_places)]
+        for i in range(num_places)
+    ]
+
+    # 2. Create the routing index manager:
     # (num_nodes, num_vehicles, start_node, end_node)
     manager = pywrapcp.RoutingIndexManager(num_places, 1, 0)
 
-    # 2. Create Routing Model.
+    # 3. Create Routing Model.
     routing = pywrapcp.RoutingModel(manager)
 
-    # 3. Create and register a transit callback.
-    # Distances in OR-Tools must be integers. We scale to meters (dist * 1000) to keep precision.
-    def distance_callback(from_index: int, to_index: int) -> int:
-        """Returns the scaled distance between two nodes."""
-        from_node = manager.IndexToNode(from_index)
-        to_node = manager.IndexToNode(to_index)
-        dist_km = haversine(places[from_node], places[to_node])
-        return int(dist_km * 1000)
+    # 4. Register transit matrix directly.
+    transit_callback_index = routing.RegisterTransitMatrix(dist_matrix)
 
-    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
-
-    # 4. Define cost of each arc.
+    # 5. Define cost of each arc.
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
-    # 5. Setting first solution heuristic.
+    # 6. Setting first solution heuristic.
+    # Christofides strategy is highly efficient for metric TSP and is faster
+    # and more precise than PATH_CHEAPEST_ARC on geometric instances.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+        routing_enums_pb2.FirstSolutionStrategy.CHRISTOFIDES
     )
 
-    # 6. Solve the problem.
+    # 7. Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
 
-    # 7. Extract the route.
+    # 8. Extract the route.
     if solution:
         index = routing.Start(0)
         route = []

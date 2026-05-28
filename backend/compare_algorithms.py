@@ -61,17 +61,12 @@ def ortools_optimize_bench(places: List[Place]) -> List[Place]:
         for i in range(num_places)
     ]
 
-    def distance_callback(from_index: int, to_index: int) -> int:
-        return dist_matrix[manager.IndexToNode(from_index)][
-            manager.IndexToNode(to_index)
-        ]
-
-    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
+    transit_callback_index = routing.RegisterTransitMatrix(dist_matrix)
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+        routing_enums_pb2.FirstSolutionStrategy.CHRISTOFIDES
     )
 
     solution = routing.SolveWithParameters(search_parameters)

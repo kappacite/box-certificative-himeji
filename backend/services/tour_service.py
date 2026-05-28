@@ -251,6 +251,98 @@ class TourService:
             id=None,
         )
 
+    def optimize_places(
+        self,
+        place_ids: List[int],
+        owner_id: int,
+        locked_positions: dict = None,
+        locked_places: list = None,
+    ) -> dict:
+        """Optimize place sequence according to coordinates and locked constraints.
+
+        Args:
+            place_ids: A list of place IDs (or dicts) to include.
+            owner_id: The ID of the owner user.
+            locked_positions: Dict mapping place_id (as str) to target position.
+            locked_places: List of place_ids to lock at their input positions.
+
+        Returns:
+            A dictionary containing:
+                - places: A list of dict representations of optimized Places.
+                - total_distance: The total distance of the closed loop.
+
+        Raises:
+            ValidationException: If validation fails or too few places are provided.
+            ForbiddenException: If the user doesn't own all specified places.
+        """
+        if not place_ids or len(place_ids) < 2:
+            raise ValidationException(
+                "At least 2 places are required to generate a tour"
+            )
+
+        # Parse place_ids and locks
+        parsed_place_ids = []
+        locked_map = {}  # place_id -> position
+
+        for index, item in enumerate(place_ids):
+            if isinstance(item, dict):
+                pid = item.get("id")
+                if pid is not None:
+                    parsed_place_ids.append(pid)
+                    if item.get("locked") or item.get("position") is not None:
+                        locked_map[pid] = item.get("position", index)
+            else:
+                try:
+                    parsed_place_ids.append(int(item))
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid place ID format")
+
+        # Merge separately passed locked_positions
+        if locked_positions:
+            for pid_str, pos in locked_positions.items():
+                try:
+                    pid = int(pid_str)
+                    locked_map[pid] = int(pos)
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid locked_positions format")
+
+        # Merge separately passed locked_places
+        if locked_places:
+            for pid in locked_places:
+                try:
+                    pid = int(pid)
+                    if pid in parsed_place_ids:
+                        locked_map[pid] = parsed_place_ids.index(pid)
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid locked_places format")
+
+        # Retrieve and validate all places belong to the owner or are public
+        places = []
+        for pid in parsed_place_ids:
+            place = self.place_dao.get_by_id(pid)
+            if not place:
+                raise ValidationException(f"Place with ID {pid} does not exist")
+            if place.owner_id != owner_id and place.visibility != "public":
+                raise ForbiddenException(
+                    f"You do not own the place with ID {pid} and it is not public"
+                )
+            places.append(place)
+
+        # Optimize the place ordering respecting locks
+        optimized_places = optimize(places, locked_map)
+
+        # Apply locked property on returned place objects
+        for place in optimized_places:
+            place.locked = (place.id in locked_map)
+
+        # Calculate total distance (closed loop)
+        total_dist = self.calculate_tour_distance(optimized_places)
+
+        return {
+            "places": [p.to_dict() for p in optimized_places],
+            "total_distance": total_dist,
+        }
+
     def get_public_tours(
         self,
         q: Optional[str] = None,

@@ -418,3 +418,48 @@ def test_tours_search_and_pagination(client, auth_headers, mock_geocoding):
     assert res_pub.status_code == 200
     tours_pub = res_pub.get_json()["data"]["tours"]
     assert len(tours_pub) == 1
+
+
+def test_optimize_tour_route(client, auth_headers):
+    """Test POST /api/tours/optimize endpoint."""
+    # 1. Create three places
+    res_p1 = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Paris", "latitude": 48.8566, "longitude": 2.3522},
+    )
+    res_p2 = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Lyon", "latitude": 45.7640, "longitude": 4.8357},
+    )
+    res_p3 = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Marseille", "latitude": 43.2964, "longitude": 5.3697},
+    )
+
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+    p3_id = res_p3.get_json()["data"]["place"]["id"]
+
+    # 2. Call optimize endpoint locking Marseille (p3_id) at position 1
+    res_opt = client.post(
+        "/api/tours/optimize",
+        headers=auth_headers,
+        json={
+            "place_ids": [p1_id, p2_id, p3_id],
+            "locked_positions": {
+                str(p3_id): 1
+            }
+        }
+    )
+
+    assert res_opt.status_code == 200
+    res_data = res_opt.get_json()["data"]
+    assert "places" in res_data
+    assert "total_distance" in res_data
+    places = res_data["places"]
+    assert len(places) == 3
+    # Marseille (p3_id) must be at index 1
+    assert places[1]["id"] == p3_id

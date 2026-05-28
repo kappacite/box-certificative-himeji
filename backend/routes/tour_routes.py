@@ -177,3 +177,21 @@ def duplicate_tour(tour_id):
     """Duplicate a public or owned tour into the current user's space."""
     tour = tour_service.duplicate_tour(tour_id, g.current_user.id)
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 201
+
+
+@tour_bp.route("/optimize", methods=["POST"])
+@require_auth
+def optimize_tour():
+    """Optimize a list of place IDs and return the sorted sequence and distance."""
+    data = request.get_json(silent=True) or {}
+    place_ids = data.get("place_ids", [])
+    locked_positions = data.get("locked_positions")
+    locked_places = data.get("locked_places")
+
+    result = tour_service.optimize_places(
+        place_ids=place_ids,
+        owner_id=g.current_user.id,
+        locked_positions=locked_positions,
+        locked_places=locked_places,
+    )
+    return jsonify({"status": "success", "data": result}), 200

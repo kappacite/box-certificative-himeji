@@ -41,12 +41,16 @@ def create_place():
 def get_public_places():
     """Retrieve all public places."""
     places = place_service.get_public_places()
-    return (
-        jsonify(
+    return jsonify(
             {"status": "success", "data": {"places": [p.to_dict() for p in places]}}
-        ),
-        200,
-    )
+        ), 200
+
+
+@place_bp.route("/public/<int:place_id>", methods=["GET"])
+def get_public_place(place_id):
+
+    place = place_service.get_public_place_by_id(place_id)
+    return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 200
 
 
 @place_bp.route("/<int:place_id>", methods=["GET"])

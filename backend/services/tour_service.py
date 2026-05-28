@@ -133,34 +133,37 @@ class TourService:
         self.get_tour_by_id(tour_id, owner_id)
         return self.tour_dao.delete(tour_id)
 
-    def update_share_visibility(
-        self, tour_id: int, visibility: Optional[str], owner_id: int
+    def patch_tour(
+        self,
+        tour_id: int,
+        visibility: Optional[str],
+        places: Optional[Place],
+        name: Optional[str],
+        owner_id: int,
     ) -> Tour:
-        """Update tour sharing visibility (private vs public).
+        """Update tour.
 
         Args:
             tour_id: The ID of the tour.
             visibility: Either 'private' or 'public', or None to toggle.
+            places: New list of places
+            name: New tour name
             owner_id: The ID of the current user.
 
         Returns:
             The updated Tour.
-
-        Raises:
-            ValidationException: If visibility value is invalid.
         """
         tour = self.get_tour_by_id(tour_id, owner_id)
 
-        if visibility is None:
-            new_visibility = "private" if tour.visibility == "public" else "public"
-        else:
-            if visibility not in ["private", "public"]:
-                raise ValidationException(
-                    "Visibility must be either 'private' or 'public'"
-                )
-            new_visibility = visibility
+        if visibility is not None:
+            tour.visibility = visibility
 
-        tour.visibility = new_visibility
+        if places is not None:
+            tour.places = places
+
+        if name is not None:
+            tour.name = name
+
         return self.tour_dao.update(tour)
 
     def get_shared_tour(self, share_token: str) -> Tour:

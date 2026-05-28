@@ -120,15 +120,17 @@ def run_benchmark_n100_n250():
     # --- Markdown Report Generation ---
     report_md = []
     report_md.append(
-        "# Rapport de Benchmark Comparatif : N=100 et N=250 (10 Iterations)\n"
+        "# Rapport de Benchmark Comparatif : N=100 et N=250 (10 Iterations)"
     )
+    report_md.append("")
     report_md.append(
         "Ce rapport presente l'analyse comparative et de performance detaillee pour "
         "deux tailles d'itineraires significatives ($N=100$ et $N=250$), realisee sur "
         "10 simulations aleatoires. Il met en evidence les gains de performance et "
         "de precision de l'algorithme Google OR-Tools (optimise avec `RegisterTransitMatrix` "
-        "et la strategie `Christofides`) face à notre heuristique custom `NN + 2-opt`.\n"
+        "et la strategie `Christofides`) face à notre heuristique custom `NN + 2-opt`."
     )
+    report_md.append("")
 
     def append_section_md(
         report_list: List[str],
@@ -142,46 +144,61 @@ def run_benchmark_n100_n250():
             / stats["avg_nn_dist"]
         ) * 100
 
-        report_list.append(f"## 📊 Résultats détaillés pour {title}\n")
+        report_list.append(f"## 📊 Résultats détaillés pour {title}")
+        report_list.append("")
+        report_list.append("- **Nombre d'itérations** : 10")
         report_list.append(
-            f"- **Nombre d'itérations** : 10\n"
-            f"- **Victoires OR-Tools (itinéraire plus court)** : **{stats['wins_ort']} / 10**\n"
-            f"- **Victoires NN + 2-opt (itinéraire plus court)** : {stats['wins_nn']} / 10\n"
-            f"- **Égalités** : {stats['ties']} / 10\n\n"
+            f"- **Victoires OR-Tools (itinéraire plus court)** : **{stats['wins_ort']} / 10**"
         )
+        report_list.append(
+            f"- **Victoires NN + 2-opt (itinéraire plus court)** : {stats['wins_nn']} / 10"
+        )
+        report_list.append(f"- **Égalités** : {stats['ties']} / 10")
+        report_list.append("")
 
         # Iterations Table
         report_list.append(
             "| Run | Dist OR-Tools (km) | Temps OR-Tools (ms) | "
-            "Dist NN+2-Opt (km) | Temps NN+2-Opt (ms) | Gain (%) |\n"
-            "| :--- | :---: | :---: | :---: | :---: | :---: |\n"
+            "Dist NN+2-Opt (km) | Temps NN+2-Opt (ms) | Gain (%) |"
+        )
+        report_list.append(
+            "| :--- | :---: | :---: | :---: | :---: | :---: |"
         )
         for r in results_list:
             gain = ((r["nn_dist"] - r["ort_dist"]) / r["nn_dist"]) * 100
             report_list.append(
                 f"| {r['run_id']} | {r['ort_dist']:.2f} | {r['ort_time']:.2f} | "
-                f"{r['nn_dist']:.2f} | {r['nn_time']:.2f} | {gain:.2f}% |\n"
+                f"{r['nn_dist']:.2f} | {r['nn_time']:.2f} | {gain:.2f}% |"
             )
-        report_list.append("\n")
+        report_list.append("")
 
         # Summary Table
         t_diff = stats["avg_ort_time"] - stats["avg_nn_time"]
-        report_list.append("### Synthèse des Métriques :\n\n")
+        report_list.append("### Synthèse des Métriques :")
+        report_list.append("")
         report_list.append(
-            "| Métrique | Google OR-Tools | NN + 2-opt | Différence / Amélioration |\n"
-            "| :--- | :---: | :---: | :---: |\n"
+            "| Métrique | Google OR-Tools | NN + 2-opt | Différence / Amélioration |"
+        )
+        report_list.append("| :--- | :---: | :---: | :---: |")
+        report_list.append(
             f"| **Distance Moyenne** | {stats['avg_ort_dist']:.2f} km | "
-            f"{stats['avg_nn_dist']:.2f} km | OR-Tools réduit de {avg_gain_pct:.2f}% |\n"
+            f"{stats['avg_nn_dist']:.2f} km | OR-Tools réduit de {avg_gain_pct:.2f}% |"
+        )
+        report_list.append(
             f"| **Temps Moyen de Calcul** | {stats['avg_ort_time']:.2f} ms | "
-            f"{stats['avg_nn_time']:.2f} ms | Différence de {t_diff:+.2f} ms |\n"
+            f"{stats['avg_nn_time']:.2f} ms | Différence de {t_diff:+.2f} ms |"
+        )
+        report_list.append(
             f"| **Distance Min / Max** | {stats['min_ort_dist']:.2f} / "
             f"{stats['max_ort_dist']:.2f} km | {stats['min_nn_dist']:.2f} / "
-            f"{stats['max_nn_dist']:.2f} km | -\n"
+            f"{stats['max_nn_dist']:.2f} km | -"
+        )
+        report_list.append(
             f"| **Temps Min / Max** | {stats['min_ort_time']:.2f} / "
             f"{stats['max_ort_time']:.2f} ms | {stats['min_nn_time']:.2f} / "
-            f"{stats['max_nn_time']:.2f} ms | -\n"
+            f"{stats['max_nn_time']:.2f} ms | -"
         )
-        report_list.append("\n\n")
+        report_list.append("")
 
     append_section_md(
         report_md, "N = 100 lieux", 100, stats_n100, results_by_size[100]
@@ -200,30 +217,40 @@ def run_benchmark_n100_n250():
         / stats_n250["avg_nn_dist"]
     ) * 100
 
-    report_md.append("## 🔍 Analyse & Conclusion :\n")
+    report_md.append("## 🔍 Analyse & Conclusion :")
+    report_md.append("")
     report_md.append(
         f"- **Efficacité de la recherche** : À $N=100$, OR-Tools obtient un itinéraire plus "
         f"court dans **{stats_n100['wins_ort'] * 10}%** des cas avec un gain moyen de "
         f"{gain_100:.2f}%. À $N=250$, l'hégémonie d'OR-Tools est totale "
         f"(**{stats_n250['wins_ort'] * 10}%** de victoires) avec un gain moyen "
-        f"de {gain_250:.2f}% de distance économisée.\n"
-        f"- **Vitesse d'exécution** : Grâce au passage de la matrice directe "
-        f"(`RegisterTransitMatrix`), OR-Tools est non seulement plus précis, mais il "
-        f"surpasse également `NN + 2-opt` en vitesse :\n"
+        f"de {gain_250:.2f}% de distance économisée."
+    )
+    report_md.append(
+        "- **Vitesse d'exécution** : Grâce au passage de la matrice directe "
+        "(`RegisterTransitMatrix`), OR-Tools est non seulement plus précis, mais il "
+        "surpasse également `NN + 2-opt` en vitesse :"
+    )
+    report_md.append(
         f"  - À $N=100$, OR-Tools s'exécute en **{stats_n100['avg_ort_time']:.2f} ms** "
-        f"en moyenne (contre {stats_n100['avg_nn_time']:.2f} ms pour NN+2-opt).\n"
+        f"en moyenne (contre {stats_n100['avg_nn_time']:.2f} ms pour NN+2-opt)."
+    )
+    report_md.append(
         f"  - À $N=250$, OR-Tools résout le problème en **{stats_n250['avg_ort_time']:.2f} ms** "
         f"(contre {stats_n250['avg_nn_time']:.2f} ms pour NN+2-opt, soit un gain "
-        f"de temps très important).\n"
-        f"- **Conclusion** : L'optimisation consistant à éliminer les callbacks Python a "
-        f"transformé la performance d'OR-Tools. Celui-ci est désormais la solution "
-        f"optimale à tous les niveaux, alliant la rapidité fulgurante du C++ à la "
-        f"précision des heuristiques avancées (Christofides).\n"
+        f"de temps très important)."
     )
+    report_md.append(
+        "- **Conclusion** : L'optimisation consistant à éliminer les callbacks Python a "
+        "transformé la performance d'OR-Tools. Celui-ci est désormais la solution "
+        "optimale à tous les niveaux, alliant la rapidité fulgurante du C++ à la "
+        "précision des heuristiques avancées (Christofides)."
+    )
+    report_md.append("")
 
     filepath = "docs/benchmark_n100_n250.md"
     with open(filepath, "w", encoding="utf-8") as f:
-        f.write("\n".join(report_md))
+        f.write("\n".join(report_md) + "\n")
 
     # --- CLI Summary Print ---
     print("\n" + "=" * 100)

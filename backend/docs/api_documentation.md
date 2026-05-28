@@ -180,11 +180,16 @@ Renvoie les détails du profil de l'utilisateur actuellement authentifié par so
 
 ## 📍 2. Gestion des Lieux (`/api/places/*`)
 
-### 📋 Lister mes lieux **[Auth Requise]**
-Renvoie tous les lieux personnels créés par l'utilisateur connecté.
+### 📋 Lister les lieux **[Auth Requise si privé / Facultatif si public]**
+Renvoie la liste des lieux personnels ou publics avec filtres et pagination.
 
 * **Méthode** : `GET`
 * **URL** : `/api/places`
+* **Paramètres de requête (Query Params)** :
+  * `visibility` : Optionnel (`public` ou `private`, par défaut `private`). Si `public`, liste les lieux publics (aucune authentification requise).
+  * `q` : Optionnel. Terme de recherche pour filtrer les lieux par nom (insensible à la casse).
+  * `page` : Optionnel (défaut `1`). Numéro de page.
+  * `limit` : Optionnel. Nombre de résultats par page.
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Liste récupérée.
     ```json
@@ -258,6 +263,10 @@ Renvoie la liste globale de tous les lieux publics présents en base de données
 
 * **Méthode** : `GET`
 * **URL** : `/api/places/public`
+* **Paramètres de requête (Query Params)** :
+  * `q` : Optionnel. Terme de recherche pour filtrer les lieux publics par nom.
+  * `page` : Optionnel (défaut `1`). Numéro de page.
+  * `limit` : Optionnel. Nombre de résultats par page.
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Liste récupérée (ex: les 200 lieux notables français).
     ```json
@@ -413,20 +422,28 @@ Supprime définitivement un lieu.
 ## 🗺️ 3. Gestion des Itinéraires (`/api/tours/*`)
 
 ### 📋 Lister mes itinéraires **[Auth Requise]**
-Renvoie tous les itinéraires appartenant à l'utilisateur connecté.
+Renvoie tous les itinéraires appartenant à l'utilisateur connecté avec filtres et pagination.
 
 * **Méthode** : `GET`
 * **URL** : `/api/tours`
+* **Paramètres de requête (Query Params)** :
+  * `q` : Optionnel. Terme de recherche pour filtrer par nom d'itinéraire.
+  * `page` : Optionnel (défaut `1`). Numéro de page.
+  * `limit` : Optionnel. Nombre de résultats par page.
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Liste d'itinéraires retournée.
 
 ---
 
 ### 🌍 Lister tous les itinéraires publics
-Affiche tous les itinéraires de la plateforme configurés avec une visibilité `"public"`. Aucun jeton n'est requis.
+Affiche tous les itinéraires de la plateforme configurés avec une visibilité `"public"` avec recherche et pagination. Aucun jeton n'est requis.
 
 * **Méthode** : `GET`
 * **URL** : `/api/tours/public`
+* **Paramètres de requête (Query Params)** :
+  * `q` : Optionnel. Terme de recherche pour filtrer les itinéraires publics par nom.
+  * `page` : Optionnel (défaut `1`). Numéro de page.
+  * `limit` : Optionnel. Nombre de résultats par page.
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Liste récupérée.
     ```json
@@ -642,6 +659,30 @@ Modifie la visibilité d'un itinéraire. Si aucun corps n'est passé, la route a
 
 ---
 
+### 🔄 Recalculer un itinéraire **[Auth Requise / Propriétaire uniquement]**
+Recalcule l'ordre optimal et la distance totale d'un itinéraire existant. Utile si les coordonnées de l'un des lieux de l'itinéraire ont été modifiées entre-temps.
+
+* **Méthode** : `POST`
+* **URL** : `/api/tours/<int:tour_id>/recalculate`
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Recalcul réussi.
+  * **`403 Forbidden`** : Utilisateur non propriétaire.
+  * **`404 Not Found`** : L'itinéraire n'existe pas.
+
+---
+
+### 👯 Dupliquer un itinéraire **[Auth Requise]**
+Copie un itinéraire public (ou appartenant à l'utilisateur) dans son espace personnel. Si l'itinéraire d'origine contient des lieux privés appartenant à un tiers, l'API clone automatiquement ces lieux en tant que nouveaux lieux privés pour le destinataire, évitant ainsi les erreurs de permission.
+
+* **Méthode** : `POST`
+* **URL** : `/api/tours/<int:tour_id>/duplicate`
+* **Codes HTTP de réponse** :
+  * **`201 Created`** : Copie créée.
+  * **`403 Forbidden`** : L'itinéraire d'origine est privé et appartient à un autre utilisateur (copie interdite).
+  * **`404 Not Found`** : L'itinéraire n'existe pas.
+
+---
+
 ### 🔗 Accéder à un itinéraire partagé
 Permet à n'importe quel internaute d'accéder aux détails d'un itinéraire via son UUID de partage (`share_token`). Aucune authentification n'est requise.
 
@@ -689,5 +730,31 @@ Permet à Docker, Kubernetes ou aux outils de monitoring de tester l'état du ba
       "data": {
         "message": "Service is healthy"
       }
+    }
+    ```
+
+---
+
+### 🔍 Vérification de l'état de préparation (Ready Healthcheck)
+Vérifie que le backend et la base de données SQLite/PostgreSQL sont connectés et prêts à répondre.
+
+* **Méthode** : `GET`
+* **URL** : `/api/health/ready`
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Le service et la base de données sont prêts.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "message": "Database and service are ready"
+      }
+    }
+    ```
+  * **`500 Internal Server Error`** : La base de données n'est pas joignable.
+    ```json
+    {
+      "status": "error",
+      "message": "Database is not ready: <détails_erreur>",
+      "code": "DATABASE_ERROR"
     }
     ```

@@ -110,8 +110,13 @@ routes  →  services  →  dao  →  DB
 /api/tours               GET, POST
 /api/tours/<id>          GET, PATCH, DELETE
 /api/tours/preview       POST
+/api/tours/<id>/recalculate POST
+/api/tours/<id>/duplicate   POST
 /api/tours/<id>/share    PATCH
 /api/tours/shared/<token> GET    ← public access, no auth required
+
+/api/health              GET
+/api/health/ready        GET
 ```
 
 ### HTTP Status Codes

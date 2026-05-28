@@ -15,6 +15,20 @@ class PlaceDAO(BaseDAO[Place, int]):
             return None
         return self._to_dataobject(place_model)
 
+    def get_by_ids(self, entity_ids: List[int]) -> List[Place]:
+        """Retrieve multiple places by a list of IDs in a single query.
+
+        Args:
+            entity_ids: List of place IDs to retrieve.
+
+        Returns:
+            A list of Place data objects.
+        """
+        if not entity_ids:
+            return []
+        place_models = PlaceModel.query.filter(PlaceModel.id.in_(entity_ids)).all()
+        return [self._to_dataobject(pm) for pm in place_models]
+
     def get_all(self) -> List[Place]:
         """Retrieve all places."""
         place_models = PlaceModel.query.all()

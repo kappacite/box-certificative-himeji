@@ -120,9 +120,10 @@ class TourService:
                     raise ValidationException("Invalid locked_places format")
 
         # Retrieve and validate all places belong to the owner or are public
+        places_by_id = {p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)}
         places = []
         for pid in parsed_place_ids:
-            place = self.place_dao.get_by_id(pid)
+            place = places_by_id.get(pid)
             if not place:
                 raise ValidationException(f"Place with ID {pid} does not exist")
             if place.owner_id != owner_id and place.visibility != "public":
@@ -219,9 +220,10 @@ class TourService:
                     raise ValidationException("Invalid locked_places format")
 
         # Retrieve and validate all places belong to the owner or are public
+        places_by_id = {p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)}
         places = []
         for pid in parsed_place_ids:
-            place = self.place_dao.get_by_id(pid)
+            place = places_by_id.get(pid)
             if not place:
                 raise ValidationException(f"Place with ID {pid} does not exist")
             if place.owner_id != owner_id and place.visibility != "public":
@@ -317,9 +319,10 @@ class TourService:
                     raise ValidationException("Invalid locked_places format")
 
         # Retrieve and validate all places belong to the owner or are public
+        places_by_id = {p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)}
         places = []
         for pid in parsed_place_ids:
-            place = self.place_dao.get_by_id(pid)
+            place = places_by_id.get(pid)
             if not place:
                 raise ValidationException(f"Place with ID {pid} does not exist")
             if place.owner_id != owner_id and place.visibility != "public":
@@ -566,9 +569,10 @@ class TourService:
                     "At least 2 places are required to generate a tour"
                 )
 
+            places_by_id = {p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)}
             places = []
             for pid in parsed_place_ids:
-                place = self.place_dao.get_by_id(pid)
+                place = places_by_id.get(pid)
                 if not place:
                     raise ValidationException(f"Place with ID {pid} does not exist")
                 if place.owner_id != owner_id and place.visibility != "public":

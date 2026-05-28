@@ -13,6 +13,9 @@ def optimize(
 
     Uses Google OR-Tools Routing library to solve the Traveling Salesperson
     Problem (TSP) to near-optimality, respecting optional locked positions.
+    To avoid solver timeouts or infinite loops under hard constraints,
+    locked positions are handled via a robust sub-tour optimization and
+    insertion strategy.
 
     Args:
         places: A list of Place data objects to optimize.
@@ -30,106 +33,104 @@ def optimize(
     if not locked_positions:
         locked_positions = {}
 
-    # Map place ID to Place object
+    # 1. Map place ID to Place object
     place_by_id = {p.id: p for p in places if p.id is not None}
 
-    # Identify if a start place is locked at position 0
+    # 2. Extract valid locks: map target_position -> Place object
+    locked_places_dict = {}  # target_position -> Place
+    locked_ids = set()
+    used_positions = set()
+
+    # Prioritize start node lock (position 0)
     start_place_id = None
     for pid, pos in locked_positions.items():
         if pid in place_by_id and pos == 0:
             start_place_id = pid
+            locked_places_dict[0] = place_by_id[pid]
+            locked_ids.add(pid)
+            used_positions.add(0)
             break
 
-    # Reorder places to put the locked start place at index 0
-    ordered_places = list(places)
-    if start_place_id is not None:
-        start_place = place_by_id[start_place_id]
-        ordered_places.remove(start_place)
-        ordered_places.insert(0, start_place)
-
-    # Re-map positions to indices in the ordered list
-    place_to_idx = {
-        p.id: idx for idx, p in enumerate(ordered_places) if p.id is not None
-    }
-
-    # Filter and validate other locked positions
-    valid_locks = {}  # node_index -> target_position
-    used_positions = set()
-
-    if start_place_id is not None:
-        valid_locks[0] = 0
-        used_positions.add(0)
-
+    # Extract other locked positions
     for pid, pos in locked_positions.items():
         if pid == start_place_id:
             continue
-        if pid in place_to_idx and 0 <= pos < num_places:
-            idx = place_to_idx[pid]
+        if pid in place_by_id and 0 <= pos < num_places:
             if pos not in used_positions:
-                valid_locks[idx] = pos
+                locked_places_dict[pos] = place_by_id[pid]
+                locked_ids.add(pid)
                 used_positions.add(pos)
 
-    # 1. Precompute the distance matrix in meters (integer values)
-    # This avoids crossing the Python-C++ language boundary inside the solver loop.
+    # 3. Filter unlocked places
+    unlocked_places = [p for p in places if p.id not in locked_ids]
+
+    # 4. If all places are locked, or only 1 is unlocked, reconstruct directly
+    if len(unlocked_places) <= 1:
+        final_route = [None] * num_places
+        for pos, place in locked_places_dict.items():
+            final_route[pos] = place
+        unlocked_idx = 0
+        for i in range(num_places):
+            if final_route[i] is None:
+                if unlocked_idx < len(unlocked_places):
+                    final_route[i] = unlocked_places[unlocked_idx]
+                    unlocked_idx += 1
+        return [p for p in final_route if p is not None]
+
+    # 5. Optimize the unlocked places using OR-Tools (without locks)
+    num_unlocked = len(unlocked_places)
     dist_matrix = [
         [
-            int(haversine(ordered_places[i], ordered_places[j]) * 1000)
-            for j in range(num_places)
+            int(haversine(unlocked_places[i], unlocked_places[j]) * 1000)
+            for j in range(num_unlocked)
         ]
-        for i in range(num_places)
+        for i in range(num_unlocked)
     ]
 
-    # 2. Create the routing index manager:
-    # (num_nodes, num_vehicles, start_node, end_node)
-    manager = pywrapcp.RoutingIndexManager(num_places, 1, 0)
+    # Create routing index manager: (num_nodes, num_vehicles, start_node)
+    manager = pywrapcp.RoutingIndexManager(num_unlocked, 1, 0)
 
-    # 3. Create Routing Model.
+    # Create Routing Model.
     routing = pywrapcp.RoutingModel(manager)
 
-    # 4. Register transit matrix directly.
+    # Register transit matrix directly.
     transit_callback_index = routing.RegisterTransitMatrix(dist_matrix)
 
-    # 5. Define cost of each arc.
+    # Define cost of each arc.
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
-    # 6. Apply locks constraints if present
-    if valid_locks:
-        # Define a dimension to track step counts
-        routing.AddConstantDimension(
-            1,  # increment of 1 per step
-            num_places + 1,  # capacity
-            True,  # fix_start_cumul_to_zero
-            "Step",
-        )
-        step_dimension = routing.GetDimensionOrDie("Step")
-        for node_idx, pos in valid_locks.items():
-            index = manager.NodeToIndex(node_idx)
-            step_dimension.CumulVar(index).SetValue(pos)
-
-    # 7. Setting first solution heuristic.
+    # Setting first solution heuristic.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-    if valid_locks:
-        # Automatic works best when dimensions are constrained
-        search_parameters.first_solution_strategy = (
-            routing_enums_pb2.FirstSolutionStrategy.AUTOMATIC
-        )
-    else:
-        search_parameters.first_solution_strategy = (
-            routing_enums_pb2.FirstSolutionStrategy.CHRISTOFIDES
-        )
+    search_parameters.first_solution_strategy = (
+        routing_enums_pb2.FirstSolutionStrategy.CHRISTOFIDES
+    )
+    # Set a safety time limit on the solver
+    search_parameters.time_limit.seconds = 3
 
-    # 8. Solve the problem.
+    # Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
 
-    # 9. Extract the route.
+    # Extract the route.
+    optimized_unlocked = []
     if solution:
         index = routing.Start(0)
-        route = []
         while not routing.IsEnd(index):
             node = manager.IndexToNode(index)
-            route.append(ordered_places[node])
+            optimized_unlocked.append(unlocked_places[node])
             index = solution.Value(routing.NextVar(index))
-        return route
     else:
-        # Fallback to the ordered_places list if no solution is found
-        return list(ordered_places)
+        optimized_unlocked = list(unlocked_places)
+
+    # 6. Reconstruct final tour by inserting locked places at their positions
+    final_route = [None] * num_places
+    for pos, place in locked_places_dict.items():
+        final_route[pos] = place
+
+    unlocked_idx = 0
+    for i in range(num_places):
+        if final_route[i] is None:
+            if unlocked_idx < len(optimized_unlocked):
+                final_route[i] = optimized_unlocked[unlocked_idx]
+                unlocked_idx += 1
+
+    return [p for p in final_route if p is not None]

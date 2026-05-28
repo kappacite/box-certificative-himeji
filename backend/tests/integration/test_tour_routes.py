@@ -119,21 +119,19 @@ def test_tour_creation_with_public_and_private_places(
     res_pub = client.post(
         "/api/places",
         headers=auth_headers,
-        json={"name": "Paris", "visibility": "public"}
+        json={"name": "Paris", "visibility": "public"},
     )
     res_priv = client.post(
         "/api/places",
         headers=auth_headers,
-        json={"name": "Lyon", "visibility": "private"}
+        json={"name": "Lyon", "visibility": "private"},
     )
     pub_place_id = res_pub.get_json()["data"]["place"]["id"]
     priv_place_id = res_priv.get_json()["data"]["place"]["id"]
 
     # User 2 creates their own place
     res_own = client.post(
-        "/api/places",
-        headers=other_auth_headers,
-        json={"name": "Paris"}
+        "/api/places", headers=other_auth_headers, json={"name": "Paris"}
     )
     own_place_id = res_own.get_json()["data"]["place"]["id"]
 
@@ -144,8 +142,8 @@ def test_tour_creation_with_public_and_private_places(
         json={
             "name": "Mixed Tour",
             "place_ids": [own_place_id, pub_place_id],
-            "visibility": "public"
-        }
+            "visibility": "public",
+        },
     )
     assert res_tour_ok.status_code == 201
     tour_data = res_tour_ok.get_json()["data"]["tour"]
@@ -156,10 +154,7 @@ def test_tour_creation_with_public_and_private_places(
     res_tour_forbidden = client.post(
         "/api/tours",
         headers=other_auth_headers,
-        json={
-            "name": "Forbidden Tour",
-            "place_ids": [own_place_id, priv_place_id]
-        }
+        json={"name": "Forbidden Tour", "place_ids": [own_place_id, priv_place_id]},
     )
     assert res_tour_forbidden.status_code == 403
 
@@ -168,4 +163,3 @@ def test_tour_creation_with_public_and_private_places(
     assert res_public_list.status_code == 200
     tours = res_public_list.get_json()["data"]["tours"]
     assert any(t["id"] == tour_id for t in tours)
-

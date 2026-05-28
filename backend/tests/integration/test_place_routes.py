@@ -111,13 +111,15 @@ def test_get_place_forbidden(client, auth_headers, other_auth_headers, mock_geoc
     assert json_data["code"] == "FORBIDDEN"
 
 
-def test_create_and_get_public_places(client, auth_headers, other_auth_headers, mock_geocoding):
+def test_create_and_get_public_places(
+    client, auth_headers, other_auth_headers, mock_geocoding
+):
     """Test creating a public place and fetching it, even by other users."""
     # Create a public place
     response = client.post(
         "/api/places",
         headers=auth_headers,
-        json={"name": "Paris", "visibility": "public"}
+        json={"name": "Paris", "visibility": "public"},
     )
     assert response.status_code == 201
     place = response.get_json()["data"]["place"]
@@ -137,16 +139,12 @@ def test_create_and_get_public_places(client, auth_headers, other_auth_headers, 
 
     # Other user tries to update the place (should be Forbidden)
     response_update = client.put(
-        f"/api/places/{place_id}",
-        headers=other_auth_headers,
-        json={"name": "Lyon"}
+        f"/api/places/{place_id}", headers=other_auth_headers, json={"name": "Lyon"}
     )
     assert response_update.status_code == 403
 
     # Other user tries to delete the place (should be Forbidden)
     response_delete = client.delete(
-        f"/api/places/{place_id}",
-        headers=other_auth_headers
+        f"/api/places/{place_id}", headers=other_auth_headers
     )
     assert response_delete.status_code == 403
-

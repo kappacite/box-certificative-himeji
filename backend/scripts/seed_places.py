@@ -129,7 +129,7 @@ NOTABLE_PLACES = [
     ("Basilique de Notre-Dame du Port, Clermont-Ferrand", 45.7806, 3.0897),
     ("L'Aventure Michelin, Clermont-Ferrand", 45.7903, 3.1056),
     # Auvergne-Rhône-Alpes & Alps (121-150)
-    ("Basilique Notre-Dame de Fourvière, Lyon", 48.5817, 7.7508),
+    ("Basilique Notre-Dame de Fourvière, Lyon",45.7622,4.8226),
     ("Théâtre Antique de Lyon", 45.7597, 4.8197),
     ("Place Bellecour, Lyon", 45.7578, 4.8322),
     ("Parc de la Tête d'Or, Lyon", 45.7786, 4.8547),

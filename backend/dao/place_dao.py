@@ -27,6 +27,7 @@ class PlaceDAO(BaseDAO[Place, int]):
             latitude=entity.latitude,
             longitude=entity.longitude,
             owner_id=entity.owner_id,
+            visibility=entity.visibility,
         )
         db.session.add(place_model)
         db.session.commit()
@@ -41,6 +42,7 @@ class PlaceDAO(BaseDAO[Place, int]):
             place_model.latitude = entity.latitude
             place_model.longitude = entity.longitude
             place_model.owner_id = entity.owner_id
+            place_model.visibility = entity.visibility
             db.session.commit()
         return entity
 
@@ -65,6 +67,15 @@ class PlaceDAO(BaseDAO[Place, int]):
         place_models = PlaceModel.query.filter_by(owner_id=owner_id).all()
         return [self._to_dataobject(pm) for pm in place_models]
 
+    def get_public(self) -> List[Place]:
+        """Retrieve all public places.
+
+        Returns:
+            A list of Place data objects.
+        """
+        place_models = PlaceModel.query.filter_by(visibility="public").all()
+        return [self._to_dataobject(pm) for pm in place_models]
+
     def _to_dataobject(self, model: PlaceModel) -> Place:
         """Helper to convert PlaceModel (ORM) to Place (DataObject)."""
         return Place(
@@ -73,4 +84,5 @@ class PlaceDAO(BaseDAO[Place, int]):
             latitude=model.latitude,
             longitude=model.longitude,
             owner_id=model.owner_id,
+            visibility=model.visibility,
         )

@@ -2,7 +2,7 @@
 
 Ce document explique les concepts mathématiques et algorithmiques utilisés dans le backend pour calculer l'itinéraire optimal entre les différents lieux.
 
-Le problème posé est une variante du **Problème du Voyageur de Commerce (TSP - Traveling Salesperson Problem)** : trouver le cycle le plus court passant exactement une fois par chaque lieu et revenant au point de départ.
+Le problème posé est une variante du **Problème du Voyageur de Commerce (TSP - Traveling Salesperson Problem)** : trouver le cycle le plus court passant exactement une fois par chaque lieu, **le point de départ devant obligatoirement être le point d'arrivée (boucle fermée ou circuit hamiltonien)**.
 
 ---
 
@@ -39,6 +39,24 @@ def haversine(place_a, place_b) -> float:
         + math.cos(lat_a) * math.cos(lat_b) * math.cos(lon_b - lon_a)
     )
 ```
+
+---
+
+## 1.5. Contrainte de Boucle Fermée : Départ = Arrivée
+
+Dans tous nos calculs et nos benchmarks, le point de départ de l'itinéraire est configuré pour être également son point d'arrivée. Cela signifie que la distance totale retournée par l'API prend en compte le trajet nécessaire pour retourner au point initial.
+
+Cette contrainte est assurée de la manière suivante dans le code :
+* **Calcul global de la distance de la tournée** :
+  ```python
+  # On additionne les segments géodésiques de i vers i+1
+  for i in range(len(tour) - 1):
+      total += haversine(tour[i], tour[i + 1])
+  # On ajoute le retour obligatoire vers le point initial (tour[0])
+  total += haversine(tour[-1], tour[0])
+  ```
+* **Moteur de routage OR-Tools** : Le manager d'index d'OR-Tools est instancié avec un dépôt (`0`), ce qui contraint intrinsèquement le solveur à ramener le véhicule à son point d'origine à la fin de sa tournée.
+* **Held-Karp (Programmation dynamique)** : La fonction récursive évalue les sous-trajets et ajoute le retour à la ville d'origine (la ville `0`) comme condition de terminaison lors du parcours complet.
 
 ---
 

@@ -150,7 +150,8 @@ def test_tour_creation_with_public_and_private_places(
     assert tour_data["visibility"] == "public"
     tour_id = tour_data["id"]
 
-    # User 2 tries to create a tour with their own place + User 1's private place (should be Forbidden)
+    # User 2 tries to create a tour with their own place + User 1's private place
+    # (should be Forbidden)
     res_tour_forbidden = client.post(
         "/api/tours",
         headers=other_auth_headers,

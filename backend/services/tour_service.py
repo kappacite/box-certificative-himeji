@@ -67,7 +67,8 @@ class TourService:
 
         Raises:
             ValidationException: If there are fewer than 2 places or validation fails.
-            ForbiddenException: If the user doesn't own all specified places (unless they are public).
+            ForbiddenException: If the user doesn't own all specified places
+                (unless they are public).
         """
         if not name or not name.strip():
             raise ValidationException("Tour name is required")

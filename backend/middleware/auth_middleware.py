@@ -31,6 +31,13 @@ def require_auth(f):
             raise UnauthorizedException("Authorization header must be Bearer token")
 
         token = parts[1]
+
+        # Check if the token was blacklisted (logged out)
+        from dao.models import RevokedTokenModel
+        is_revoked = RevokedTokenModel.query.filter_by(token=token).first() is not None
+        if is_revoked:
+            raise UnauthorizedException("Token has been revoked")
+
         auth_service = AuthService()
         # verify_token will raise TokenExpiredException or InvalidTokenException if invalid
         g.current_user = auth_service.verify_token(token)

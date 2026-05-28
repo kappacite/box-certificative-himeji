@@ -51,7 +51,20 @@ def login():
 @auth_bp.route("/logout", methods=["POST"])
 @require_auth
 def logout():
-    """Log out the current user (client-side token removal confirmation)."""
+    """Log out the current user and blacklist their JWT."""
+    auth_header = request.headers.get("Authorization")
+    if auth_header:
+        parts = auth_header.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+            from dao.models import RevokedTokenModel
+            from dao.database import db
+            exists = RevokedTokenModel.query.filter_by(token=token).first()
+            if not exists:
+                revoked = RevokedTokenModel(token=token)
+                db.session.add(revoked)
+                db.session.commit()
+
     return (
         jsonify({"status": "success", "data": {"message": "Logged out successfully"}}),
         200,

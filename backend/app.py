@@ -30,7 +30,11 @@ def create_app(config_name: str = None) -> Flask:
     app.config.from_object(config_class)
 
     # Initialize CORS
-    CORS(app)
+    cors_origins = app.config.get("CORS_ORIGINS", "*")
+    if cors_origins == "*":
+        CORS(app)
+    else:
+        CORS(app, origins=cors_origins)
 
     # Initialize database
     db.init_app(app)
@@ -52,8 +56,9 @@ def create_app(config_name: str = None) -> Flask:
         )
 
     # Ensure database tables exist (SQLite dev automatic migration helper)
-    with app.app_context():
-        db.create_all()
+    if config_name != "production":
+        with app.app_context():
+            db.create_all()
 
     return app
 

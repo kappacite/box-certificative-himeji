@@ -75,3 +75,13 @@ class TourModel(db.Model):
         order_by="TourPlaceModel.position",
         lazy="select",
     )
+
+
+class RevokedTokenModel(db.Model):
+    """SQLAlchemy model for blacklisted JWTs (revoked on logout)."""
+
+    __tablename__ = "revoked_tokens"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    token = db.Column(db.String(500), unique=True, nullable=False, index=True)
+    revoked_at = db.Column(db.DateTime, nullable=False, default=db.func.now())

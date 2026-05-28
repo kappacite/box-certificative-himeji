@@ -69,3 +69,36 @@ def test_route_login_unauthorized(client):
     json_data = response.get_json()
     assert json_data["status"] == "error"
     assert json_data["code"] == "UNAUTHORIZED"
+
+
+def test_route_logout_and_revocation(client):
+    """Test POST /api/auth/logout blacklists the token and prevents further usage."""
+    # 1. Register and login
+    client.post(
+        "/api/auth/register",
+        json={
+            "username": "logoutuser",
+            "email": "logoutuser@example.com",
+            "password": "password123",
+        },
+    )
+    res_login = client.post(
+        "/api/auth/login",
+        json={"email": "logoutuser@example.com", "password": "password123"},
+    )
+    token = res_login.get_json()["data"]["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 2. Test accessing protected route works before logout
+    res_places_before = client.get("/api/places", headers=headers)
+    assert res_places_before.status_code == 200
+
+    # 3. Logout
+    res_logout = client.post("/api/auth/logout", headers=headers)
+    assert res_logout.status_code == 200
+    assert res_logout.get_json()["data"]["message"] == "Logged out successfully"
+
+    # 4. Test accessing protected route fails after logout (401)
+    res_places_after = client.get("/api/places", headers=headers)
+    assert res_places_after.status_code == 401
+    assert res_places_after.get_json()["code"] == "UNAUTHORIZED"

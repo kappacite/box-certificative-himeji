@@ -22,7 +22,6 @@ const placesList = ref()
 async function placesFunction() {
   const placesReq = await placesApi.getPublicPlaces()
   placesList.value = placesReq.data.data.places
-  console.log(placesList.value)
 }
 
 onMounted(async () => {

@@ -6,48 +6,18 @@ from dataobject.place import Place
 from services.algorithm.distance import haversine
 
 
-def fallback_reconstruction(
-    places: List[Place], locked_positions: dict[int, int]
-) -> List[Place]:
-    """Helper fallback to reconstruct the tour if the solver cannot find a solution.
-
-    Places locked positions are respected, and the remaining slots are filled
-    with the unlocked places in their input order.
-    """
-    num_places = len(places)
-    place_by_id = {p.id: p for p in places if p.id is not None}
-
-    final_route = [None] * num_places
-    used_ids = set()
-
-    # Place locked nodes
-    for pid, pos in locked_positions.items():
-        if pid in place_by_id and 0 <= pos < num_places:
-            final_route[pos] = place_by_id[pid]
-            used_ids.add(pid)
-
-    # Unlocked nodes
-    unlocked_places = [p for p in places if p.id not in used_ids]
-
-    unlocked_idx = 0
-    for i in range(num_places):
-        if final_route[i] is None:
-            if unlocked_idx < len(unlocked_places):
-                final_route[i] = unlocked_places[unlocked_idx]
-                unlocked_idx += 1
-
-    return [p for p in final_route if p is not None]
-
-
 def optimize(
     places: List[Place], locked_positions: dict[int, int] = None
 ) -> List[Place]:
     """Returns an ordered list of Places representing the optimal tour.
 
-    Uses Google OR-Tools Routing library to solve the Traveling Salesperson
-    Problem (TSP) to near-optimality, respecting optional locked positions.
-    To satisfy position constraints, a global cumulative Steps dimension is used,
-    forcing locked places to be visited at their designated step/rank.
+    To satisfy position constraints efficiently and avoid solver timeouts or poor
+    local minima on larger datasets (e.g. 200 places), a robust sub-tour
+    optimization and insertion strategy is used:
+    1. Filter out locked places.
+    2. Optimize the remaining unlocked places using OR-Tools (solving a pure TSP).
+    3. Reconstruct the final tour by inserting the locked places back into their
+       designated indices.
 
     Args:
         places: A list of Place data objects to optimize.
@@ -65,108 +35,98 @@ def optimize(
     if not locked_positions:
         locked_positions = {}
 
-    # Map place ID to Place object and index in input list
     place_by_id = {p.id: p for p in places if p.id is not None}
 
-    # Sanitize locked positions
-    valid_locks = {}
+    # Extract valid locks: target_position -> Place
+    locked_places_dict = {}
+    locked_ids = set()
     used_positions = set()
     start_place_id = None
 
-    # First find if there is a lock at position 0
+    # 1. Prioritize start node lock (position 0)
     for pid, pos in locked_positions.items():
         if pid in place_by_id and pos == 0:
             start_place_id = pid
-            valid_locks[pid] = 0
+            locked_places_dict[0] = place_by_id[pid]
+            locked_ids.add(pid)
             used_positions.add(0)
             break
 
-    # Extract all other valid locked positions
+    # 2. Extract other locked positions
     for pid, pos in locked_positions.items():
         if pid == start_place_id:
             continue
         if pid in place_by_id and 0 <= pos < num_places:
             if pos not in used_positions:
-                valid_locks[pid] = pos
+                locked_places_dict[pos] = place_by_id[pid]
+                locked_ids.add(pid)
                 used_positions.add(pos)
 
-    # Determine start place for the vehicle (must end up at position 0)
-    if start_place_id is None:
-        # Find the first place that does not have a lock at pos > 0
-        for p in places:
-            if p.id not in valid_locks:
-                start_place_id = p.id
-                break
-        if start_place_id is None:
-            start_place_id = places[0].id
+    # 3. Filter unlocked places
+    unlocked_places = [p for p in places if p.id not in locked_ids]
 
-    # Get index of start place in input list
-    start_node = 0
-    for idx, p in enumerate(places):
-        if p.id == start_place_id:
-            start_node = idx
-            break
+    # 4. If all places are locked, or only 1 is unlocked, reconstruct directly
+    if len(unlocked_places) <= 1:
+        final_route = [None] * num_places
+        for pos, place in locked_places_dict.items():
+            final_route[pos] = place
+        unlocked_idx = 0
+        for i in range(num_places):
+            if final_route[i] is None:
+                if unlocked_idx < len(unlocked_places):
+                    final_route[i] = unlocked_places[unlocked_idx]
+                    unlocked_idx += 1
+        return [p for p in final_route if p is not None]
 
-    # Build global distance matrix
+    # 5. Optimize the unlocked places using OR-Tools (without locks)
+    num_unlocked = len(unlocked_places)
     dist_matrix = [
         [
-            int(haversine(places[i], places[j]) * 1000)
-            for j in range(num_places)
+            int(haversine(unlocked_places[i], unlocked_places[j]) * 1000)
+            for j in range(num_unlocked)
         ]
-        for i in range(num_places)
+        for i in range(num_unlocked)
     ]
 
     try:
-        manager = pywrapcp.RoutingIndexManager(num_places, 1, start_node)
+        # Create routing index manager: (num_nodes, num_vehicles, start_node)
+        manager = pywrapcp.RoutingIndexManager(num_unlocked, 1, 0)
         routing = pywrapcp.RoutingModel(manager)
         transit_callback_index = routing.RegisterTransitMatrix(dist_matrix)
         routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
-        # Steps dimension tracking cumulative sequence position of visited nodes
-        routing.AddConstantDimension(
-            1,              # increment per step
-            num_places + 1,  # capacity (max step count)
-            True,           # fix_start_cumul_to_zero
-            "Steps"
-        )
-        steps_dimension = routing.GetDimensionOrDie("Steps")
-
-        # Constrain locked places to their specified index
-        for pid, pos in valid_locks.items():
-            if pid == start_place_id:
-                # Already guaranteed by setting start_node as vehicle start
-                continue
-            # Find node index in `places`
-            node_idx = None
-            for idx, p in enumerate(places):
-                if p.id == pid:
-                    node_idx = idx
-                    break
-            if node_idx is not None:
-                index = manager.NodeToIndex(node_idx)
-                steps_dimension.CumulVar(index).SetValue(pos)
-
-        # Set first solution heuristic and search parameters
+        # Setting first solution heuristic.
         search_parameters = pywrapcp.DefaultRoutingSearchParameters()
         search_parameters.first_solution_strategy = (
             routing_enums_pb2.FirstSolutionStrategy.CHRISTOFIDES
         )
-        # Set a safety time limit on the solver
         search_parameters.time_limit.seconds = 3
 
         # Solve
         solution = routing.SolveWithParameters(search_parameters)
 
+        optimized_unlocked = []
         if solution:
-            optimized_places = []
             index = routing.Start(0)
             while not routing.IsEnd(index):
                 node = manager.IndexToNode(index)
-                optimized_places.append(places[node])
+                optimized_unlocked.append(unlocked_places[node])
                 index = solution.Value(routing.NextVar(index))
-            return optimized_places
+        else:
+            optimized_unlocked = list(unlocked_places)
     except Exception:
-        pass
+        optimized_unlocked = list(unlocked_places)
 
-    # Fallback if solver fails or raises exception
-    return fallback_reconstruction(places, valid_locks)
+    # 6. Reconstruct final tour by inserting locked places at their positions
+    final_route = [None] * num_places
+    for pos, place in locked_places_dict.items():
+        final_route[pos] = place
+
+    unlocked_idx = 0
+    for i in range(num_places):
+        if final_route[i] is None:
+            if unlocked_idx < len(optimized_unlocked):
+                final_route[i] = optimized_unlocked[unlocked_idx]
+                unlocked_idx += 1
+
+    return [p for p in final_route if p is not None]

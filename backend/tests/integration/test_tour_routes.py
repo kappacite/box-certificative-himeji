@@ -448,3 +448,43 @@ def test_create_tour_with_hotels_grouping(client, auth_headers, mock_geocoding):
     assert places[3]["is_hotel"] is True
     assert places[4]["id"] == p1_id
     assert places[4]["is_hotel"] is True
+
+
+def test_delete_place_cascade(client, auth_headers, mock_geocoding):
+    """Test that when a place included in a tour is deleted:
+    1. The tour doesn't crash on fetch
+    2. The deleted place is removed/ignored in the retrieved tour
+    """
+    # 1. Create two places
+    res_p1 = client.post("/api/places", headers=auth_headers, json={"name": "Paris"})
+    res_p2 = client.post("/api/places", headers=auth_headers, json={"name": "Lyon"})
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+
+    # 2. Create a tour with them
+    res_tour = client.post(
+        "/api/tours",
+        headers=auth_headers,
+        json={"name": "Cascade Test Tour", "place_ids": [p1_id, p2_id]},
+    )
+    assert res_tour.status_code == 201
+    tour_id = res_tour.get_json()["data"]["tour"]["id"]
+
+    # 3. Delete one of the places (Lyon)
+    res_delete_place = client.delete(
+        f"/api/places/{p2_id}",
+        headers=auth_headers
+    )
+    assert res_delete_place.status_code == 204
+
+    # 4. Fetch the tour and verify it does not crash, and the place is gone
+    res_get_tour = client.get(
+        f"/api/tours/{tour_id}",
+        headers=auth_headers
+    )
+    assert res_get_tour.status_code == 200
+    tour_data = res_get_tour.get_json()["data"]["tour"]
+    # Check that Lyon is no longer in the places list of the tour
+    remaining_place_ids = [p["id"] for p in tour_data["places"]]
+    assert p2_id not in remaining_place_ids
+

@@ -177,6 +177,8 @@ class TourDAO(BaseDAO[Tour, int]):
         places = []
         for tp in model.tour_places:
             # tp.place is a PlaceModel
+            if tp.place is None:
+                continue
             place_do = Place(
                 id=tp.place.id,
                 name=tp.place.name,

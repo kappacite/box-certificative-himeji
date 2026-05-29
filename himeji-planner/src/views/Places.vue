@@ -1,33 +1,133 @@
 <template>
   <div class="places-container">
     <header class="places-header">
-      <h1>Explore Popular Landmarks 🌸</h1>
-      <p class="subtitle">A curated selection of must-see attractions to include in your customized travel itineraries.</p>
+      <div>
+        <h1>Explore Popular Landmarks</h1>
+        <p class="subtitle">A curated selection of must-see attractions to include in your customized travel itineraries.</p>
+      </div>
+
+      <BaseButton v-if="isAuthenticated" type="button" @click="openCreatePlace">
+        Add place
+      </BaseButton>
     </header>
 
-    <div class="places-grid">
-      <PlaceCard v-for="place in placesList" :key="place.id" :name="place.name.split(', ')[0]" :latitude="place.latitude" :longitude="place.longitude" :city="place.name.split(', ')[1]"/>
+    <div v-if="error && !selectedPlace && !isCreatePlaceOpen" class="error-message">
+      {{ friendlyErrorMessage }}
     </div>
+
+    <div v-if="loading && placesList.length === 0" class="loading-state">
+      Loading places...
+    </div>
+
+    <p v-else-if="placesList.length === 0" class="empty-state">
+      No places are available yet.
+    </p>
+
+    <div class="places-grid">
+      <PlaceCard
+        v-for="place in placesList"
+        :key="place.id"
+        :name="getPlaceName(place)"
+        :latitude="place.latitude"
+        :longitude="place.longitude"
+        :city="getPlaceCity(place)"
+        @select="openPlaceDetails(place)"
+      />
+    </div>
+
+    <PlaceDetailsModal
+      :place="selectedPlace"
+      :can-delete="isAuthenticated"
+      :loading="loading"
+      :error="error"
+      @close="closePlaceDetails"
+      @delete="handleDeletePlace"
+    />
+
+    <PlaceCreateModal
+      :open="isCreatePlaceOpen"
+      :loading="loading"
+      :error="error"
+      @close="closeCreatePlace"
+      @create="handleCreatePlace"
+    />
   </div>
 </template>
 
 <script setup>
-import BaseCard from '@/components/BaseCard.vue'
-import PlaceCard from '@/components/places/PlaceCard.vue';
-import { usePlacesStore } from '@/stores/placesStore';
-import { placesApi } from '../../api/placesApi';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
+import { usePlaces } from '@/composables/usePlaces'
+import BaseButton from '@/components/BaseButton.vue'
+import PlaceCard from '@/components/places/PlaceCard.vue'
+import PlaceCreateModal from '@/components/places/PlaceCreateModal.vue'
+import PlaceDetailsModal from '@/components/places/PlaceDetailsModal.vue'
 
-const placesList = ref()
-async function placesFunction() {
-  const placesReq = await placesApi.getPublicPlaces()
-  placesList.value = placesReq.data.data.places
-  console.log(placesList.value)
+const authStore = useAuthStore()
+const { places, loading, error, loadPublicPlaces, createPlace, deletePlace } = usePlaces()
+
+const selectedPlace = ref(null)
+const isCreatePlaceOpen = ref(false)
+
+const placesList = computed(() => places.value)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const friendlyErrorMessage = computed(() => getFriendlyErrorMessage(error.value?.code))
+
+function getPlaceName(place) {
+  return place.name?.split(', ')[0] || 'Unknown place'
+}
+
+function getPlaceCity(place) {
+  return place.name?.split(', ')[1] || 'Not specified'
+}
+
+function openPlaceDetails(place) {
+  selectedPlace.value = place
+}
+
+function closePlaceDetails() {
+  selectedPlace.value = null
+}
+
+function openCreatePlace() {
+  isCreatePlaceOpen.value = true
+}
+
+function closeCreatePlace() {
+  isCreatePlaceOpen.value = false
+}
+
+async function handleCreatePlace(placeData) {
+  const createdPlace = await createPlace(placeData)
+
+  if (createdPlace) {
+    closeCreatePlace()
+  }
+}
+
+async function handleDeletePlace(placeId) {
+  const deleted = await deletePlace(placeId)
+
+  if (deleted) {
+    closePlaceDetails()
+  }
+}
+
+function getFriendlyErrorMessage(code) {
+  const messages = {
+    FORBIDDEN: 'You do not have permission to manage this place.',
+    NOT_FOUND: 'This place no longer exists.',
+    UNAUTHORIZED: 'Please log in again before managing this place.',
+    VALIDATION_ERROR: 'Please check the place information.',
+    UNKNOWN_ERROR: 'Unable to load places. Please try again.'
+  }
+
+  return messages[code] || messages.UNKNOWN_ERROR
 }
 
 onMounted(async () => {
-        await placesFunction();
-  })
+  await loadPublicPlaces()
+})
 </script>
 
 <style scoped>
@@ -36,6 +136,18 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+}
+
+.places-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.places-header > div {
+  flex: 1;
+  min-width: 0;
 }
 
 .places-header h1 {
@@ -53,10 +165,46 @@ onMounted(async () => {
   font-size: 1.05rem;
 }
 
+.places-header :deep(.base-btn) {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .places-header {
+    flex-direction: column;
+  }
+
+  .places-header :deep(.base-btn) {
+    align-self: flex-end;
+  }
+}
+
 .places-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
+}
+
+.loading-state,
+.empty-state,
+.error-message {
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.loading-state,
+.empty-state {
+  background: rgba(243, 244, 246, 0.8);
+  color: #4b5563;
+}
+
+.error-message {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .place-card {
@@ -66,41 +214,6 @@ onMounted(async () => {
 
 .place-card:hover {
   border-color: rgba(16, 185, 129, 0.3) !important;
-}
-
-.place-image {
-  height: 220px;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  transition: transform 0.5s ease;
-}
-
-/* Beautiful pure CSS placeholder gradients representing the sights */
-.castle-img {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #93c5fd 100%);
-}
-
-.garden-img {
-  background: linear-gradient(135deg, #064e3b 0%, #10b981 50%, #a7f3d0 100%);
-}
-
-.temple-img {
-  background: linear-gradient(135deg, #78350f 0%, #d97706 50%, #fde68a 100%);
-}
-
-.place-tag {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  background: rgba(17, 24, 39, 0.6);
-  backdrop-filter: blur(8px);
-  color: white;
-  padding: 0.35rem 0.85rem;
-  border-radius: 2rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
 }
 
 .place-content {

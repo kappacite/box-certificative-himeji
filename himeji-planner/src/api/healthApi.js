@@ -1,7 +1,3 @@
-/* =========================================================================
-   VÉRIFICATION DU SERVEUR
-   =========================================================================
-
 import client from './client'
 
 export const healthApi = {
@@ -10,4 +6,3 @@ export const healthApi = {
   // Utile pour afficher un indicateur de statut du serveur sur le frontend[cite: 4]
   checkStatus: () => client.get('/api/health')
 }
-*/

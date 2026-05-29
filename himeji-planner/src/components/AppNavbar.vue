@@ -19,6 +19,9 @@
           <RouterLink :to="{ name: 'places' }" class="nav-link">
             <span>Places to visit</span>
           </RouterLink>
+          <RouterLink :to="{ name: 'tours' }" class="nav-link">
+            <span>Tours</span>
+          </RouterLink>
           <RouterLink :to="{ name: 'planner' }" class="nav-link">
             <span>Planify Travel</span>
           </RouterLink>
@@ -26,6 +29,12 @@
 
         <!-- Guest Navigation -->
         <template v-else>
+          <RouterLink :to="{ name: 'places' }" class="nav-link">
+            Places to Visit
+          </RouterLink>
+          <RouterLink :to="{ name: 'tours' }" class="nav-link">
+            Tours
+          </RouterLink>
           <RouterLink :to="{ name: 'login' }" class="nav-link">
             Log In
           </RouterLink>
@@ -84,6 +93,9 @@
                 <p class="user-email">{{ authStore.user?.email }}</p>
               </div>
             </div>
+            <RouterLink :to="{ name: 'tours' }" class="mobile-nav-link" @click="closeAllMenus">
+              Tours
+            </RouterLink>
             <div class="dropdown-divider"></div>
             <RouterLink :to="{ name: 'dashboard' }" class="mobile-nav-link" @click="closeAllMenus">
               🇯🇵 Dashboard
@@ -99,6 +111,12 @@
 
           <!-- Guest -->
           <template v-else>
+            <RouterLink :to="{ name: 'places' }" class="mobile-nav-link" @click="closeAllMenus">
+              Places to visit
+            </RouterLink>
+            <RouterLink :to="{ name: 'tours' }" class="mobile-nav-link" @click="closeAllMenus">
+              Tours
+            </RouterLink>
             <RouterLink :to="{ name: 'login' }" class="mobile-nav-link" @click="closeAllMenus">
               Log In
             </RouterLink>
@@ -115,7 +133,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -208,6 +226,7 @@ const vClickOutside = {
 .brand-text {
   background: linear-gradient(135deg, #1f2937 0%, #1e40af 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

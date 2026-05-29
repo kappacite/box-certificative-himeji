@@ -4,9 +4,10 @@ import Login from '@/views/Login.vue'
 import Register from '@/views/Register.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import Places from '@/views/Places.vue'
+import Tours from '@/views/Tours.vue'
 import NotFound from '@/views/NotFound.vue'
 import PlannerView from '@/views/PlannerView.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,7 +39,11 @@ const router = createRouter({
       path: '/places',
       name: 'places',
       component: Places,
-      meta: { requiresAuth: true }
+    },
+    {
+      path: '/tours',
+      name: 'tours',
+      component: Tours
     },
     {
     path: '/planner',

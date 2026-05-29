@@ -34,10 +34,10 @@
         />
 
         <div v-if="error" class="error-message">
-          {{ error }}
+          {{ getFriendlyErrorMessage(error.code) }}
         </div>
 
-        <BaseButton type="submit" :loading="isLoading">
+        <BaseButton type="submit" :loading="loading">
           Register
         </BaseButton>
       </form>
@@ -54,40 +54,40 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuth } from '@/composables/useAuth'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseInput from '@/components/BaseInput.vue'
 import BaseButton from '@/components/BaseButton.vue'
 
-const router = useRouter()
-const authStore = useAuthStore()
+const { loading, error, registerUser } = useAuth()
 
 const username = ref('')
 const email = ref('')
 const password = ref('')
-const error = ref('')
-const isLoading = ref(false)
 
 const handleSubmit = async () => {
   if (!username.value || !email.value || !password.value) {
-    error.value = 'Please fill in all fields.'
+    error.value = {
+      code: 'VALIDATION_ERROR',
+      message: 'Please fill in all fields.'
+    }
     return
   }
 
-  isLoading.value = true
-  error.value = ''
+  await registerUser({
+    username: username.value,
+    email: email.value,
+    password: password.value
+  })
+}
 
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    authStore.register(username.value, email.value, password.value)
-    router.push({ name: 'dashboard' })
-  } catch (err) {
-    error.value = 'An error occurred during registration.'
-  } finally {
-    isLoading.value = false
+const getFriendlyErrorMessage = (code) => {
+  const errorMessages = {
+    'CONFLICT_ERROR': 'This username or email is already registered.',
+    'VALIDATION_ERROR': 'Please check your username, email, and password.',
+    'UNKNOWN_ERROR': 'Unable to connect to the server. Please try again later.'
   }
+  return errorMessages[code] || errorMessages['UNKNOWN_ERROR']
 }
 </script>
 

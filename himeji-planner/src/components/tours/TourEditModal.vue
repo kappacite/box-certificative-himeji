@@ -150,7 +150,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved'])
 
-const { patchTour, optimizeTour } = useTours()
+const { patchTour } = useTours()
 
 // ── Local state ──────────────────────────────────────────────────────────────
 const localName = ref('')
@@ -284,37 +284,22 @@ async function handleSave() {
     let saved
 
     if (shouldOptimize.value) {
-      // Optimize mode: only user-locked stops are fixed, backend routes the rest
+      // Optimize mode: send locked stops as constraints, backend runs the algorithm
       const lockedPos = Object.keys(lockedPositions.value).length > 0 ? lockedPositions.value : null
-
-      const optimized = await optimizeTour({
-        place_ids: placeIds,
-        locked_positions: lockedPos
-      })
-      if (!optimized) {
-        errorMessage.value = 'Optimization failed. Please try again.'
-        return
-      }
       saved = await patchTour(props.tour.id, {
         name: localName.value,
         visibility: localVisibility.value,
-        place_ids: optimized.ordered_ids ?? placeIds,
-        locked_positions: lockedPos
+        place_ids: placeIds,
+        locked_positions: lockedPos,
+        optimize: true
       })
     } else {
-      // Manual order: lock EVERY stop at its current position so the
-      // backend algorithm cannot reorder anything.
-      // Format: { "<place_id>": <position_index> }
-      const allLocked = {}
-      placeIds.forEach((id, idx) => {
-        if (id != null) allLocked[String(id)] = idx
-      })
-
+      // Manual order: backend saves places in the exact order provided, no algorithm
       saved = await patchTour(props.tour.id, {
         name: localName.value,
         visibility: localVisibility.value,
         place_ids: placeIds,
-        locked_positions: allLocked
+        optimize: false
       })
     }
 

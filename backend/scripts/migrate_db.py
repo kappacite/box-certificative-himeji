@@ -52,10 +52,11 @@ def migrate():
             if "PRIMARY KEY (tour_id, place_id)" in create_sql or "PRIMARY KEY(tour_id, place_id)" in create_sql:
                 print("[+] Migrating 'tour_places' table to use (tour_id, position) as PRIMARY KEY...")
 
-                # Check columns of tour_places to make sure is_hotel exists or not in the source
+                # Check columns of tour_places to make sure is_hotel and locked exist in the source
                 cursor.execute("PRAGMA table_info(tour_places)")
                 tp_cols = [col[1] for col in cursor.fetchall()]
                 has_is_hotel = "is_hotel" in tp_cols
+                has_locked = "locked" in tp_cols
 
                 # Rename old table
                 cursor.execute("ALTER TABLE tour_places RENAME TO tour_places_old")
@@ -75,16 +76,12 @@ def migrate():
                 """)
 
                 # Copy data from old to new
-                if has_is_hotel:
-                    cursor.execute("""
-                        INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
-                        SELECT tour_id, place_id, position, locked, is_hotel FROM tour_places_old
-                    """)
-                else:
-                    cursor.execute("""
-                        INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
-                        SELECT tour_id, place_id, position, locked, 0 FROM tour_places_old
-                    """)
+                select_locked = "locked" if has_locked else "0"
+                select_is_hotel = "is_hotel" if has_is_hotel else "0"
+                cursor.execute(f"""
+                    INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
+                    SELECT tour_id, place_id, position, {select_locked}, {select_is_hotel} FROM tour_places_old
+                """)
 
                 # Drop old table
                 cursor.execute("DROP TABLE tour_places_old")

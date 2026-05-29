@@ -163,6 +163,16 @@ def run_auto_migrations(app) -> None:
                             db.session.rollback()
                             has_is_hotel = False
 
+                        # Check if locked exists
+                        try:
+                            db.session.execute(
+                                text("SELECT locked FROM tour_places LIMIT 1")
+                            )
+                            has_locked = True
+                        except Exception:
+                            db.session.rollback()
+                            has_locked = False
+
                         # Rename old table
                         db.session.execute(
                             text("ALTER TABLE tour_places RENAME TO tour_places_old")
@@ -185,20 +195,14 @@ def run_auto_migrations(app) -> None:
                         )
 
                         # Copy data
-                        if has_is_hotel:
-                            db.session.execute(
-                                text("""
-                                INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
-                                SELECT tour_id, place_id, position, locked, is_hotel FROM tour_places_old
-                            """)
-                            )
-                        else:
-                            db.session.execute(
-                                text("""
-                                INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
-                                SELECT tour_id, place_id, position, locked, 0 FROM tour_places_old
-                            """)
-                            )
+                        select_locked = "locked" if has_locked else "0"
+                        select_is_hotel = "is_hotel" if has_is_hotel else "0"
+                        db.session.execute(
+                            text(f"""
+                            INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
+                            SELECT tour_id, place_id, position, {select_locked}, {select_is_hotel} FROM tour_places_old
+                        """)
+                        )
 
                         # Drop old table
                         db.session.execute(text("DROP TABLE tour_places_old"))

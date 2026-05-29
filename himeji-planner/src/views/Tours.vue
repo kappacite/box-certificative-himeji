@@ -17,13 +17,13 @@
 
     <section v-if="isAuthenticated" class="tour-section">
       <div class="section-header">
-        <h2>My Private Tours</h2>
-        <span class="section-count">{{ privateTours.length }}</span>
+        <h2>My Tours</h2>
+        <span class="section-count">{{ myTours.length }}</span>
       </div>
 
-      <div v-if="privateTours.length > 0" class="tours-grid">
+      <div v-if="myTours.length > 0" class="tours-grid">
         <BaseCard 
-          v-for="tour in privateTours" 
+          v-for="tour in myTours" 
           :key="tour.id" 
           class="tour-card interactive-card"
           hoverable
@@ -45,11 +45,15 @@
               </button>
             </div>
           </div>
-          <p class="tour-distance">{{ formatDistance(tour.total_distance) }}</p>
+          <p class="tour-distance">
+            <span>{{ formatDistance(tour.total_distance) }}</span>
+            <span v-if="tour.max_distance" class="tour-max-dist-badge">Max Hotel: {{ tour.max_distance }} km</span>
+          </p>
           <div class="places-preview-container">
             <ol class="places-preview">
               <li v-for="place in visiblePlaces(tour)" :key="place.id">
                 {{ getPlaceName(place) }}
+                <span v-if="place.is_hotel" class="badge-hotel-inline">🏨 Hotel</span>
               </li>
             </ol>
             <button 
@@ -65,19 +69,19 @@
       </div>
 
       <p v-else class="empty-state">
-        You do not have private tours yet.
+        You do not have any tours yet.
       </p>
     </section>
 
     <section class="tour-section">
       <div class="section-header">
         <h2>Public Tours</h2>
-        <span class="section-count">{{ publicTours.length }}</span>
+        <span class="section-count">{{ otherPublicTours.length }}</span>
       </div>
 
-      <div v-if="publicTours.length > 0" class="tours-grid">
+      <div v-if="otherPublicTours.length > 0" class="tours-grid">
         <BaseCard 
-          v-for="tour in publicTours" 
+          v-for="tour in otherPublicTours" 
           :key="tour.id" 
           class="tour-card interactive-card"
           hoverable
@@ -87,11 +91,15 @@
             <h3>{{ tour.name }}</h3>
             <span class="visibility-badge public">Public</span>
           </div>
-          <p class="tour-distance">{{ formatDistance(tour.total_distance) }}</p>
+          <p class="tour-distance">
+            <span>{{ formatDistance(tour.total_distance) }}</span>
+            <span v-if="tour.max_distance" class="tour-max-dist-badge">Max Hotel: {{ tour.max_distance }} km</span>
+          </p>
           <div class="places-preview-container">
             <ol class="places-preview">
               <li v-for="place in visiblePlaces(tour)" :key="place.id">
                 {{ getPlaceName(place) }}
+                <span v-if="place.is_hotel" class="badge-hotel-inline">🏨 Hotel</span>
               </li>
             </ol>
             <button 
@@ -137,7 +145,14 @@ import TourDetailsModal from '@/components/tours/TourDetailsModal.vue'
 import TourEditModal from '@/components/tours/TourEditModal.vue'
 
 const authStore = useAuthStore()
-const { publicTours, privateTours, loading, error, loadPublicTours, loadMyTours } = useTours()
+const { publicTours, myTours, loading, error, loadPublicTours, loadMyTours } = useTours()
+
+const currentUserId = computed(() => authStore.user?.id ?? null)
+
+// Tours not owned by the current user — shown in the Public section to avoid duplication
+const otherPublicTours = computed(() =>
+  publicTours.value.filter((t) => t.owner_id !== currentUserId.value)
+)
 
 const selectedTour = ref(null)
 const editingTour = ref(null)
@@ -162,12 +177,15 @@ function openEdit(tour) {
   editingTour.value = tour
 }
 
-function onTourSaved(updatedTour) {
-  // Refresh the card data in-place
+async function onTourSaved(updatedTour) {
   editingTour.value = null
-  // Also update selectedTour if it was open
+  // Re-fetch my tours from the backend — source of truth after any edit
+  await loadMyTours()
+  // Also sync the detail modal if it was open on the same tour
   if (selectedTour.value?.id === updatedTour.id) {
-    selectedTour.value = updatedTour
+    const fresh = myTours.value.find((t) => t.id === updatedTour.id)
+      ?? publicTours.value.find((t) => t.id === updatedTour.id)
+    if (fresh) selectedTour.value = fresh
   }
 }
 
@@ -357,6 +375,20 @@ onMounted(async () => {
   color: #2563eb;
   font-size: 1rem;
   font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tour-max-dist-badge {
+  font-size: 0.75rem;
+  background-color: rgba(99, 102, 241, 0.08);
+  color: #4f46e5;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
 }
 
 .places-preview-container {
@@ -372,6 +404,19 @@ onMounted(async () => {
   line-height: 1.7;
 }
 
+.badge-hotel-inline {
+  background-color: #e0e7ff;
+  color: #4338ca;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  margin-left: 0.4rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .expand-button {
   background: transparent;
   border: none;
@@ -383,7 +428,7 @@ onMounted(async () => {
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   transition: background-color 0.2s, color 0.2s;
-  z-index: 2; /* Ensure it stays above other card components if styled closely */
+  z-index: 2;
 }
 
 .expand-button:hover {

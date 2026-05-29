@@ -1,12 +1,12 @@
-# 📖 Public API Guide & Route Manual — Travel Planner
+# 📖 Public API Guide & Route Manual — Himeji Planner
 
-Welcome to the **Travel Planner REST API** manual. This public guide provides developers and API consumers with everything they need to integrate, query, and command our route optimization engine. 
+Welcome to the **Himeji Planner REST API** manual. This public guide provides developers and API consumers with everything they need to integrate, query, and command our route optimization engine. 
 
 ---
 
 ## 🚀 Getting Started
 
-All requests to the Travel Planner API are served in JSON format. The default base URL for local development is:
+All requests to the Himeji Planner API are served in JSON format. The default base URL for local development is:
 `http://localhost:5000/api`
 
 ### 🔑 Authentication Header
@@ -55,7 +55,7 @@ Most actions (managing private places, planning tours) require authenticating vi
 
 ## 🚦 HTTP Status Codes
 
-The Travel Planner API uses standard HTTP response codes to indicate the success or failure of requests:
+The Himeji Planner API uses standard HTTP response codes to indicate the success or failure of requests:
 
 | Code | Status | Meaning |
 | :--- | :--- | :--- |

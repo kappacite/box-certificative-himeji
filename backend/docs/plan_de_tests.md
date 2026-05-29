@@ -1,4 +1,4 @@
-# Plan de Test API — Travel Planner Backend
+# Plan de Test API — Himeji Planner Backend
 
 Ce document définit le plan de test exhaustif, route par route, de l'API Flask. Il décrit pour chaque point d'accès (endpoint) les préconditions, les scénarios de réussite (happy paths), les cas d'erreur (edge cases) et les commandes `curl` associées pour valider le comportement du serveur.
 

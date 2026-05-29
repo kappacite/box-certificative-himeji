@@ -1,6 +1,6 @@
-# 📖 User Guide — Travel Planner
+# 📖 User Guide — Himeji Planner
 
-Welcome to **Travel Planner**! This guide explains how to use the web application to organize places, compute optimized routes, manage advanced constraints, and share your travel itineraries.
+Welcome to **Himeji Planner**! This guide explains how to use the web application to organize places, compute optimized routes, manage advanced constraints, and share your travel itineraries.
 
 > [!TIP]
 > **Not sure how to run the application?**  

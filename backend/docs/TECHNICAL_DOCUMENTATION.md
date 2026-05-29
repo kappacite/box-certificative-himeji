@@ -1,9 +1,9 @@
-# Technical Documentation — Travel Planner Backend API
+# Technical Documentation — Himeji Planner Backend API
 
-This document provides a comprehensive technical overview of the backend REST API for the **Travel Planner** application. It details the layered architecture, design patterns, SOLID principles conformance, Traveling Salesperson Problem (TSP) optimization engine, and testing strategy.
+This document provides a comprehensive technical overview of the backend REST API for the **Himeji Planner** application. It details the layered architecture, design patterns, SOLID principles conformance, Traveling Salesperson Problem (TSP) optimization engine, and testing strategy.
 
 > [!NOTE]
-> For instructions on how to use the Travel Planner application features (such as creating/saving tours, editing public/private places, managing hotel clustering loops, etc.), please refer to the **[Application User Guide](../../user_guide.md)**.
+> For instructions on how to use the Himeji Planner application features (such as creating/saving tours, editing public/private places, managing hotel clustering loops, etc.), please refer to the **[Application User Guide](../../user_guide.md)**.
 
 ---
 
@@ -106,7 +106,7 @@ Dependencies are injected rather than instantiated in-place:
 
 ## 🧠 Core Optimization Engine (TSP Solver)
 
-The core feature of the Travel Planner is finding the optimal ordering of places to visit. This is mapped to the **Traveling Salesperson Problem (TSP)** with custom constraints.
+The core feature of the Himeji Planner is finding the optimal ordering of places to visit. This is mapped to the **Traveling Salesperson Problem (TSP)** with custom constraints.
 
 ```mermaid
 graph TD
@@ -190,7 +190,7 @@ When the user configures a maximum distance between hotels and stops (`max_dista
 
 ## 🌍 Geocoding Engine (Nominatim Integration)
 
-When creating or updating places in the Travel Planner, users can optionally specify the coordinates (latitude and longitude) of a location. If coordinates are omitted, the backend dynamically resolves them using the open-source **OpenStreetMap Nominatim Geocoding API**.
+When creating or updating places in the Himeji Planner, users can optionally specify the coordinates (latitude and longitude) of a location. If coordinates are omitted, the backend dynamically resolves them using the open-source **OpenStreetMap Nominatim Geocoding API**.
 
 ### Integration Workflow
 

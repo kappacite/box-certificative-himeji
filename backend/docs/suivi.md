@@ -1,4 +1,4 @@
-# Suivi du Projet Backend — Travel Planner API
+# Suivi du Projet Backend — Himeji Planner API
 
 Ce document récapitule l'état d'avancement de l'implémentation du backend, l'analyse des fichiers sources, les problèmes identifiés, ainsi que les pistes d'amélioration ou de corrections en attente.
 

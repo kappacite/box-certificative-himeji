@@ -120,6 +120,53 @@
             </div>
           </div>
 
+          <!-- Add stop search -->
+          <div class="add-stop-section">
+            <div class="add-stop-header">
+              <h3 class="stops-title">Add a stop</h3>
+            </div>
+            <div class="search-wrapper">
+              <input
+                id="place-search-input"
+                v-model="searchQuery"
+                class="search-input"
+                type="text"
+                placeholder="Search places by name…"
+                autocomplete="off"
+                @focus="showDropdown = true"
+                @blur="onSearchBlur"
+              />
+              <span v-if="searchLoading" class="search-spinner"></span>
+            </div>
+
+            <Transition name="dropdown-fade">
+              <ul
+                v-if="showDropdown && filteredPlaces.length > 0"
+                class="place-dropdown"
+                @mousedown.prevent
+              >
+                <li
+                  v-for="place in filteredPlaces"
+                  :key="place.id"
+                  class="place-option"
+                  :class="{ 'already-added': isAlreadyAdded(place.id) }"
+                  @click="addStop(place)"
+                >
+                  <span class="place-option-name">{{ shortName(place.name) }}</span>
+                  <span class="place-option-city">{{ place.city || place.name }}</span>
+                  <span v-if="isAlreadyAdded(place.id)" class="already-badge">✓ Added</span>
+                  <span v-else class="add-icon">+</span>
+                </li>
+              </ul>
+              <div
+                v-else-if="showDropdown && searchQuery.length > 0 && !searchLoading"
+                class="place-dropdown place-dropdown-empty"
+              >
+                No places found for “{{ searchQuery }}”
+              </div>
+            </Transition>
+          </div>
+
           <!-- Footer -->
           <footer class="modal-actions">
             <button class="btn-secondary" type="button" @click="handleClose">Cancel</button>
@@ -141,8 +188,9 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useTours } from '@/composables/useTours'
+import { placesApi } from '@/api/placesApi'
 
 const props = defineProps({
   tour: { type: Object, default: null }
@@ -163,6 +211,12 @@ const errorMessage = ref(null)
 // drag state
 const dragIndex = ref(null)
 const dragOverIndex = ref(null)
+
+// place search state
+const searchQuery = ref('')
+const showDropdown = ref(false)
+const searchLoading = ref(false)
+const allAvailablePlaces = ref([])
 
 // originalPredecessors: hotel _uid → predecessor _uid at init time
 // Used to detect when a hotel's upstream stop has been moved/removed
@@ -191,9 +245,62 @@ watch(
       }
     })
     originalPredecessors.value = preds
+    // Load available places when the tour opens
+    loadAvailablePlaces()
   },
   { immediate: true }
 )
+
+// ── Available places ──────────────────────────────────────────────────────────────
+async function loadAvailablePlaces() {
+  searchLoading.value = true
+  try {
+    const [pub, priv] = await Promise.allSettled([
+      placesApi.getPublicPlaces(),
+      placesApi.getMyPlaces()
+    ])
+    const publicList  = pub.status  === 'fulfilled' ? (pub.value.data?.places  ?? []) : []
+    const privateList = priv.status === 'fulfilled' ? (priv.value.data?.places ?? []) : []
+    // Merge, deduplicate by id
+    const byId = new Map()
+    for (const p of [...publicList, ...privateList]) {
+      if (p?.id) byId.set(p.id, p)
+    }
+    allAvailablePlaces.value = Array.from(byId.values())
+  } finally {
+    searchLoading.value = false
+  }
+}
+
+const filteredPlaces = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return allAvailablePlaces.value
+    .filter((p) => p.name?.toLowerCase().includes(q) || p.city?.toLowerCase().includes(q))
+    .slice(0, 12)
+})
+
+function isAlreadyAdded(placeId) {
+  return editableStops.value.some((s) => s.id === placeId)
+}
+
+function onSearchBlur() {
+  // small delay so click on dropdown item fires first
+  setTimeout(() => { showDropdown.value = false }, 150)
+}
+
+function addStop(place) {
+  if (isAlreadyAdded(place.id)) return
+  const newIdx = editableStops.value.length
+  editableStops.value.push({
+    ...place,
+    _uid: `${place.id}-new-${newIdx}`,
+    locked: false,
+    is_hotel: false
+  })
+  searchQuery.value = ''
+  showDropdown.value = false
+}
 
 // ── Broken-hotel detection ───────────────────────────────────────────────────
 // A hotel is "broken" when its current predecessor differs from the original one
@@ -344,7 +451,7 @@ function handleClose() {
   flex-direction: column;
   gap: 1.5rem;
   max-height: 90vh;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
@@ -678,6 +785,129 @@ function handleClose() {
 /* ── Transition ──────────────────────────────────────────────────────────── */
 .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s ease; }
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+
+/* ── Add stop section ────────────────────────────────────────────────────── */
+.add-stop-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.add-stop-header {
+  display: flex;
+  align-items: center;
+}
+
+.search-wrapper {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.55rem 2.2rem 0.55rem 0.75rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.search-input:focus { outline: none; border-color: #3b82f6; }
+
+.search-spinner {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d1d5db;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.place-dropdown {
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem 0;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.place-dropdown-empty {
+  padding: 0.75rem 1rem;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-style: italic;
+  list-style: none;
+}
+
+.place-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.place-option:hover:not(.already-added) { background: #eff6ff; }
+.place-option.already-added { opacity: 0.5; cursor: default; }
+
+.place-option-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1f2937;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.place-option-city {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.already-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 999px;
+  padding: 0.1rem 0.4rem;
+  flex-shrink: 0;
+}
+
+.add-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.place-option:hover .add-icon { background: #2563eb; color: #fff; }
+
+/* Dropdown transition */
+.dropdown-fade-enter-active, .dropdown-fade-leave-active { transition: opacity 0.15s, transform 0.15s; }
+.dropdown-fade-enter-from, .dropdown-fade-leave-to { opacity: 0; transform: translateY(-4px); }
 
 @media (max-width: 640px) {
   .modal-panel { padding: 1.25rem; }

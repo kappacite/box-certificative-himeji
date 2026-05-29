@@ -10,7 +10,7 @@ class UserDAO(BaseDAO[User, int]):
 
     def get_by_id(self, entity_id: int) -> Optional[User]:
         """Retrieve a user by ID."""
-        user_model = UserModel.query.get(entity_id)
+        user_model = db.session.get(UserModel, entity_id)
         if not user_model:
             return None
         return self._to_dataobject(user_model)
@@ -28,26 +28,26 @@ class UserDAO(BaseDAO[User, int]):
             password_hash=entity.password_hash,
         )
         db.session.add(user_model)
-        db.session.commit()
+        db.session.flush()
         entity.id = user_model.id
         return entity
 
     def update(self, entity: User) -> User:
         """Update an existing user."""
-        user_model = UserModel.query.get(entity.id)
+        user_model = db.session.get(UserModel, entity.id)
         if user_model:
             user_model.username = entity.username
             user_model.email = entity.email
             user_model.password_hash = entity.password_hash
-            db.session.commit()
+            db.session.flush()
         return entity
 
     def delete(self, entity_id: int) -> bool:
         """Delete a user by ID."""
-        user_model = UserModel.query.get(entity_id)
+        user_model = db.session.get(UserModel, entity_id)
         if user_model:
             db.session.delete(user_model)
-            db.session.commit()
+            db.session.flush()
             return True
         return False
 

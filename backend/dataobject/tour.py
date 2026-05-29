@@ -13,6 +13,7 @@ class Tour:
     total_distance: float = 0.0
     visibility: str = "private"  # "private" or "public"
     share_token: Optional[str] = None
+    max_distance: float = 100.0
     id: Optional[int] = None
 
     def to_dict(self) -> dict:
@@ -21,14 +22,17 @@ class Tour:
         Returns:
             A dictionary representation of the Tour.
         """
+        places_dict = [p.to_dict() for p in self.places]
+
         return {
             "id": self.id,
             "name": self.name,
             "owner_id": self.owner_id,
-            "places": [p.to_dict() for p in self.places],
+            "places": places_dict,
             "total_distance": self.total_distance,
             "visibility": self.visibility,
             "share_token": self.share_token,
+            "max_distance": self.max_distance,
         }
 
     @classmethod
@@ -43,6 +47,7 @@ class Tour:
         """
         raw_places = data.get("places", [])
         places = [Place.from_dict(p) if isinstance(p, dict) else p for p in raw_places]
+
         return cls(
             name=data.get("name"),
             owner_id=data.get("owner_id"),
@@ -50,5 +55,6 @@ class Tour:
             total_distance=float(data.get("total_distance", 0.0)),
             visibility=data.get("visibility", "private"),
             share_token=data.get("share_token"),
+            max_distance=float(data.get("max_distance", 100.0)),
             id=data.get("id"),
         )

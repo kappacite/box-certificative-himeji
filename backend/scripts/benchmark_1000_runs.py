@@ -143,9 +143,7 @@ def run_1000_benchmarks():
 
     # --- Markdown Report Generation ---
     report_md = []
-    report_md.append(
-        "# Rapport de Test de Robustesse Massif : 1000 Runs à N=5 et N=10"
-    )
+    report_md.append("# Rapport de Test de Robustesse Massif : 1000 Runs à N=5 et N=10")
     report_md.append("")
     report_md.append(
         "Ce rapport présente l'analyse statistique agrégée de 1000 simulations "
@@ -158,8 +156,7 @@ def run_1000_benchmarks():
 
     def append_section_md(report_list, title, stats):
         avg_gain_pct = (
-            (stats["avg_nn_dist"] - stats["avg_ort_dist"])
-            / stats["avg_nn_dist"]
+            (stats["avg_nn_dist"] - stats["avg_ort_dist"]) / stats["avg_nn_dist"]
         ) * 100
 
         report_list.append(f"## 📊 Résultats pour {title}")
@@ -204,8 +201,7 @@ def run_1000_benchmarks():
 
     # Observations
     gain_5 = (
-        (stats_n5["avg_nn_dist"] - stats_n5["avg_ort_dist"])
-        / stats_n5["avg_nn_dist"]
+        (stats_n5["avg_nn_dist"] - stats_n5["avg_ort_dist"]) / stats_n5["avg_nn_dist"]
     ) * 100
     gain_10 = (
         (stats_n10["avg_nn_dist"] - stats_n10["avg_ort_dist"])

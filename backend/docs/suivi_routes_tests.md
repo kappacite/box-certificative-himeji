@@ -38,3 +38,17 @@ Ce fichier est conçu pour t'accompagner dans le test manuel de chaque endpoint 
 | `DELETE` | `/api/tours/<id>` | Supprimer un itinéraire | Aucun (ID dans l'URL) *(En-tête Auth requis)* | **204 No Content** (Corps vide) | [x] Validé (204 No Content, 403 Forbidden si non-propriétaire) |
 | `PATCH` | `/api/tours/<id>/share` | Activer/désactiver/basculer le partage public d'un circuit | `{"visibility": "public"}` (ou vide `{}` pour basculer/toggle) | **200 OK** : `{ "status": "success", "data": { "tour": { ..., "visibility": "public" } } }` | [x] Validé (200 OK, basculement/toggle automatique validé) |
 | `GET` | `/api/tours/shared/<token>` | Accéder publiquement à un itinéraire **(Sans Auth)** | Aucun (Jeton UUID dans l'URL) | **200 OK** : `{ "status": "success", "data": { "tour": { ... } } }` | [x] Validé (200 OK, 404 si introuvable ou repassé en "private") |
+
+---
+
+## ⚡ 4. Nouvelles Routes Utiles
+
+| Méthode | Route | Description | Corps de requête (JSON) | Réponse attendue | Statut du Test |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/api/auth/me` | Récupérer le profil courant | Aucun *(En-tête Auth requis)* | **200 OK** : `{ "status": "success", "data": { "user": { ... } } }` | [x] Validé (200 OK, 401 si jeton absent) |
+| `PATCH` | `/api/places/<id>` | Mise à jour partielle d'un lieu | `{"visibility": "public"}` | **200 OK** : `{ "status": "success", "data": { "place": { ... } } }` | [x] Validé (200 OK, modification partielle validée) |
+| `POST` | `/api/tours/<id>/recalculate` | Forcer le recalcul d'un parcours | Aucun *(En-tête Auth requis)* | **200 OK** : `{ "status": "success", "data": { "tour": { ... } } }` | [x] Validé (200 OK, 403 si non-propriétaire) |
+| `POST` | `/api/tours/<id>/duplicate` | Dupliquer un parcours public/possédé | Aucun *(En-tête Auth requis)* | **201 Created** : `{ "status": "success", "data": { "tour": { ... } } }` | [x] Validé (201 Created, clonage auto des lieux privés validé) |
+| `POST` | `/api/tours/optimize` | Optimiser une liste de lieux (sans sauvegarde) | `{"place_ids": [1, 2], "locked_positions": {"2": 1}}` | **200 OK** : `{ "status": "success", "data": { "places": [...], "total_distance": 12.3 } }` | [x] Validé (200 OK, contraintes globales OR-Tools validées) |
+| `GET` | `/api/places` / `/api/tours/public` | Recherche, filtres et pagination | Aucun (Paramètres URL : `q`, `page`, `limit`) | **200 OK** : Liste paginée et filtrée | [x] Validé (200 OK) |
+| `GET` | `/api/health/ready` | Healthcheck complet (API + DB) | Aucun | **200 OK** : `{ "status": "success", "data": { ... } }` | [x] Validé (200 OK, 500 si DB non joignable) |

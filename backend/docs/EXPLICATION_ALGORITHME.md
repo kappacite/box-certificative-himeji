@@ -2,7 +2,7 @@
 
 Ce document explique les concepts mathématiques et algorithmiques utilisés dans le backend pour calculer l'itinéraire optimal entre les différents lieux.
 
-Le problème posé est une variante du **Problème du Voyageur de Commerce (TSP - Traveling Salesperson Problem)** : trouver le cycle le plus court passant exactement une fois par chaque lieu et revenant au point de départ.
+Le problème posé est une variante du **Problème du Voyageur de Commerce (TSP - Traveling Salesperson Problem)** : trouver le cycle le plus court passant exactement une fois par chaque lieu, **le point de départ devant obligatoirement être le point d'arrivée (boucle fermée ou circuit hamiltonien)**.
 
 ---
 
@@ -39,6 +39,65 @@ def haversine(place_a, place_b) -> float:
         + math.cos(lat_a) * math.cos(lat_b) * math.cos(lon_b - lon_a)
     )
 ```
+
+---
+
+## 1.5. Contrainte de Boucle Fermée : Départ = Arrivée
+
+Dans tous nos calculs et nos benchmarks, le point de départ de l'itinéraire est configuré pour être également son point d'arrivée. Cela signifie que la distance totale retournée par l'API prend en compte le trajet nécessaire pour retourner au point initial.
+
+Cette contrainte est assurée de la manière suivante dans le code :
+* **Calcul global de la distance de la tournée** :
+  ```python
+  # On additionne les segments géodésiques de i vers i+1
+  for i in range(len(tour) - 1):
+      total += haversine(tour[i], tour[i + 1])
+  # On ajoute le retour obligatoire vers le point initial (tour[0])
+  total += haversine(tour[-1], tour[0])
+  ```
+* **Représentation JSON (API)** : Lors de la sérialisation de l'itinéraire via `Tour.to_dict()`, le point de départ (le premier élément de la liste) est dynamiquement dupliqué et ajouté à la fin du tableau `places`. Une tournée de $N$ lieux uniques retournera donc une liste de $N + 1$ étapes, où le premier et le dernier élément sont identiques (par exemple `[A, B, C, A]`). Lors de la désérialisation via `Tour.from_dict()`, le point de fin dupliqué est automatiquement retiré pour garder la liste interne propre.
+* **Moteur de routage OR-Tools** : Le manager d'index d'OR-Tools est instancié avec un dépôt (`0`), ce qui contraint intrinsèquement le solveur à ramener le véhicule à son point d'origine à la fin de sa tournée.
+* **Held-Karp (Programmation dynamique)** : La fonction récursive évalue les sous-trajets et ajoute le retour à la ville d'origine (la ville `0`) comme condition de terminaison lors du parcours complet.
+
+---
+
+## 1.6. Gestion des Étapes Verrouillées (Locked Steps)
+
+L'API permet de verrouiller certains lieux à des positions d'index fixes de l'itinéraire (par exemple, exiger que le lieu d'ID 48 reste exactement à la 48ème étape).
+
+Pour résoudre ce problème de manière optimale sur de grands réseaux (comme 200 lieux) tout en évitant les échecs du solveur sous contraintes strictes, le backend utilise une **stratégie hybride de démarrage à chaud (Warm-Start)** :
+
+1. **Génération de la solution initiale (Démarrage à chaud)** :
+   - Nous filtrons temporairement les lieux verrouillés de la liste principale.
+   - Nous résolvons un TSP pur et non contraint sur les lieux libres en utilisant OR-Tools.
+   - Nous réinsérons les lieux verrouillés précisément à leurs index cibles respectifs pour reconstituer un parcours complet et valide (faisable) respectant tous les verrous.
+2. **Optimisation locale (Warm-Start OR-Tools)** :
+   - Ce parcours complet est injecté en tant que solution de départ dans le solveur OR-Tools avec `ReadAssignmentFromRoutes()`.
+   - On applique une **dimension cumulative de pas (`Steps`)** pour contraindre les index cibles du solveur, mais cette fois-ci, OR-Tools commence la recherche à partir d'un état déjà 100% faisable.
+   - Nous activons la métaheuristique **Guided Local Search** pour affiner et optimiser localement les segments de l'itinéraire (en modifiant l'ordre des lieux libres et en trouvant les raccourcis optimaux sans briser les verrous).
+3. **Sécurité et performance** :
+   - L'algorithme renvoie toujours la solution améliorée d'OR-Tools. Si le temps limite de **3 secondes** est dépassé ou si une erreur survient, il bascule de manière transparente sur la solution initiale faisable calculée à l'étape 1, qui est déjà de très bonne qualité.
+
+---
+
+## 1.7. Regroupement par Hôtels (Clustering & Allers-retours)
+
+Afin d'optimiser les déplacements sur des groupes de villes/lieux proches, le système permet de regrouper les lieux à visiter autour d'un ensemble d'hôtels (lieux de séjour) :
+
+1. **Sélection des hôtels (Algorithme Glouton de Couverture d'Ensemble)** :
+   - Le point de départ (`places[0]`) est obligatoirement désigné comme hôtel de départ.
+   - Les lieux dans un rayon inférieur ou égal à `max_distance` de cet hôtel sont marqués comme couverts.
+   - Tant qu'il reste des lieux non couverts, l'algorithme sélectionne de façon gloutonne le lieu candidat qui couvre le maximum de lieux restants dans un rayon de `max_distance`. Ce candidat devient un nouvel hôtel.
+   - Les autres lieux (non sélectionnés comme hôtels) sont rattachés à l'hôtel le plus proche de chez eux.
+2. **Allers-retours (Round trips)** :
+   - Pour chaque hôtel $H_i$, les lieux qui lui sont rattachés sont visités sous forme d'allers-retours depuis cet hôtel ($H_i \to \text{Lieu} \to H_i$).
+   - Ces mouvements sont comptabilisés dans le calcul de la distance totale.
+3. **Résolution des verrous pour les non-hôtels (`resolve_hotel_locks`)** :
+   - Si l'utilisateur verrouille une étape non-hôtel à un index spécifique $P$ dans la séquence finale, l'algorithme de projection convertit cet index en un index cible pour l'hôtel qui la couvre.
+   - Il estime l'index de l'hôtel dans la liste des hôtels en fonction de la taille cumulée des groupes d'hôtels et applique les contraintes de verrouillage résultantes directement sur la séquence des hôtels dans OR-Tools.
+4. **Itinéraire final (Boucle Fermée)** :
+   - Le solveur optimise la séquence des hôtels sous forme de circuit fermé (TSP sur les hôtels).
+   - L'itinéraire complet est reconstitué en remplaçant chaque hôtel par sa visite et ses allers-retours, et se termine en rebouclant vers l'hôtel de départ initial.
 
 ---
 

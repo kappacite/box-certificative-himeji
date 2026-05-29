@@ -140,8 +140,7 @@ def run_benchmark_n100_n250():
         results_list: List[Dict],
     ):
         avg_gain_pct = (
-            (stats["avg_nn_dist"] - stats["avg_ort_dist"])
-            / stats["avg_nn_dist"]
+            (stats["avg_nn_dist"] - stats["avg_ort_dist"]) / stats["avg_nn_dist"]
         ) * 100
 
         report_list.append(f"## 📊 Résultats détaillés pour {title}")
@@ -161,9 +160,7 @@ def run_benchmark_n100_n250():
             "| Run | Dist OR-Tools (km) | Temps OR-Tools (ms) | "
             "Dist NN+2-Opt (km) | Temps NN+2-Opt (ms) | Gain (%) |"
         )
-        report_list.append(
-            "| :--- | :---: | :---: | :---: | :---: | :---: |"
-        )
+        report_list.append("| :--- | :---: | :---: | :---: | :---: | :---: |")
         for r in results_list:
             gain = ((r["nn_dist"] - r["ort_dist"]) / r["nn_dist"]) * 100
             report_list.append(
@@ -200,12 +197,8 @@ def run_benchmark_n100_n250():
         )
         report_list.append("")
 
-    append_section_md(
-        report_md, "N = 100 lieux", 100, stats_n100, results_by_size[100]
-    )
-    append_section_md(
-        report_md, "N = 250 lieux", 250, stats_n250, results_by_size[250]
-    )
+    append_section_md(report_md, "N = 100 lieux", 100, stats_n100, results_by_size[100])
+    append_section_md(report_md, "N = 250 lieux", 250, stats_n250, results_by_size[250])
 
     # Observations
     gain_100 = (

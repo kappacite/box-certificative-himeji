@@ -17,7 +17,7 @@ Cette partie contient les modules de calculs mathématiques et d'optimisation (T
   - `distance.py` a pour unique tâche le calcul de la distance orthodromique entre deux points de coordonnées.
   - `optimizer.py` a pour unique tâche de résoudre le problème du voyageur de commerce (TSP) pour une liste de lieux. Aucun de ces fichiers n'effectue d'appels à des bases de données ou à des APIs réseau.
 * **O — Open/Closed Principle (OCP)** :
-  - L'interface d'optimisation expose une fonction d'entrée unique `optimize(places)`. Le moteur de résolution interne (initialement Nearest Neighbour + 2-opt, désormais **Google OR-Tools**) a été modifié sans altérer la signature publique de la fonction ni impacter les couches supérieures (routes, services), ce qui valide l'OCP.
+  - L'interface d'optimisation expose une fonction d'entrée `optimize(places, locked_positions=None)`. Le moteur de résolution interne a été enrichi pour supporter le verrouillage d'étapes sans impacter les contrats de base des couches supérieures ni briser la compatibilité ascendante.
 * **L — Liskov Substitution Principle (LSP)** :
   - Les calculs reposent uniquement sur les abstractions de type `Place` (qui sont de simples structures de données). Toute extension de la classe `Place` sera supportée sans altérer le comportement des algorithmes.
 * **I — Interface Segregation Principle (ISP)** :
@@ -32,5 +32,5 @@ Cette partie contient les modules de calculs mathématiques et d'optimisation (T
 | Fichier / Élément | État | Problèmes identifiés | Actions correctives / Évolutions |
 | :--- | :--- | :--- | :--- |
 | `distance.py` | 🟢 Complet | Risque d'erreur de domaine `math.acos` dû aux arrondis de précision des floats (sur deux points identiques). | *Corrigé* : Le paramètre d'entrée est désormais bridé avec `max(-1.0, min(1.0, cos_val))` avant l'appel à `acos`, ce qui prévient toute exception de calcul. |
-| `optimizer.py` | 🟢 Complet | La complexité du 2-opt ($O(N^2)$) présentait un risque d'épuisement de ressources CPU synchrone si la liste de lieux était trop grande. | *Corrigé* : Intégration de **Google OR-Tools**, un solveur extrêmement performant capable de gérer des milliers de villes en quelques millisecondes. |
+| `optimizer.py` | 🟢 Complet | Risque d'infinite loops ou de temps de calculs longs d'OR-Tools sous fortes contraintes de dimensions à grande échelle (ex: 200 lieux). | *Corrigé* : Résolution par sous-tours et réinsertion (les lieux verrouillés sont retirés pour optimiser le sous-tour avec OR-Tools, puis réinsérés en $O(N)$). Ajout d'une limite de temps de 3 secondes sur OR-Tools. |
 

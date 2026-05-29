@@ -11,7 +11,7 @@ class TourDAO(BaseDAO[Tour, int]):
 
     def get_by_id(self, entity_id: int) -> Optional[Tour]:
         """Retrieve a tour by ID, populating its ordered list of places."""
-        tour_model = TourModel.query.get(entity_id)
+        tour_model = db.session.get(TourModel, entity_id)
         if not tour_model:
             return None
         return self._to_dataobject(tour_model)
@@ -29,6 +29,7 @@ class TourDAO(BaseDAO[Tour, int]):
             total_distance=entity.total_distance,
             visibility=entity.visibility,
             share_token=entity.share_token,
+            max_distance=entity.max_distance,
         )
         db.session.add(tour_model)
         # Flush to get the tour_model.id
@@ -44,17 +45,21 @@ class TourDAO(BaseDAO[Tour, int]):
                 )
 
             assoc = TourPlaceModel(
-                tour_id=tour_model.id, place_id=place.id, position=index
+                tour_id=tour_model.id,
+                place_id=place.id,
+                position=index,
+                locked=place.locked,
+                is_hotel=place.is_hotel,
             )
             db.session.add(assoc)
 
-        db.session.commit()
+        db.session.flush()
         entity.id = tour_model.id
         return entity
 
     def update(self, entity: Tour) -> Tour:
         """Update an existing tour, replacing its ordered place list."""
-        tour_model = TourModel.query.get(entity.id)
+        tour_model = db.session.get(TourModel, entity.id)
         if not tour_model:
             return entity
 
@@ -63,6 +68,7 @@ class TourDAO(BaseDAO[Tour, int]):
         tour_model.total_distance = entity.total_distance
         tour_model.visibility = entity.visibility
         tour_model.share_token = entity.share_token
+        tour_model.max_distance = entity.max_distance
 
         # Replace ordered list of places: delete existing, add new ones
         TourPlaceModel.query.filter_by(tour_id=entity.id).delete()
@@ -74,19 +80,23 @@ class TourDAO(BaseDAO[Tour, int]):
                 )
 
             assoc = TourPlaceModel(
-                tour_id=tour_model.id, place_id=place.id, position=index
+                tour_id=tour_model.id,
+                place_id=place.id,
+                position=index,
+                locked=place.locked,
+                is_hotel=place.is_hotel,
             )
             db.session.add(assoc)
 
-        db.session.commit()
+        db.session.flush()
         return entity
 
     def delete(self, entity_id: int) -> bool:
         """Delete a tour by ID. Foreign keys take care of cascade deletes."""
-        tour_model = TourModel.query.get(entity_id)
+        tour_model = db.session.get(TourModel, entity_id)
         if tour_model:
             db.session.delete(tour_model)
-            db.session.commit()
+            db.session.flush()
             return True
         return False
 
@@ -125,6 +135,43 @@ class TourDAO(BaseDAO[Tour, int]):
         tour_models = TourModel.query.filter_by(visibility="public").all()
         return [self._to_dataobject(tm) for tm in tour_models]
 
+    def query_tours(
+        self,
+        owner_id: Optional[int] = None,
+        visibility: Optional[str] = None,
+        q: Optional[str] = None,
+        page: int = 1,
+        limit: Optional[int] = None,
+    ) -> List[Tour]:
+        """Query tours with filters and pagination.
+
+        Args:
+            owner_id: Optional owner user ID filter.
+            visibility: Optional visibility ('public' or 'private') filter.
+            q: Optional search query for tour name (case-insensitive).
+            page: Page number for pagination (starts at 1).
+            limit: Maximum number of tours to retrieve.
+
+        Returns:
+            A list of Tour data objects.
+        """
+        query = TourModel.query
+
+        if visibility is not None:
+            query = query.filter(TourModel.visibility == visibility)
+        if owner_id is not None:
+            query = query.filter(TourModel.owner_id == owner_id)
+        if q:
+            query = query.filter(TourModel.name.ilike(f"%{q}%"))
+
+        # Pagination
+        if limit is not None and limit > 0:
+            offset = (page - 1) * limit
+            query = query.limit(limit).offset(offset)
+
+        tour_models = query.all()
+        return [self._to_dataobject(tm) for tm in tour_models]
+
     def _to_dataobject(self, model: TourModel) -> Tour:
         """Helper to convert TourModel (ORM) to Tour (DataObject) with resolved Places."""
         places = []
@@ -137,6 +184,8 @@ class TourDAO(BaseDAO[Tour, int]):
                 longitude=tp.place.longitude,
                 owner_id=tp.place.owner_id,
                 visibility=tp.place.visibility,
+                locked=getattr(tp, "locked", False),
+                is_hotel=getattr(tp, "is_hotel", False),
             )
             places.append(place_do)
 
@@ -148,4 +197,5 @@ class TourDAO(BaseDAO[Tour, int]):
             total_distance=model.total_distance,
             visibility=model.visibility,
             share_token=model.share_token,
+            max_distance=model.max_distance,
         )

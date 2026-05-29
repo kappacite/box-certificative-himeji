@@ -100,14 +100,23 @@ routes  →  services  →  dao  →  DB
 /api/auth/register       POST
 /api/auth/login          POST
 /api/auth/logout         POST
+/api/auth/me             GET
 
 /api/places              GET, POST
-/api/places/<id>         GET, PUT, DELETE
+/api/places/<id>         GET, PUT, PATCH, DELETE
+/api/places/search       GET
+/api/places/geocode      POST
 
 /api/tours               GET, POST
-/api/tours/<id>          GET, DELETE
+/api/tours/<id>          GET, PATCH, DELETE
+/api/tours/preview       POST
+/api/tours/<id>/recalculate POST
+/api/tours/<id>/duplicate   POST
 /api/tours/<id>/share    PATCH
 /api/tours/shared/<token> GET    ← public access, no auth required
+
+/api/health              GET
+/api/health/ready        GET
 ```
 
 ### HTTP Status Codes

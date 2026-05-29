@@ -213,7 +213,7 @@ Renvoie la liste des lieux personnels ou publics avec filtres et pagination.
 ---
 
 ### 🗺️ Rechercher les coordonnées d'un lieu (GET)
-Récupère les coordonnées (latitude et longitude) d'une adresse ou d'un nom de lieu via le service Nominatim, sans enregistrer le lieu en base de données.
+Récupère les coordonnées (latitude et longitude) et la ville d'une adresse ou d'un nom de lieu via le service Nominatim, sans enregistrer le lieu en base de données.
 
 * **Méthode** : `GET`
 * **URL** : `/api/places/search?q=<nom_du_lieu>`
@@ -224,7 +224,8 @@ Récupère les coordonnées (latitude et longitude) d'une adresse ou d'un nom de
       "status": "success",
       "data": {
         "latitude": 48.8566,
-        "longitude": 2.3522
+        "longitude": 2.3522,
+        "city": "Paris"
       }
     }
     ```
@@ -250,7 +251,8 @@ Identique à la route de recherche GET, mais via un corps de requête POST. Util
       "status": "success",
       "data": {
         "latitude": 48.8566,
-        "longitude": 2.3522
+        "longitude": 2.3522,
+        "city": "Paris"
       }
     }
     ```
@@ -291,7 +293,7 @@ Renvoie la liste globale de tous les lieux publics présents en base de données
 ---
 
 ### ➕ Créer un lieu **[Auth Requise]**
-Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitude`/`longitude`) ne sont pas fournies, l'API utilise automatiquement l'API OpenStreetMap Nominatim pour géocoder le nom.
+Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitude`/`longitude`) ne sont pas fournies, l'API utilise automatiquement l'API OpenStreetMap Nominatim pour géocoder le nom et en résoudre la ville.
 
 * **Méthode** : `POST`
 * **URL** : `/api/places`
@@ -301,6 +303,7 @@ Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitu
     "name": "Lyon",
     "latitude": 45.7640,          // Optionnel
     "longitude": 4.8357,         // Optionnel
+    "city": "Lyon",              // Optionnel (défaut: extrait via géocodage si coordonnées non fournies)
     "visibility": "public"       // Optionnel ("private" ou "public", défaut: "private")
   }
   ```
@@ -316,7 +319,10 @@ Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitu
           "latitude": 45.764,
           "longitude": 4.8357,
           "owner_id": 2,
-          "visibility": "public"
+          "visibility": "public",
+          "city": "Lyon",
+          "is_hotel": false,
+          "locked": false
         }
       }
     }
@@ -693,19 +699,7 @@ Recalcule l'ordre optimal et la distance totale d'un itinéraire existant. Utile
   * **`403 Forbidden`** : Utilisateur non propriétaire.
   * **`404 Not Found`** : L'itinéraire n'existe pas.
 
----
 
-### 👯 Dupliquer un itinéraire **[Auth Requise]**
-Copie un itinéraire public (ou appartenant à l'utilisateur) dans son espace personnel. Si l'itinéraire d'origine contient des lieux privés appartenant à un tiers, l'API clone automatiquement ces lieux en tant que nouveaux lieux privés pour le destinataire, évitant ainsi les erreurs de permission.
-
-* **Méthode** : `POST`
-* **URL** : `/api/tours/<int:tour_id>/duplicate`
-* **Codes HTTP de réponse** :
-  * **`201 Created`** : Copie créée.
-  * **`403 Forbidden`** : L'itinéraire d'origine est privé et appartient à un autre utilisateur (copie interdite).
-  * **`404 Not Found`** : L'itinéraire n'existe pas.
-
----
 
 ### ⚡ Optimiser un itinéraire (sans sauvegarde) **[Auth Requise]**
 Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sans créer ni enregistrer de tournée en base de données. Il permet également de tester l'impact de verrous de position, de lieux spécifiques, ou de la distance de clustering `max_distance`.

@@ -325,55 +325,7 @@ def test_recalculate_tour(client, auth_headers, mock_geocoding):
     assert new_distance != old_distance
 
 
-def test_duplicate_tour(client, auth_headers, other_auth_headers, mock_geocoding):
-    """Test duplicating a public tour and verifying place cloning."""
-    # 1. User 1 creates a private place and a public place
-    res_p1 = client.post(
-        "/api/places",
-        headers=auth_headers,
-        json={"name": "Paris", "visibility": "private"},
-    )
-    res_p2 = client.post(
-        "/api/places",
-        headers=auth_headers,
-        json={"name": "Lyon", "visibility": "public"},
-    )
-    p1_id = res_p1.get_json()["data"]["place"]["id"]
-    p2_id = res_p2.get_json()["data"]["place"]["id"]
 
-    # 2. User 1 creates a public tour with both places
-    res_tour = client.post(
-        "/api/tours",
-        headers=auth_headers,
-        json={
-            "name": "User1 Tour",
-            "place_ids": [p1_id, p2_id],
-            "visibility": "public",
-        },
-    )
-    tour_id = res_tour.get_json()["data"]["tour"]["id"]
-
-    # 3. User 2 duplicates the public tour
-    res_dup = client.post(
-        f"/api/tours/{tour_id}/duplicate",
-        headers=other_auth_headers,
-    )
-    assert res_dup.status_code == 201
-    dup_tour = res_dup.get_json()["data"]["tour"]
-    assert dup_tour["name"] == "User1 Tour (Copy)"
-    assert dup_tour["visibility"] == "private"
-    assert len(dup_tour["places"]) == 3  # closed loop: start, intermediate, start
-
-    # 4. Verify that User 1's private place was cloned for User 2
-    cloned_place_id = dup_tour["places"][0]["id"]
-    assert cloned_place_id != p1_id  # It must be a new place ID
-    # Check that User 2 has access to it
-    res_fetch_place = client.get(
-        f"/api/places/{cloned_place_id}",
-        headers=other_auth_headers,
-    )
-    assert res_fetch_place.status_code == 200
-    assert res_fetch_place.get_json()["data"]["place"]["name"] == "Paris"
 
 
 def test_tours_search_and_pagination(client, auth_headers, mock_geocoding):

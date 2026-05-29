@@ -4,7 +4,7 @@
    =========================================================================
 */
 
-import apiTravel from "./apiconfig";
+import client from "./client"
 
 export const placesApi = {
   // Lister mes lieux (personnels) [Auth Requise][cite: 4]

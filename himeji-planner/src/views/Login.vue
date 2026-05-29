@@ -27,10 +27,6 @@
           required
         />
 
-        <div class="test-user-info">
-          ⚙️ <strong>Production Mode</strong>: Connect using your registered account credentials.
-        </div>
-
         <div v-if="error" class="error-message">
           {{ getFriendlyErrorMessage(error.code) }}
         </div>

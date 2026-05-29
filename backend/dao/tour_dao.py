@@ -11,7 +11,7 @@ class TourDAO(BaseDAO[Tour, int]):
 
     def get_by_id(self, entity_id: int) -> Optional[Tour]:
         """Retrieve a tour by ID, populating its ordered list of places."""
-        tour_model = TourModel.query.get(entity_id)
+        tour_model = db.session.get(TourModel, entity_id)
         if not tour_model:
             return None
         return self._to_dataobject(tour_model)
@@ -53,13 +53,13 @@ class TourDAO(BaseDAO[Tour, int]):
             )
             db.session.add(assoc)
 
-        db.session.commit()
+        db.session.flush()
         entity.id = tour_model.id
         return entity
 
     def update(self, entity: Tour) -> Tour:
         """Update an existing tour, replacing its ordered place list."""
-        tour_model = TourModel.query.get(entity.id)
+        tour_model = db.session.get(TourModel, entity.id)
         if not tour_model:
             return entity
 
@@ -88,15 +88,15 @@ class TourDAO(BaseDAO[Tour, int]):
             )
             db.session.add(assoc)
 
-        db.session.commit()
+        db.session.flush()
         return entity
 
     def delete(self, entity_id: int) -> bool:
         """Delete a tour by ID. Foreign keys take care of cascade deletes."""
-        tour_model = TourModel.query.get(entity_id)
+        tour_model = db.session.get(TourModel, entity_id)
         if tour_model:
             db.session.delete(tour_model)
-            db.session.commit()
+            db.session.flush()
             return True
         return False
 

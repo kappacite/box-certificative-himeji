@@ -73,7 +73,10 @@ class AuthService:
 
         new_user = User(username=username, email=email, password_hash=password_hash)
 
-        return self.user_dao.create(new_user)
+        from dao.database import db
+        user = self.user_dao.create(new_user)
+        db.session.commit()
+        return user
 
     def login(self, email: str, password: str) -> Tuple[str, User]:
         """Authenticate user credentials and generate a JWT.
@@ -169,3 +172,5 @@ class AuthService:
         if not exists:
             revoked = RevokedToken(token=token)
             self.revoked_token_dao.create(revoked)
+            from dao.database import db
+            db.session.commit()

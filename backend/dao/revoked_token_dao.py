@@ -24,7 +24,7 @@ class RevokedTokenDAO(BaseDAO[RevokedToken, int]):
         """Create and persist a new revoked token."""
         model = RevokedTokenModel(token=entity.token)
         db.session.add(model)
-        db.session.commit()
+        db.session.flush()
         entity.id = model.id
         entity.revoked_at = model.revoked_at
         return entity
@@ -34,7 +34,7 @@ class RevokedTokenDAO(BaseDAO[RevokedToken, int]):
         model = db.session.get(RevokedTokenModel, entity.id)
         if model:
             model.token = entity.token
-            db.session.commit()
+            db.session.flush()
         return entity
 
     def delete(self, entity_id: int) -> bool:
@@ -42,7 +42,7 @@ class RevokedTokenDAO(BaseDAO[RevokedToken, int]):
         model = db.session.get(RevokedTokenModel, entity_id)
         if model:
             db.session.delete(model)
-            db.session.commit()
+            db.session.flush()
             return True
         return False
 

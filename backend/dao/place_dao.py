@@ -10,7 +10,7 @@ class PlaceDAO(BaseDAO[Place, int]):
 
     def get_by_id(self, entity_id: int) -> Optional[Place]:
         """Retrieve a place by ID."""
-        place_model = PlaceModel.query.get(entity_id)
+        place_model = db.session.get(PlaceModel, entity_id)
         if not place_model:
             return None
         return self._to_dataobject(place_model)
@@ -44,28 +44,28 @@ class PlaceDAO(BaseDAO[Place, int]):
             visibility=entity.visibility,
         )
         db.session.add(place_model)
-        db.session.commit()
+        db.session.flush()
         entity.id = place_model.id
         return entity
 
     def update(self, entity: Place) -> Place:
         """Update an existing place."""
-        place_model = PlaceModel.query.get(entity.id)
+        place_model = db.session.get(PlaceModel, entity.id)
         if place_model:
             place_model.name = entity.name
             place_model.latitude = entity.latitude
             place_model.longitude = entity.longitude
             place_model.owner_id = entity.owner_id
             place_model.visibility = entity.visibility
-            db.session.commit()
+            db.session.flush()
         return entity
 
     def delete(self, entity_id: int) -> bool:
         """Delete a place by ID."""
-        place_model = PlaceModel.query.get(entity_id)
+        place_model = db.session.get(PlaceModel, entity_id)
         if place_model:
             db.session.delete(place_model)
-            db.session.commit()
+            db.session.flush()
             return True
         return False
 

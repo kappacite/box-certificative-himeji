@@ -159,7 +159,10 @@ class TourService:
             max_distance=max_distance,
         )
 
-        return self.tour_dao.create(new_tour)
+        from dao.database import db
+        tour = self.tour_dao.create(new_tour)
+        db.session.commit()
+        return tour
 
     def preview_tour(
         self,
@@ -445,7 +448,10 @@ class TourService:
             visibility="private",
             share_token=share_token,
         )
-        return self.tour_dao.create(new_tour)
+        from dao.database import db
+        duplicated_tour = self.tour_dao.create(new_tour)
+        db.session.commit()
+        return duplicated_tour
 
     def recalculate_tour(self, tour_id: int, owner_id: int) -> Tour:
         """Recalculate the optimized routing and distance of a tour.
@@ -481,7 +487,10 @@ class TourService:
         tour.places = optimized_places
         tour.total_distance = self.calculate_tour_distance(optimized_places)
 
-        return self.tour_dao.update(tour)
+        from dao.database import db
+        updated_tour = self.tour_dao.update(tour)
+        db.session.commit()
+        return updated_tour
 
     def delete_tour(self, tour_id: int, owner_id: int) -> bool:
         """Delete a tour, verifying ownership.
@@ -495,7 +504,10 @@ class TourService:
         """
         # Triggers ownership verification
         self.get_tour_by_id(tour_id, owner_id)
-        return self.tour_dao.delete(tour_id)
+        from dao.database import db
+        deleted = self.tour_dao.delete(tour_id)
+        db.session.commit()
+        return deleted
 
     def patch_tour(
         self,
@@ -627,7 +639,10 @@ class TourService:
             tour.places = optimized_places
             tour.total_distance = self.calculate_tour_distance(optimized_places)
 
-        return self.tour_dao.update(tour)
+        from dao.database import db
+        updated_tour = self.tour_dao.update(tour)
+        db.session.commit()
+        return updated_tour
 
     def get_shared_tour(self, share_token: str) -> Tour:
         """Retrieve a public tour by its share token. No authentication required.

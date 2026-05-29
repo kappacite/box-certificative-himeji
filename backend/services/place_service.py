@@ -164,7 +164,10 @@ class PlaceService:
             owner_id=owner_id,
             visibility=visibility,
         )
-        return self.place_dao.create(new_place)
+        from dao.database import db
+        place = self.place_dao.create(new_place)
+        db.session.commit()
+        return place
 
     def update_place(
         self,
@@ -223,7 +226,10 @@ class PlaceService:
             place.latitude = lat
             place.longitude = lon
 
-        return self.place_dao.update(place)
+        from dao.database import db
+        updated = self.place_dao.update(place)
+        db.session.commit()
+        return updated
 
     def patch_place(
         self,
@@ -290,7 +296,10 @@ class PlaceService:
             place.latitude = lat
             place.longitude = lon
 
-        return self.place_dao.update(place)
+        from dao.database import db
+        updated = self.place_dao.update(place)
+        db.session.commit()
+        return updated
 
     def delete_place(self, place_id: int, owner_id: int) -> bool:
         """Delete a place by ID, verifying ownership.
@@ -308,7 +317,10 @@ class PlaceService:
             raise NotFoundException("Place not found")
         if place.owner_id != owner_id:
             raise ForbiddenException("You do not own this place")
-        return self.place_dao.delete(place_id)
+        from dao.database import db
+        deleted = self.place_dao.delete(place_id)
+        db.session.commit()
+        return deleted
 
     def get_public_places(self) -> List[Place]:
         """Retrieve all public places.

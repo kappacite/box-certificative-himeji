@@ -41,6 +41,14 @@
               Close
             </BaseButton>
             <BaseButton
+              v-if="canEdit"
+              variant="secondary"
+              type="button"
+              @click="$emit('edit', place)"
+            >
+              Edit place
+            </BaseButton>
+            <BaseButton
               v-if="canDelete"
               type="button"
               :loading="loading"
@@ -64,6 +72,10 @@ const props = defineProps({
     type: Object,
     default: null
   },
+  canEdit: {
+    type: Boolean,
+    default: false
+  },
   canDelete: {
     type: Boolean,
     default: false
@@ -78,7 +90,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['close', 'delete'])
+defineEmits(['close', 'edit', 'delete'])
 
 const nameParts = computed(() => props.place?.name?.split(', ') ?? [])
 const displayName = computed(() => nameParts.value[0] || props.place?.name || 'Unknown place')

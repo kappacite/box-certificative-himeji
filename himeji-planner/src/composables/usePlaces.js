@@ -72,6 +72,23 @@ export function usePlaces() {
     }
   }
 
+  async function updatePlace(placeId, placeData) {
+    placesStore.clearError()
+    placesStore.loading = true
+
+    try {
+      const response = await placesApi.updatePlace(placeId, placeData)
+      const updatedPlace = response.data?.place
+      placesStore.updatePlace(updatedPlace)
+      return updatedPlace
+    } catch (err) {
+      placesStore.setError(err)
+      return null
+    } finally {
+      placesStore.loading = false
+    }
+  }
+
   return {
     places,
     loading,
@@ -79,6 +96,7 @@ export function usePlaces() {
     loadPublicPlaces,
     loadVisiblePlaces,
     createPlace,
+    updatePlace,
     deletePlace
   }
 }

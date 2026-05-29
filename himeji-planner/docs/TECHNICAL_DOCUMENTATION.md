@@ -123,7 +123,22 @@ Manages itineraries:
 
 ## 🚀 Running & Building
 
-To run the Vue 3 app locally:
+### Launching the Application (Recommended)
+You can launch both the frontend and backend simultaneously using the cross-platform automated startup scripts located at the root of the project:
+
+* **Linux / macOS**:
+  ```bash
+  ./run.sh
+  ```
+* **Windows**:
+  Double-click or run from command prompt:
+  ```cmd
+  run.bat
+  ```
+These scripts will automatically verify Python/Node.js dependencies, seed the database, and spin up both dev servers in parallel.
+
+### Manual Frontend Execution
+If you wish to run the frontend independently:
 
 1. **Install Dependencies**:
    ```bash

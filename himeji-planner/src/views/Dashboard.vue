@@ -59,24 +59,23 @@
           </RouterLink>
         </BaseCard>
 
-        <!-- Card 2: Travel Essentials Checklist -->
         <BaseCard hoverable class="dashboard-card">
           <div class="card-icon">🎒</div>
-          <h3>Travel Checklist</h3>
-          <p>Prepare your baggage optimally: follow our curated list of essentials for an enjoyable stay abroad.</p>
-          <BaseButton @click="handleManageChecklist">
-            Manage My Checklist
-          </BaseButton>
+          <h3>Plan your next trip</h3>
+          <p>Prepare your baggage optimally: select your destinations and we will optimize your journeys and hotels.</p>
+          <RouterLink :to="{ name: 'planner' }" class="card-action">
+            Create a new travel →
+          </RouterLink>
         </BaseCard>
 
         <!-- Card 3: Saved Travel Guides -->
         <BaseCard hoverable class="dashboard-card">
           <div class="card-icon">🗺️</div>
-          <h3>My Saved Itineraries</h3>
-          <p>Your saved routes, itineraries, and custom offline guides will be listed here. Explore destinations to compile a guide.</p>
-          <BaseButton variant="secondary" @click="handleBrowseGuides">
-            Browse Guides
-          </BaseButton>
+          <h3>My Itineraries</h3>
+          <p>Your saved routes, custom it and and explore destinations.</p>
+          <RouterLink :to="{ name: 'tours' }" class="card-action">
+            Check your tours →
+          </RouterLink>
         </BaseCard>
       </div>
     </div>

@@ -46,15 +46,22 @@
           <div class="timeline-item">
             <span class="time">10:00</span>
             <div class="details">
-              <h4>Himeji Castle (White Heron) 🏯</h4>
+              <h4>Himeji Castle 🏯</h4>
               <p>Guided tour of the main keep and fortresses</p>
             </div>
           </div>
           <div class="timeline-item">
-            <span class="time">13:30</span>
+            <span class="time">15:00</span>
             <div class="details">
-              <h4>Lunch & Tea Ceremony at Koko-en 🍵</h4>
-              <p>Traditional matcha tasting in the historic garden</p>
+              <h4>Another Train to Shizuoka</h4>
+              <p>A day of travel...</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="time">21:00</span>
+            <div class="details">
+              <h4>Take a good night !l</h4>
+              <p>Tomorow i climb the mythical Mount Fuji 🏔️</p>
             </div>
           </div>
         </div>
@@ -111,6 +118,7 @@ const authStore = useAuthStore()
 .hero-title span {
   background: linear-gradient(135deg, #2563eb, #db2777);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

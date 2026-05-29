@@ -238,6 +238,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, #1d4ed8, #0891b2);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

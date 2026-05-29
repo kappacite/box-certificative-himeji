@@ -11,7 +11,7 @@ This document provides a comprehensive technical overview of the backend REST AP
 
 To satisfy the routing and usability requirements, the backend implementation relies on several key technical decisions:
 
-* **Efficient TSP Optimization (Google OR-Tools)**: Computing the shortest path between multiple locations is a classic **Traveling Salesperson Problem (TSP)**, which is NP-hard. Rather than writing a slow custom brute-force algorithm or naive heuristics, we integrated **Google OR-Tools Routing Solver** (configured with Path Cheapest Arc and Guided Local Search) to compute highly optimized itineraries within a strict 3-second timeout constraint.
+* **Efficient TSP Optimization (Google OR-Tools)**: Computing the shortest path between multiple locations is a classic **Traveling Salesperson Problem (TSP)**, which is NP-hard. Rather than writing a slow custom brute-force algorithm or naive heuristics, we integrated **Google OR-Tools Routing Solver** (configured with the **Christofides algorithm** for first solution search) to compute highly optimized itineraries within a strict 3-second timeout constraint.
 * **Hotel Clustering & Multi-Day Adaptations**: To handle longer trips realistically, the engine solves the "hotel clustering" problem. Sights are clustered around elected hotel bases using a **Greedy Set Cover heuristic** to construct a series of daily round-trips (`Hotel -> Stop -> Hotel`), preventing travelers from having to cover excessive linear distances without returning to a lodging base.
 * **Dedicated REST API**: The Flask backend exposes a clean REST API. By separating optimization logic and database management from the user interface, it provides a fast, stateless interface for the frontend application.
 
@@ -146,7 +146,7 @@ cos_val = max(-1.0, min(1.0, cos_val))
 
 ### Google OR-Tools Routing Engine
 The optimizer uses **Google OR-Tools**' routing solver.
-* **First Solution Strategy**: Path cheapest arc (greedy starting path).
+* **First Solution Strategy**: Christofides algorithm (provides an initial path with a proven 1.5 approximation ratio for symmetric metric TSPs).
 * **Local Search Metaheuristic**: Guided Local Search (GLS) or Tabu Search to escape local minima.
 * **Time limit**: Constrained to a maximum of 3 seconds to guarantee prompt HTTP responses.
 

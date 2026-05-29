@@ -178,11 +178,43 @@ def get_public_tours():
     )
 
 
+def serialize_public_tour(tour) -> dict:
+    """Serialize a Tour data object for public access, hiding internal database IDs."""
+    places = []
+    for p in tour.places:
+        places.append(
+            {
+                "name": p.name,
+                "latitude": p.latitude,
+                "longitude": p.longitude,
+                "visibility": p.visibility,
+                "is_hotel": getattr(p, "is_hotel", False),
+                "locked": getattr(p, "locked", False),
+            }
+        )
+    return {
+        "name": tour.name,
+        "places": places,
+        "total_distance": tour.total_distance,
+        "visibility": tour.visibility,
+        "share_token": tour.share_token,
+        "max_distance": tour.max_distance,
+    }
+
+
 @tour_bp.route("/shared/<string:share_token>", methods=["GET"])
 def get_shared_tour(share_token):
     """Retrieve a public tour by share token. No authentication required."""
     tour = tour_service.get_shared_tour(share_token)
-    return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
+    return (
+        jsonify(
+            {
+                "status": "success",
+                "data": {"tour": serialize_public_tour(tour)},
+            }
+        ),
+        200,
+    )
 
 
 @tour_bp.route("/<int:tour_id>/recalculate", methods=["POST"])

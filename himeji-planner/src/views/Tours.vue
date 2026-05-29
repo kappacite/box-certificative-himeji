@@ -170,12 +170,15 @@ function openEdit(tour) {
   editingTour.value = tour
 }
 
-function onTourSaved(updatedTour) {
-  // Refresh the card data in-place
+async function onTourSaved(updatedTour) {
   editingTour.value = null
-  // Also update selectedTour if it was open
+  // Re-fetch my tours from the backend — source of truth after any edit
+  await loadMyTours()
+  // Also sync the detail modal if it was open on the same tour
   if (selectedTour.value?.id === updatedTour.id) {
-    selectedTour.value = updatedTour
+    const fresh = privateTours.value.find((t) => t.id === updatedTour.id)
+      ?? publicTours.value.find((t) => t.id === updatedTour.id)
+    if (fresh) selectedTour.value = fresh
   }
 }
 

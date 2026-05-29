@@ -554,10 +554,13 @@ class TourService:
                 for place in optimized_places:
                     place.locked = place.id in locked_map
             else:
-                # Save in the exact order provided — no algorithm
+                # Save in the exact order provided — no algorithm.
+                # Restore is_hotel from the existing tour so hotel markers are preserved.
+                existing_hotel_map = {p.id: p.is_hotel for p in tour.places}
                 optimized_places = places
                 for place in optimized_places:
                     place.locked = place.id in locked_map
+                    place.is_hotel = existing_hotel_map.get(place.id, False)
 
             tour.places = optimized_places
             tour.total_distance = self.calculate_tour_distance(optimized_places)

@@ -25,6 +25,14 @@ client.interceptors.response.use(
     const status = error.response?.status
     const responseData = error.response?.data
 
+    if (!error.response) {
+      return Promise.reject({
+        status: null,
+        message: 'Unable to reach the API. Please check that the backend is running.',
+        code: 'NETWORK_ERROR'
+      })
+    }
+
     if (status === 401) {
       useAuthStore().logout()
     }

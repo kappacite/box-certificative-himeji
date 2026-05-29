@@ -8,6 +8,7 @@
       :placeholder="placeholder"
       :required="required"
       :disabled="disabled"
+      :step="step"
       class="form-input"
       @input="$emit('update:modelValue', $event.target.value)"
     />
@@ -43,6 +44,10 @@ defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  step: {
+    type: String,
+    default: undefined
   }
 })
 

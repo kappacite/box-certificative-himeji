@@ -1,7 +1,8 @@
 
     
 <template>
-    <BaseCard hoverable class="place-card">
+    <button class="place-card-button" type="button" @click="$emit('select')">
+      <BaseCard hoverable class="place-card">
         <div class="place-content">
           <h3>{{ name }}</h3>
           <div class="place-meta">
@@ -9,7 +10,8 @@
             <span class="meta-item">{{ latitude }} | {{ longitude }}</span>
           </div>
         </div>
-    </BaseCard>
+      </BaseCard>
+    </button>
 </template>
 
 <script setup>
@@ -22,9 +24,19 @@ defineProps({
   longitude: Number
 })
 
+defineEmits(['select'])
 </script>
 
 <style scoped>
+.place-card-button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
 .base-card {
   background: #ffffff;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
@@ -36,7 +48,7 @@ defineProps({
 
   background: linear-gradient(white, white) padding-box,
               linear-gradient(135deg, #047857, #10b981) border-box;
-  border-radius: 30px;
+  border-radius: 1rem;
   border: 1px solid transparent;
 }
 

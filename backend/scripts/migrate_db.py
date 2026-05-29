@@ -3,11 +3,11 @@ import sqlite3
 
 
 def migrate():
-    """Migrates the local SQLite database to include missing columns.
+    """Migrates the local SQLite database to include missing columns and correct primary keys.
 
     Adds:
     - tours.max_distance (FLOAT, default 100.0)
-    - tour_places.is_hotel (BOOLEAN, default 0)
+    - Migrates tour_places primary key from (tour_id, place_id) to (tour_id, position)
     """
     # SQLite file path inside instance/
     base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -22,7 +22,7 @@ def migrate():
     cursor = conn.cursor()
 
     try:
-        # Check columns of tours
+        # 1. Check/Add max_distance in tours table
         cursor.execute("PRAGMA table_info(tours)")
         tours_columns = [col[1] for col in cursor.fetchall()]
 
@@ -32,21 +32,64 @@ def migrate():
         else:
             print("[~] Column 'max_distance' already exists in table 'tours'.")
 
-        # Check columns of tour_places
-        cursor.execute("PRAGMA table_info(tour_places)")
-        tour_places_columns = [col[1] for col in cursor.fetchall()]
+        # 2. Check primary key of tour_places table
+        # Query the creation SQL to check primary key constraint
+        cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='tour_places'")
+        sql_row = cursor.fetchone()
+        if sql_row:
+            create_sql = sql_row[0]
+            # If the primary key is (tour_id, place_id), we need to migrate it to (tour_id, position)
+            if "PRIMARY KEY (tour_id, place_id)" in create_sql or "PRIMARY KEY(tour_id, place_id)" in create_sql:
+                print("[+] Migrating 'tour_places' table to use (tour_id, position) as PRIMARY KEY...")
 
-        if "is_hotel" not in tour_places_columns:
-            print("[+] Adding column 'is_hotel' to table 'tour_places'...")
-            cursor.execute("ALTER TABLE tour_places ADD COLUMN is_hotel BOOLEAN NOT NULL DEFAULT 0")
+                # Check columns of tour_places to make sure is_hotel exists or not in the source
+                cursor.execute("PRAGMA table_info(tour_places)")
+                tp_cols = [col[1] for col in cursor.fetchall()]
+                has_is_hotel = "is_hotel" in tp_cols
+
+                # Rename old table
+                cursor.execute("ALTER TABLE tour_places RENAME TO tour_places_old")
+
+                # Create new table with correct PRIMARY KEY and columns
+                cursor.execute("""
+                    CREATE TABLE tour_places (
+                        tour_id INTEGER NOT NULL,
+                        place_id INTEGER NOT NULL,
+                        position INTEGER NOT NULL,
+                        locked BOOLEAN NOT NULL DEFAULT 0,
+                        is_hotel BOOLEAN NOT NULL DEFAULT 0,
+                        PRIMARY KEY (tour_id, position),
+                        FOREIGN KEY(tour_id) REFERENCES tours (id) ON DELETE CASCADE,
+                        FOREIGN KEY(place_id) REFERENCES places (id) ON DELETE CASCADE
+                    )
+                """)
+
+                # Copy data from old to new
+                if has_is_hotel:
+                    cursor.execute("""
+                        INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
+                        SELECT tour_id, place_id, position, locked, is_hotel FROM tour_places_old
+                    """)
+                else:
+                    cursor.execute("""
+                        INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
+                        SELECT tour_id, place_id, position, locked, 0 FROM tour_places_old
+                    """)
+
+                # Drop old table
+                cursor.execute("DROP TABLE tour_places_old")
+                print("[+] 'tour_places' table migrated successfully!")
+            else:
+                print("[~] 'tour_places' table already has the correct PRIMARY KEY structure.")
         else:
-            print("[~] Column 'is_hotel' already exists in table 'tour_places'.")
+            print("[-] 'tour_places' table does not exist.")
 
         conn.commit()
         print("[+] Migration completed successfully!")
     except Exception as e:
         conn.rollback()
         print(f"[-] Migration failed: {e}")
+        raise e
     finally:
         conn.close()
 

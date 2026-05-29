@@ -47,7 +47,7 @@ def create_place():
     name = data.get("name")
     latitude = data.get("latitude")
     longitude = data.get("longitude")
-    visibility = data.get("visibility", "private")
+    visibility = data.get("visibility", "public")
 
     # If coordinates are passed as empty strings, convert to None
     lat = place_service.parse_coordinate(latitude, "latitude")

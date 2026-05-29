@@ -15,25 +15,51 @@
       {{ friendlyErrorMessage }}
     </div>
 
-    <div v-if="loading && placesList.length === 0" class="loading-state">
+    <div v-if="loading && places.length === 0" class="loading-state">
       Loading places...
     </div>
 
-    <p v-else-if="placesList.length === 0" class="empty-state">
+    <p v-else-if="places.length === 0" class="empty-state">
       No places are available yet.
     </p>
 
-    <div class="places-grid">
-      <PlaceCard
-        v-for="place in placesList"
-        :key="place.id"
-        :name="getPlaceName(place)"
-        :latitude="place.latitude"
-        :longitude="place.longitude"
-        :city="getPlaceCity(place)"
-        @select="openPlaceDetails(place)"
-      />
-    </div>
+    <section v-if="isAuthenticated && privatePlaces.length > 0" class="places-section">
+      <div class="section-header">
+        <h2>My Private Places</h2>
+        <span class="section-count">{{ privatePlaces.length }}</span>
+      </div>
+
+      <div class="places-grid">
+        <PlaceCard
+          v-for="place in privatePlaces"
+          :key="place.id"
+          :name="getPlaceName(place)"
+          :latitude="place.latitude"
+          :longitude="place.longitude"
+          :city="getPlaceCity(place)"
+          @select="openPlaceDetails(place)"
+        />
+      </div>
+    </section>
+
+    <section v-if="publicPlaces.length > 0" class="places-section">
+      <div class="section-header">
+        <h2>Public Places</h2>
+        <span class="section-count">{{ publicPlaces.length }}</span>
+      </div>
+
+      <div class="places-grid">
+        <PlaceCard
+          v-for="place in publicPlaces"
+          :key="place.id"
+          :name="getPlaceName(place)"
+          :latitude="place.latitude"
+          :longitude="place.longitude"
+          :city="getPlaceCity(place)"
+          @select="openPlaceDetails(place)"
+        />
+      </div>
+    </section>
 
     <PlaceDetailsModal
       :place="selectedPlace"
@@ -64,13 +90,14 @@ import PlaceCreateModal from '@/components/places/PlaceCreateModal.vue'
 import PlaceDetailsModal from '@/components/places/PlaceDetailsModal.vue'
 
 const authStore = useAuthStore()
-const { places, loading, error, loadPublicPlaces, createPlace, deletePlace } = usePlaces()
+const { places, loading, error, loadVisiblePlaces, createPlace, deletePlace } = usePlaces()
 
 const selectedPlace = ref(null)
 const isCreatePlaceOpen = ref(false)
 
-const placesList = computed(() => places.value)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const privatePlaces = computed(() => places.value.filter((place) => place.visibility === 'private'))
+const publicPlaces = computed(() => places.value.filter((place) => place.visibility !== 'private'))
 const friendlyErrorMessage = computed(() => getFriendlyErrorMessage(error.value?.code))
 
 function getPlaceName(place) {
@@ -126,7 +153,7 @@ function getFriendlyErrorMessage(code) {
 }
 
 onMounted(async () => {
-  await loadPublicPlaces()
+  await loadVisiblePlaces(authStore.isAuthenticated)
 })
 </script>
 
@@ -184,6 +211,34 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
+}
+
+.places-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-header h2 {
+  color: #111827;
+  font-size: 1.3rem;
+}
+
+.section-count {
+  min-width: 2rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #047857;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
 }
 
 .loading-state,

@@ -20,6 +20,25 @@ export function usePlaces() {
     }
   }
 
+  async function loadVisiblePlaces(isAuthenticated) {
+    placesStore.clearError()
+    placesStore.loading = true
+
+    try {
+      const publicResponse = await placesApi.getPublicPlaces()
+      placesStore.setPlaces(publicResponse.data?.places ?? [])
+
+      if (isAuthenticated) {
+        const privateResponse = await placesApi.getMyPlaces()
+        placesStore.mergePlaces(privateResponse.data?.places ?? [])
+      }
+    } catch (err) {
+      placesStore.setError(err)
+    } finally {
+      placesStore.loading = false
+    }
+  }
+
   async function deletePlace(placeId) {
     placesStore.clearError()
     placesStore.loading = true
@@ -58,6 +77,7 @@ export function usePlaces() {
     loading,
     error,
     loadPublicPlaces,
+    loadVisiblePlaces,
     createPlace,
     deletePlace
   }

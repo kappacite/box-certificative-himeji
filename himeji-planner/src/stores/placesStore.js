@@ -11,6 +11,18 @@ export const usePlacesStore = defineStore('places', () => {
     places.value = newPlaces ?? []
   }
 
+  function mergePlaces(newPlaces) {
+    const placeById = new Map()
+
+    for (const place of [...places.value, ...(newPlaces ?? [])]) {
+      if (place?.id) {
+        placeById.set(place.id, place)
+      }
+    }
+
+    places.value = Array.from(placeById.values())
+  }
+
   function addPlace(place) {
     if (place) {
       places.value = [place, ...places.value]
@@ -29,5 +41,5 @@ export const usePlacesStore = defineStore('places', () => {
     error.value = null
   }
 
-  return { places, loading, error, setPlaces, addPlace, removePlace, setError, clearError }
+  return { places, loading, error, setPlaces, mergePlaces, addPlace, removePlace, setError, clearError }
 })

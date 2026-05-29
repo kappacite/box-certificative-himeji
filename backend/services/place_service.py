@@ -129,7 +129,7 @@ class PlaceService:
         owner_id: int,
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
-        visibility: str = "private",
+        visibility: str = "public",
     ) -> Place:
         """Create a new place, optionally geocoding its name if coordinates are omitted.
 

@@ -32,6 +32,38 @@
               required
             />
 
+            <div class="search-panel">
+              <BaseInput
+                id="place-search"
+                v-model="searchQuery"
+                label="Search places in this city"
+                placeholder="e.g. cathedral, museum, station"
+                :disabled="loading || searchLoading"
+              />
+              <BaseButton
+                type="button"
+                variant="secondary"
+                :loading="searchLoading"
+                :disabled="loading"
+                @click="handleSearch"
+              >
+                Search
+              </BaseButton>
+            </div>
+
+            <p v-if="searchError" class="search-message">
+              {{ searchError.message }}
+            </p>
+
+            <ul v-if="results.length > 0" class="search-results">
+              <li v-for="result in results" :key="result.id">
+                <button type="button" class="result-button" @click="selectSearchResult(result)">
+                  <strong>{{ result.name }}</strong>
+                  <span>{{ result.label }}</span>
+                </button>
+              </li>
+            </ul>
+
             <div class="field-row">
               <BaseInput
                 id="place-latitude"
@@ -52,6 +84,11 @@
                 step="any"
               />
             </div>
+
+            <label class="checkbox-field">
+              <input v-model="form.isPrivate" type="checkbox" :disabled="loading" />
+              <span>Make this place private</span>
+            </label>
 
             <p v-if="localError" class="error-message">
               {{ localError }}
@@ -78,6 +115,7 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
+import { usePlaceSearch } from '@/composables/usePlaceSearch'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseInput from '@/components/BaseInput.vue'
 
@@ -102,10 +140,13 @@ const form = reactive({
   name: '',
   city: '',
   latitude: '',
-  longitude: ''
+  longitude: '',
+  isPrivate: false
 })
 
 const localError = ref('')
+const searchQuery = ref('')
+const { results, searchLoading, searchError, searchPlaces, clearResults } = usePlaceSearch()
 
 const friendlyErrorMessage = computed(() => {
   const messages = {
@@ -151,9 +192,23 @@ function handleSubmit() {
   emit('create', buildPayload())
 }
 
+async function handleSearch() {
+  localError.value = ''
+  await searchPlaces(form.city, searchQuery.value)
+}
+
+function selectSearchResult(result) {
+  form.name = result.name
+  form.city = result.city
+  form.latitude = result.latitude.toString()
+  form.longitude = result.longitude.toString()
+  clearResults()
+}
+
 function buildPayload() {
   const payload = {
-    name: `${form.name.trim()}, ${form.city.trim()}`
+    name: `${form.name.trim()}, ${form.city.trim()}`,
+    visibility: form.isPrivate ? 'private' : 'public'
   }
 
   if (form.latitude !== '') {
@@ -184,7 +239,10 @@ function resetForm() {
   form.city = ''
   form.latitude = ''
   form.longitude = ''
+  form.isPrivate = false
+  searchQuery.value = ''
   localError.value = ''
+  clearResults()
 }
 </script>
 
@@ -262,6 +320,80 @@ function resetForm() {
   gap: 1rem;
 }
 
+.search-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #374151;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.checkbox-field input {
+  width: 18px;
+  height: 18px;
+  accent-color: #047857;
+}
+
+.search-message {
+  padding: 0.75rem 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.875rem;
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.result-button {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.result-button:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.result-button strong,
+.result-button span {
+  display: block;
+}
+
+.result-button strong {
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.result-button span {
+  margin-top: 0.25rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
 .error-message {
   padding: 0.75rem 1rem;
   border: 1px solid #fecaca;
@@ -289,7 +421,8 @@ function resetForm() {
 }
 
 @media (max-width: 520px) {
-  .field-row {
+  .field-row,
+  .search-panel {
     grid-template-columns: 1fr;
   }
 

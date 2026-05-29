@@ -32,7 +32,7 @@ class PlaceModel(db.Model):
     owner_id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    visibility = db.Column(db.String(20), nullable=False, default="private")
+    visibility = db.Column(db.String(20), nullable=False, default="public")
 
 
 class TourPlaceModel(db.Model):

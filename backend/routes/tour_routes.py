@@ -116,6 +116,7 @@ def patch_tour(tour_id):
     name = data.get("name")
     locked_positions = data.get("locked_positions")
     locked_places = data.get("locked_places")
+    optimize = data.get("optimize", True)  # False → save order as-is, skip algorithm
 
     max_distance_val = data.get("max_distance")
     max_distance = None
@@ -134,6 +135,7 @@ def patch_tour(tour_id):
         locked_positions=locked_positions,
         locked_places=locked_places,
         max_distance=max_distance,
+        optimize=optimize,
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 

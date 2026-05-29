@@ -477,6 +477,7 @@ class TourService:
         locked_positions: Optional[dict] = None,
         locked_places: Optional[list] = None,
         max_distance: Optional[float] = None,
+        optimize: bool = True,
     ) -> Tour:
         """Update tour.
 
@@ -489,6 +490,8 @@ class TourService:
             locked_positions: Optional new locked positions mapping.
             locked_places: Optional new locked places list.
             max_distance: Optional updated max_distance for clustering.
+            optimize: When False, save places in the provided order without
+                      running the optimization algorithm (default True).
 
         Returns:
             The updated Tour.
@@ -543,13 +546,18 @@ class TourService:
 
             places = self._retrieve_and_validate_places(parsed_place_ids, owner_id)
 
-            optimized_places = optimize_with_hotels(
-                places, locked_map, max_distance=tour.max_distance
-            )
-
-            # Apply locked property on returned place objects
-            for place in optimized_places:
-                place.locked = place.id in locked_map
+            if optimize:
+                optimized_places = optimize_with_hotels(
+                    places, locked_map, max_distance=tour.max_distance
+                )
+                # Apply locked property on returned place objects
+                for place in optimized_places:
+                    place.locked = place.id in locked_map
+            else:
+                # Save in the exact order provided — no algorithm
+                optimized_places = places
+                for place in optimized_places:
+                    place.locked = place.id in locked_map
 
             tour.places = optimized_places
             tour.total_distance = self.calculate_tour_distance(optimized_places)

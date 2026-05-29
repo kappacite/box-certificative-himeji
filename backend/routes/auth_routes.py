@@ -57,14 +57,7 @@ def logout():
         parts = auth_header.split()
         if len(parts) == 2 and parts[0].lower() == "bearer":
             token = parts[1]
-            from dao.models import RevokedTokenModel
-            from dao.database import db
-
-            exists = RevokedTokenModel.query.filter_by(token=token).first()
-            if not exists:
-                revoked = RevokedTokenModel(token=token)
-                db.session.add(revoked)
-                db.session.commit()
+            auth_service.logout(token)
 
     return (
         jsonify({"status": "success", "data": {"message": "Logged out successfully"}}),

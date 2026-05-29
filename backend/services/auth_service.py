@@ -5,7 +5,9 @@ import bcrypt
 import jwt
 
 from dao.user_dao import UserDAO
+from dao.revoked_token_dao import RevokedTokenDAO
 from dataobject.user import User
+from dataobject.revoked_token import RevokedToken
 from exceptions.app_exceptions import ConflictException, ValidationException
 from exceptions.auth_exceptions import (
     UnauthorizedException,
@@ -17,8 +19,11 @@ from exceptions.auth_exceptions import (
 class AuthService:
     """Business logic service for user authentication and session management."""
 
-    def __init__(self, user_dao: UserDAO = None):
+    def __init__(
+        self, user_dao: UserDAO = None, revoked_token_dao: RevokedTokenDAO = None
+    ):
         self.user_dao = user_dao or UserDAO()
+        self.revoked_token_dao = revoked_token_dao or RevokedTokenDAO()
         from flask import current_app
 
         try:
@@ -133,6 +138,9 @@ class AuthService:
             TokenExpiredException: If the token has expired.
             InvalidTokenException: If the token is invalid or user is not found.
         """
+        if self.revoked_token_dao.get_by_token(token) is not None:
+            raise UnauthorizedException("Token has been revoked")
+
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
             user_id = payload.get("user_id")
@@ -148,3 +156,16 @@ class AuthService:
             raise InvalidTokenException("Authenticated user not found")
 
         return user
+
+    def logout(self, token: str) -> None:
+        """Revoke a JWT token to log the user out.
+
+        Args:
+            token: The JWT token string.
+        """
+        if not token:
+            return
+        exists = self.revoked_token_dao.get_by_token(token)
+        if not exists:
+            revoked = RevokedToken(token=token)
+            self.revoked_token_dao.create(revoked)

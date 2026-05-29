@@ -32,13 +32,6 @@ def require_auth(f):
 
         token = parts[1]
 
-        # Check if the token was blacklisted (logged out)
-        from dao.models import RevokedTokenModel
-
-        is_revoked = RevokedTokenModel.query.filter_by(token=token).first() is not None
-        if is_revoked:
-            raise UnauthorizedException("Token has been revoked")
-
         auth_service = AuthService()
         # verify_token will raise TokenExpiredException or InvalidTokenException if invalid
         g.current_user = auth_service.verify_token(token)
@@ -111,19 +104,12 @@ def optional_auth(f):
             if len(parts) == 2 and parts[0].lower() == "bearer":
                 token = parts[1]
 
-                # Check if the token was blacklisted (logged out)
-                from dao.models import RevokedTokenModel
-
-                is_revoked = (
-                    RevokedTokenModel.query.filter_by(token=token).first() is not None
-                )
-                if not is_revoked:
-                    try:
-                        auth_service = AuthService()
-                        # verify_token returns the User object if valid
-                        g.current_user = auth_service.verify_token(token)
-                    except Exception:
-                        pass
+                try:
+                    auth_service = AuthService()
+                    # verify_token returns the User object if valid
+                    g.current_user = auth_service.verify_token(token)
+                except Exception:
+                    pass
 
         return f(*args, **kwargs)
 

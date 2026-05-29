@@ -29,7 +29,7 @@ This section is dedicated to managing and exploring destinations:
 * **My Private Places List (when logged in)**: A personal, private list of landmarks that only you can see and include in your itineraries.
 * **Adding a New Place**:
   * Enter a place name.
-  * If you leave the coordinates blank, the system automatically resolves the **Latitude**, **Longitude**, and **City** name using the **OpenStreetMap Nominatim Geocoding API**.
+  * If you leave the coordinates blank, the system automatically resolves the **Latitude**, **Longitude** using the **OpenStreetMap Nominatim Geocoding API**.
   * Choose whether the place should be public or private.
 * **Editing Owned Places (when logged in)**: You can edit the name, coordinates, city, or visibility of any place you created.
 * **Robust Place Deletion**: If you delete a place that is currently referenced by one of your tours, the backend handles the deletion gracefully via cascades. The place will be removed from your tours without corrupting or crashing the itineraries.

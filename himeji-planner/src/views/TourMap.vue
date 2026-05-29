@@ -114,9 +114,23 @@ const renderMap = () => {
         .bindPopup(`<b>${stop.is_hotel ? '🏨 Hotel' : `Stop ${stopCounter}`}</b><br>${stop.name}`)
     })
     
-    // Draw line between markers
-    const polyline = L.polyline(latlngs, { color: '#2563eb', weight: 4 })
-    layers.push(polyline)
+    // Draw a solid base route line (semi-transparent)
+    const basePolyline = L.polyline(latlngs, {
+      color: '#2563eb',
+      weight: 5,
+      opacity: 0.45
+    })
+    layers.push(basePolyline)
+
+    // Draw an animated flowing line on top of the base line
+    const animatedPolyline = L.polyline(latlngs, {
+      color: '#1d4ed8',
+      weight: 5,
+      opacity: 0.95,
+      dashArray: '12, 18',
+      className: 'animated-flow-line'
+    })
+    layers.push(animatedPolyline)
 
     routeLayer = L.featureGroup(layers).addTo(map)
     
@@ -154,5 +168,15 @@ onUnmounted(() => {
 .map-container {
   width: 100%;
   height: 100%;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
+:deep(.animated-flow-line) {
+  animation: flow 1.5s linear infinite;
 }
 </style>

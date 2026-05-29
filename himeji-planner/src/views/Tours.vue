@@ -43,14 +43,6 @@
               >
                 ✏️ Edit
               </button>
-              <button
-                class="delete-btn"
-                type="button"
-                aria-label="Delete tour"
-                @click.stop="handleDeleteTour(tour)"
-              >
-                🗑️ Delete
-              </button>
             </div>
           </div>
           <p class="tour-distance">
@@ -140,6 +132,7 @@
       :tour="editingTour"
       @close="editingTour = null"
       @saved="onTourSaved"
+      @deleted="onTourDeleted"
     />
   </div>
 </template>
@@ -185,10 +178,10 @@ function openEdit(tour) {
   editingTour.value = tour
 }
 
-async function handleDeleteTour(tour) {
-  if (confirm(`Are you sure you want to delete the tour "${tour.name}"?`)) {
-    await deleteTour(tour.id)
-  }
+async function onTourDeleted() {
+  editingTour.value = null
+  selectedTour.value = null
+  await loadMyTours()
 }
 
 async function onTourSaved(updatedTour) {

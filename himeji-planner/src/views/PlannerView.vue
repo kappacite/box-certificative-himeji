@@ -69,6 +69,25 @@
             </div>
           </div>
 
+          <!-- Max Distance Slider/Input for Hotel Clustering -->
+          <div class="input-group max-distance-group">
+            <div class="label-wrapper">
+              <label for="maxDistance">Max Hotel-to-Stop Distance</label>
+              <span class="max-distance-val">{{ maxDistance }} km</span>
+            </div>
+            <p class="input-desc">Maximum distance for round trips from selected hotels. Lower values create more hotel hubs.</p>
+            <input 
+              id="maxDistance" 
+              type="range" 
+              min="10" 
+              max="500" 
+              step="10" 
+              v-model.number="maxDistance"
+              :disabled="loading"
+              class="slider"
+            />
+          </div>
+
           <div class="action-footer">
             <BaseButton 
               class="w-full text-center" 
@@ -146,15 +165,38 @@
           <div class="optimized-route-list">
             <h3>Optimized Stops Sequence</h3>
             <p class="route-desc">Stops have been reordered for the shortest travel loop (returns to start).</p>
-            <ul class="tour-route">
-              <StopDetails 
+            <ul class="tour-timeline">
+              <li 
                 v-for="(stop, index) in activeTour.route" 
                 :key="index" 
-                :id="'tourStop'+index" 
-                :hasIndex="true" 
-                :index="index" 
-                :stop="stop"
-              />
+                :class="{ 'timeline-hotel': stop.is_hotel }"
+                class="timeline-item"
+              >
+                <!-- Connecting Line -->
+                <div v-if="index < activeTour.route.length - 1" class="timeline-line"></div>
+                
+                <!-- Dot Indicator -->
+                <div class="timeline-dot-wrapper">
+                  <span class="timeline-number">{{ index + 1 }}</span>
+                </div>
+                
+                <!-- Card content -->
+                <div class="timeline-card">
+                  <div class="timeline-card-header">
+                    <h4>{{ getPlaceName(stop) }}</h4>
+                    <div class="badges">
+                      <span v-if="stop.is_hotel" class="badge badge-hotel">🏨 Hotel</span>
+                      <span v-if="stop.locked" class="badge badge-locked">🔒 Locked</span>
+                    </div>
+                  </div>
+                  <p class="timeline-coords">
+                    <span>Lat: {{ stop.latitude.toFixed(4) }}</span>
+                    <span class="separator">|</span>
+                    <span>Lng: {{ stop.longitude.toFixed(4) }}</span>
+                  </p>
+                  <p v-if="stop.is_hotel" class="hotel-desc">Round trips will branch from here</p>
+                </div>
+              </li>
             </ul>
           </div>
         </div>
@@ -187,6 +229,11 @@ const selectedPlace = ref("")
 const selectedPlaceIds = ref([])
 const activeTour = ref(null)
 const tourName = ref("")
+const maxDistance = ref(100)
+
+function getPlaceName(place) {
+  return place.name?.split(', ')[0] || place.name || 'Unknown place'
+}
 
 // Load public and private places
 const loadPlaces = async () => {
@@ -285,7 +332,8 @@ const handleGenerateTour = async () => {
 
   try {
     const payload = {
-      place_ids: selectedPlaceIds.value.map(p => p.id)
+      place_ids: selectedPlaceIds.value.map(p => p.id),
+      max_distance: maxDistance.value
     }
     const response = await client.post('/tours/preview', payload)
     const tourData = response.data?.tour
@@ -315,7 +363,8 @@ const handleSaveTour = async () => {
     const payload = {
       name: tourName.value.trim(),
       place_ids: selectedPlaceIds.value.map(p => p.id),
-      visibility: 'private'
+      visibility: 'private',
+      max_distance: maxDistance.value
     }
     await client.post('/tours', payload)
     
@@ -688,6 +737,203 @@ const handleSaveTour = async () => {
   flex-direction: column;
   max-height: 450px;
   overflow-y: auto;
+}
+
+/* Max distance slider */
+.max-distance-group {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.max-distance-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #4f46e5;
+  background: rgba(99, 102, 241, 0.08);
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.5rem;
+}
+
+.input-desc {
+  font-size: 0.8rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.slider {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.slider:focus {
+  background: #cbd5e1;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4f46e5;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Custom Timeline for optimized stops */
+.tour-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 1.25rem;
+  position: relative;
+  align-items: flex-start;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 17px;
+  top: 36px;
+  bottom: -24px;
+  width: 2px;
+  background-color: #cbd5e1;
+  z-index: 1;
+}
+
+.timeline-dot-wrapper {
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-number {
+  background-color: #111827;
+  color: white;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 3px solid white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.3s;
+}
+
+.timeline-hotel .timeline-number {
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.timeline-card {
+  flex: 1;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.timeline-card:hover {
+  border-color: #cbd5e1;
+  background: #f3f4f6;
+}
+
+.timeline-hotel .timeline-card {
+  background: rgba(99, 102, 241, 0.02);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+
+.timeline-hotel .timeline-card:hover {
+  background: rgba(99, 102, 241, 0.04);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.timeline-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.timeline-card h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.badges {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.badge-hotel {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.badge-locked {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.timeline-coords {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.separator {
+  color: #d1d5db;
+}
+
+.hotel-desc {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: #4f46e5;
+  font-weight: 600;
 }
 
 /* Alerts styling */

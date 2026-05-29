@@ -25,6 +25,20 @@ export const useToursStore = defineStore('tours', () => {
     }
   }
 
+  function updateTour(updatedTour) {
+    if (!updatedTour) return
+    const idx = myTours.value.findIndex((t) => t.id === updatedTour.id)
+    if (idx !== -1) myTours.value[idx] = updatedTour
+
+    const pidx = publicTours.value.findIndex((t) => t.id === updatedTour.id)
+    if (updatedTour.visibility === 'public') {
+      if (pidx !== -1) publicTours.value[pidx] = updatedTour
+      else publicTours.value = [updatedTour, ...publicTours.value]
+    } else if (pidx !== -1) {
+      publicTours.value.splice(pidx, 1)
+    }
+  }
+
   function setError(err) {
     error.value = err ?? null
   }
@@ -41,7 +55,9 @@ export const useToursStore = defineStore('tours', () => {
     setPublicTours,
     setMyTours,
     addTour,
+    updateTour,
     setError,
     clearError
   }
 })
+

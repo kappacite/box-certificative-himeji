@@ -54,6 +54,38 @@ export function useTours() {
     }
   }
 
+  async function patchTour(tourId, data) {
+    toursStore.clearError()
+    toursStore.loading = true
+
+    try {
+      const response = await toursApi.updateTour(tourId, data)
+      const tour = response.data?.tour
+      toursStore.updateTour(tour)
+      return tour
+    } catch (err) {
+      toursStore.setError(err)
+      return null
+    } finally {
+      toursStore.loading = false
+    }
+  }
+
+  async function optimizeTour(data) {
+    toursStore.clearError()
+    toursStore.loading = true
+
+    try {
+      const response = await toursApi.optimizeTour(data)
+      return response.data
+    } catch (err) {
+      toursStore.setError(err)
+      return null
+    } finally {
+      toursStore.loading = false
+    }
+  }
+
   return {
     publicTours,
     myTours,
@@ -62,6 +94,8 @@ export function useTours() {
     error,
     loadPublicTours,
     loadMyTours,
-    createTour
+    createTour,
+    patchTour,
+    optimizeTour
   }
 }

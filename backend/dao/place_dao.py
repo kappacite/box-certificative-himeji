@@ -42,6 +42,7 @@ class PlaceDAO(BaseDAO[Place, int]):
             longitude=entity.longitude,
             owner_id=entity.owner_id,
             visibility=entity.visibility,
+            city=entity.city,
         )
         db.session.add(place_model)
         db.session.flush()
@@ -57,6 +58,7 @@ class PlaceDAO(BaseDAO[Place, int]):
             place_model.longitude = entity.longitude
             place_model.owner_id = entity.owner_id
             place_model.visibility = entity.visibility
+            place_model.city = entity.city
             db.session.flush()
         return entity
 
@@ -136,4 +138,5 @@ class PlaceDAO(BaseDAO[Place, int]):
             longitude=model.longitude,
             owner_id=model.owner_id,
             visibility=model.visibility,
+            city=model.city,
         )

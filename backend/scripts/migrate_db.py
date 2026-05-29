@@ -32,6 +32,16 @@ def migrate():
         else:
             print("[~] Column 'max_distance' already exists in table 'tours'.")
 
+        # 1.5. Check/Add city in places table
+        cursor.execute("PRAGMA table_info(places)")
+        places_columns = [col[1] for col in cursor.fetchall()]
+
+        if "city" not in places_columns:
+            print("[+] Adding column 'city' to table 'places'...")
+            cursor.execute("ALTER TABLE places ADD COLUMN city VARCHAR(100)")
+        else:
+            print("[~] Column 'city' already exists in table 'places'.")
+
         # 2. Check primary key of tour_places table
         # Query the creation SQL to check primary key constraint
         cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='tour_places'")

@@ -14,6 +14,7 @@ class Place:
     id: Optional[int] = None
     locked: bool = False
     is_hotel: bool = False
+    city: Optional[str] = None
 
     def to_dict(self) -> dict:
         """Convert the Place dataclass instance to a dictionary.
@@ -42,4 +43,5 @@ class Place:
             id=data.get("id"),
             locked=data.get("locked", False),
             is_hotel=data.get("is_hotel", False),
+            city=data.get("city"),
         )

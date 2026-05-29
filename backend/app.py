@@ -93,11 +93,120 @@ def create_app(config_name: str = None) -> Flask:
             )
 
     # Ensure database tables exist (SQLite dev automatic migration helper)
-    if config_name != "production":
-        with app.app_context():
+    with app.app_context():
+        if config_name != "production":
             db.create_all()
+        run_auto_migrations(app)
 
     return app
+
+
+def run_auto_migrations(app) -> None:
+    """Checks the database schema and applies missing columns or constraints automatically."""
+    from sqlalchemy import text
+    from dao import db
+
+    with app.app_context():
+        # Check if the database has tables at all (specifically tours)
+        try:
+            db.session.execute(text("SELECT 1 FROM tours LIMIT 1"))
+        except Exception:
+            db.session.rollback()
+            # If the tables don't exist, they will be created by db.create_all()
+            return
+
+        # 1. Check tours.max_distance
+        try:
+            db.session.execute(text("SELECT max_distance FROM tours LIMIT 1"))
+        except Exception:
+            db.session.rollback()
+            print("[*] Auto-migration: Adding max_distance column to tours table...")
+            db.session.execute(
+                text("ALTER TABLE tours ADD COLUMN max_distance FLOAT NOT NULL DEFAULT 100.0")
+            )
+            db.session.commit()
+
+        # 2. Check places.city
+        try:
+            db.session.execute(text("SELECT city FROM places LIMIT 1"))
+        except Exception:
+            db.session.rollback()
+            print("[*] Auto-migration: Adding city column to places table...")
+            db.session.execute(text("ALTER TABLE places ADD COLUMN city VARCHAR(100)"))
+            db.session.commit()
+
+        # 3. Check tour_places primary key (SQLite specific migration)
+        is_sqlite = "sqlite" in str(db.engine.url)
+        if is_sqlite:
+            try:
+                # Query sqlite_master to inspect DDL
+                sql_row = db.session.execute(
+                    text("SELECT sql FROM sqlite_master WHERE type='table' AND name='tour_places'")
+                ).fetchone()
+                if sql_row:
+                    create_sql = sql_row[0]
+                    if (
+                        "PRIMARY KEY (tour_id, place_id)" in create_sql
+                        or "PRIMARY KEY(tour_id, place_id)" in create_sql
+                    ):
+                        print(
+                            "[*] Auto-migration: Recreating tour_places table to use (tour_id, position) as PRIMARY KEY..."
+                        )
+
+                        # Check if is_hotel exists
+                        try:
+                            db.session.execute(
+                                text("SELECT is_hotel FROM tour_places LIMIT 1")
+                            )
+                            has_is_hotel = True
+                        except Exception:
+                            db.session.rollback()
+                            has_is_hotel = False
+
+                        # Rename old table
+                        db.session.execute(
+                            text("ALTER TABLE tour_places RENAME TO tour_places_old")
+                        )
+
+                        # Create new table with correct schema
+                        db.session.execute(
+                            text("""
+                            CREATE TABLE tour_places (
+                                tour_id INTEGER NOT NULL,
+                                place_id INTEGER NOT NULL,
+                                position INTEGER NOT NULL,
+                                locked BOOLEAN NOT NULL DEFAULT 0,
+                                is_hotel BOOLEAN NOT NULL DEFAULT 0,
+                                PRIMARY KEY (tour_id, position),
+                                FOREIGN KEY(tour_id) REFERENCES tours (id) ON DELETE CASCADE,
+                                FOREIGN KEY(place_id) REFERENCES places (id) ON DELETE CASCADE
+                            )
+                        """)
+                        )
+
+                        # Copy data
+                        if has_is_hotel:
+                            db.session.execute(
+                                text("""
+                                INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
+                                SELECT tour_id, place_id, position, locked, is_hotel FROM tour_places_old
+                            """)
+                            )
+                        else:
+                            db.session.execute(
+                                text("""
+                                INSERT INTO tour_places (tour_id, place_id, position, locked, is_hotel)
+                                SELECT tour_id, place_id, position, locked, 0 FROM tour_places_old
+                            """)
+                            )
+
+                        # Drop old table
+                        db.session.execute(text("DROP TABLE tour_places_old"))
+                        db.session.commit()
+                        print("[+] Auto-migration: tour_places table successfully migrated!")
+            except Exception as e:
+                db.session.rollback()
+                print(f"[-] Auto-migration: Failed to migrate tour_places table: {e}")
 
 
 if __name__ == "__main__":

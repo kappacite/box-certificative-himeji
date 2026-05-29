@@ -44,6 +44,11 @@ export const useToursStore = defineStore('tours', () => {
     }
   }
 
+  function removeTour(tourId) {
+    myTours.value = myTours.value.filter((t) => t.id !== tourId)
+    publicTours.value = publicTours.value.filter((t) => t.id !== tourId)
+  }
+
   function setError(err) {
     error.value = err ?? null
   }
@@ -61,6 +66,7 @@ export const useToursStore = defineStore('tours', () => {
     setMyTours,
     addTour,
     updateTour,
+    removeTour,
     setError,
     clearError
   }

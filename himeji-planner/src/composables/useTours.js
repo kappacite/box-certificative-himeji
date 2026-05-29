@@ -86,6 +86,22 @@ export function useTours() {
     }
   }
 
+  async function deleteTour(tourId) {
+    toursStore.clearError()
+    toursStore.loading = true
+
+    try {
+      await toursApi.deleteTour(tourId)
+      toursStore.removeTour(tourId)
+      return true
+    } catch (err) {
+      toursStore.setError(err)
+      return false
+    } finally {
+      toursStore.loading = false
+    }
+  }
+
   return {
     publicTours,
     myTours,
@@ -96,6 +112,7 @@ export function useTours() {
     loadMyTours,
     createTour,
     patchTour,
-    optimizeTour
+    optimizeTour,
+    deleteTour
   }
 }

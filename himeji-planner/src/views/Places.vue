@@ -63,10 +63,12 @@
 
     <PlaceDetailsModal
       :place="selectedPlace"
-      :can-delete="isAuthenticated"
+      :can-edit="canManagePlace"
+      :can-delete="canManagePlace"
       :loading="loading"
       :error="error"
       @close="closePlaceDetails"
+      @edit="handleOpenEditPlace"
       @delete="handleDeletePlace"
     />
 
@@ -76,6 +78,15 @@
       :error="error"
       @close="closeCreatePlace"
       @create="handleCreatePlace"
+    />
+
+    <PlaceEditModal
+      :open="isEditPlaceOpen"
+      :place="placeToEdit"
+      :loading="loading"
+      :error="error"
+      @close="handleCloseEditPlace"
+      @update="handleUpdatePlace"
     />
   </div>
 </template>
@@ -88,17 +99,25 @@ import BaseButton from '@/components/BaseButton.vue'
 import PlaceCard from '@/components/places/PlaceCard.vue'
 import PlaceCreateModal from '@/components/places/PlaceCreateModal.vue'
 import PlaceDetailsModal from '@/components/places/PlaceDetailsModal.vue'
+import PlaceEditModal from '@/components/places/PlaceEditModal.vue'
 
 const authStore = useAuthStore()
-const { places, loading, error, loadVisiblePlaces, createPlace, deletePlace } = usePlaces()
+const { places, loading, error, loadVisiblePlaces, createPlace, updatePlace, deletePlace } = usePlaces()
 
 const selectedPlace = ref(null)
 const isCreatePlaceOpen = ref(false)
+const isEditPlaceOpen = ref(false)
+const placeToEdit = ref(null)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const privatePlaces = computed(() => places.value.filter((place) => place.visibility === 'private'))
 const publicPlaces = computed(() => places.value.filter((place) => place.visibility !== 'private'))
 const friendlyErrorMessage = computed(() => getFriendlyErrorMessage(error.value?.code))
+
+const canManagePlace = computed(() => {
+  if (!isAuthenticated.value || !selectedPlace.value) return false
+  return selectedPlace.value.owner_id === authStore.user?.id
+})
 
 function getPlaceName(place) {
   return place.name?.split(', ')[0] || 'Unknown place'
@@ -137,6 +156,25 @@ async function handleDeletePlace(placeId) {
 
   if (deleted) {
     closePlaceDetails()
+  }
+}
+
+function handleOpenEditPlace(place) {
+  placeToEdit.value = place
+  isEditPlaceOpen.value = true
+  closePlaceDetails()
+}
+
+function handleCloseEditPlace() {
+  isEditPlaceOpen.value = false
+  placeToEdit.value = null
+}
+
+async function handleUpdatePlace(placeId, placeData) {
+  const updated = await updatePlace(placeId, placeData)
+
+  if (updated) {
+    handleCloseEditPlace()
   }
 }
 

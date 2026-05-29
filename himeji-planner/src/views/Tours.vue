@@ -132,6 +132,7 @@
       :tour="editingTour"
       @close="editingTour = null"
       @saved="onTourSaved"
+      @deleted="onTourDeleted"
     />
   </div>
 </template>
@@ -145,7 +146,7 @@ import TourDetailsModal from '@/components/tours/TourDetailsModal.vue'
 import TourEditModal from '@/components/tours/TourEditModal.vue'
 
 const authStore = useAuthStore()
-const { publicTours, myTours, loading, error, loadPublicTours, loadMyTours } = useTours()
+const { publicTours, myTours, loading, error, loadPublicTours, loadMyTours, deleteTour } = useTours()
 
 const currentUserId = computed(() => authStore.user?.id ?? null)
 
@@ -175,6 +176,12 @@ function selectTour(tour) {
 
 function openEdit(tour) {
   editingTour.value = tour
+}
+
+async function onTourDeleted() {
+  editingTour.value = null
+  selectedTour.value = null
+  await loadMyTours()
 }
 
 async function onTourSaved(updatedTour) {
@@ -346,6 +353,27 @@ onMounted(async () => {
 .edit-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35);
+}
+
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.delete-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.35);
 }
 
 .tour-card h3 {

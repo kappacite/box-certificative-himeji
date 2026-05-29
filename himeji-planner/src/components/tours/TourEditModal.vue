@@ -169,16 +169,27 @@
 
           <!-- Footer -->
           <footer class="modal-actions">
-            <button class="btn-secondary" type="button" @click="handleClose">Cancel</button>
             <button
-              class="btn-primary"
+              class="btn-danger"
               type="button"
-              :disabled="saving"
-              @click="handleSave"
+              :disabled="saving || deleting"
+              @click="handleDelete"
             >
-              <span v-if="saving" class="spinner"></span>
-              {{ saving ? 'Saving…' : 'Save changes' }}
+              <span v-if="deleting" class="spinner"></span>
+              {{ deleting ? 'Deleting…' : 'Delete' }}
             </button>
+            <div class="actions-right">
+              <button class="btn-secondary" type="button" @click="handleClose">Cancel</button>
+              <button
+                class="btn-primary"
+                type="button"
+                :disabled="saving"
+                @click="handleSave"
+              >
+                <span v-if="saving" class="spinner"></span>
+                {{ saving ? 'Saving…' : 'Save changes' }}
+              </button>
+            </div>
           </footer>
 
         </section>
@@ -196,9 +207,9 @@ const props = defineProps({
   tour: { type: Object, default: null }
 })
 
-const emit = defineEmits(['close', 'saved'])
+const emit = defineEmits(['close', 'saved', 'deleted'])
 
-const { patchTour } = useTours()
+const { patchTour, deleteTour } = useTours()
 
 // ── Local state ──────────────────────────────────────────────────────────────
 const localName = ref('')
@@ -206,6 +217,7 @@ const localVisibility = ref('private')
 const shouldOptimize = ref(false)
 const editableStops = ref([])
 const saving = ref(false)
+const deleting = ref(false)
 const errorMessage = ref(null)
 
 // drag state
@@ -418,6 +430,28 @@ async function handleSave() {
     }
   } finally {
     saving.value = false
+  }
+}
+
+async function handleDelete() {
+  if (!props.tour) return
+  if (!confirm(`Are you sure you want to delete the tour "${props.tour.name}"?`)) {
+    return
+  }
+  deleting.value = true
+  errorMessage.value = null
+  try {
+    const success = await deleteTour(props.tour.id)
+    if (success) {
+      emit('deleted')
+      emit('close')
+    } else {
+      errorMessage.value = 'Failed to delete the tour. Please try again.'
+    }
+  } catch (err) {
+    errorMessage.value = err.message || 'An error occurred.'
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -737,10 +771,34 @@ function handleClose() {
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
 }
+
+.actions-right {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn-danger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.5rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  border: none;
+  border-radius: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-danger:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35); }
+.btn-danger:disabled { opacity: 0.65; cursor: not-allowed; }
 
 .btn-secondary {
   padding: 0.55rem 1.25rem;

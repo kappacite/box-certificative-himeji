@@ -17,13 +17,13 @@
 
     <section v-if="isAuthenticated" class="tour-section">
       <div class="section-header">
-        <h2>My Private Tours</h2>
-        <span class="section-count">{{ privateTours.length }}</span>
+        <h2>My Tours</h2>
+        <span class="section-count">{{ myTours.length }}</span>
       </div>
 
-      <div v-if="privateTours.length > 0" class="tours-grid">
+      <div v-if="myTours.length > 0" class="tours-grid">
         <BaseCard 
-          v-for="tour in privateTours" 
+          v-for="tour in myTours" 
           :key="tour.id" 
           class="tour-card interactive-card"
           hoverable
@@ -69,19 +69,19 @@
       </div>
 
       <p v-else class="empty-state">
-        You do not have private tours yet.
+        You do not have any tours yet.
       </p>
     </section>
 
     <section class="tour-section">
       <div class="section-header">
         <h2>Public Tours</h2>
-        <span class="section-count">{{ publicTours.length }}</span>
+        <span class="section-count">{{ otherPublicTours.length }}</span>
       </div>
 
-      <div v-if="publicTours.length > 0" class="tours-grid">
+      <div v-if="otherPublicTours.length > 0" class="tours-grid">
         <BaseCard 
-          v-for="tour in publicTours" 
+          v-for="tour in otherPublicTours" 
           :key="tour.id" 
           class="tour-card interactive-card"
           hoverable
@@ -145,7 +145,14 @@ import TourDetailsModal from '@/components/tours/TourDetailsModal.vue'
 import TourEditModal from '@/components/tours/TourEditModal.vue'
 
 const authStore = useAuthStore()
-const { publicTours, privateTours, loading, error, loadPublicTours, loadMyTours } = useTours()
+const { publicTours, myTours, loading, error, loadPublicTours, loadMyTours } = useTours()
+
+const currentUserId = computed(() => authStore.user?.id ?? null)
+
+// Tours not owned by the current user — shown in the Public section to avoid duplication
+const otherPublicTours = computed(() =>
+  publicTours.value.filter((t) => t.owner_id !== currentUserId.value)
+)
 
 const selectedTour = ref(null)
 const editingTour = ref(null)
@@ -176,7 +183,7 @@ async function onTourSaved(updatedTour) {
   await loadMyTours()
   // Also sync the detail modal if it was open on the same tour
   if (selectedTour.value?.id === updatedTour.id) {
-    const fresh = privateTours.value.find((t) => t.id === updatedTour.id)
+    const fresh = myTours.value.find((t) => t.id === updatedTour.id)
       ?? publicTours.value.find((t) => t.id === updatedTour.id)
     if (fresh) selectedTour.value = fresh
   }

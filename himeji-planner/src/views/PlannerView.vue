@@ -26,6 +26,17 @@
         </div>
         
         <div class="selection-card">
+          <!-- Search input to filter places by city or name -->
+          <div class="input-group">
+            <label for="citySearch">Filter by city or landmark name</label>
+            <BaseInput
+              id="citySearch"
+              v-model="searchQuery"
+              placeholder="e.g. Kyoto, Himeji, Eiffel..."
+              :disabled="loading"
+            />
+          </div>
+
           <div class="input-group">
             <label for="placeSelector">Choose places to include in your tour</label>
             <div class="select-wrapper">
@@ -230,6 +241,7 @@ const selectedPlaceIds = ref([])
 const activeTour = ref(null)
 const tourName = ref("")
 const maxDistance = ref(100)
+const searchQuery = ref("")
 
 function getPlaceName(place) {
   return place.name?.split(', ')[0] || place.name || 'Unknown place'
@@ -278,9 +290,21 @@ onMounted(async () => {
 
 const availableUnselectedPlaces = computed(() => {
   if (!availablePlaces.value) return []
-  return availablePlaces.value.filter(
+  
+  // First filter out selected places
+  let list = availablePlaces.value.filter(
     place => !selectedPlaceIds.value.some(sp => sp.id === place.id)
   )
+  
+  // Then filter by search query
+  const query = searchQuery.value.trim().toLowerCase()
+  if (query) {
+    list = list.filter(place => 
+      place.name?.toLowerCase().includes(query)
+    )
+  }
+  
+  return list
 })
 
 function togglePlace(place) {

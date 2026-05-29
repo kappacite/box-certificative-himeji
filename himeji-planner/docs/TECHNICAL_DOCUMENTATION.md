@@ -2,6 +2,9 @@
 
 This document provides a comprehensive technical overview of the frontend Single Page Application (SPA) for the **Travel Planner** system, built with Vue 3 (Composition API), Pinia, Vue Router 4, and Axios.
 
+> [!NOTE]
+> For instructions on how to use the Travel Planner application features (such as creating/saving tours, editing public/private places, managing hotel clustering loops, etc.), please refer to the **[Application User Guide](../../user_guide.md)**.
+
 ---
 
 ## 🏛️ Layered Frontend Architecture

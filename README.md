@@ -98,10 +98,14 @@ DATABASE_PATH=backend/data/travel.db
 
 ---
 
-## 📖 Deep-Dive Technical Documentation
+## 📖 Documentation & User Guide
 
-For more granular details on algorithms, database design, SOLID principles compliance, state stores, and component models, please refer to the specific documentation files:
+For details on how to use and operate the web application, please check:
+* 📘 **[Application User Guide](user_guide.md)**: User manual describing Dashboard stats, Places management, Planify Travel steps selection, and Tours sharing/editing features.
 
-* 📄 **[Backend Technical Documentation](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md)**: Detail on TSP solver, set cover heuristics, Haversine computations, and SQLite persistence.
-* 📄 **[Frontend Technical Documentation](file:///home/robyn/Documents/Programmation/box-certificative-himeji/himeji-planner/docs/TECHNICAL_DOCUMENTATION.md)**: Detail on drag-and-drop mechanics, Pinia stores layout, and Vue navigation guards.
-* 📄 **[REST API Reference](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/api_documentation.md)**: Comprehensive endpoints list and JSON payload structures.
+For more granular technical details on algorithms, database design, SOLID principles compliance, state stores, and component models, please refer to the specific technical documentation files:
+
+* 📄 **[Backend Technical Documentation](backend/docs/TECHNICAL_DOCUMENTATION.md)**: Detail on TSP solver, set cover heuristics, Haversine computations, and SQLite persistence.
+* 📄 **[Frontend Technical Documentation](himeji-planner/docs/TECHNICAL_DOCUMENTATION.md)**: Detail on drag-and-drop mechanics, Pinia stores layout, and Vue navigation guards.
+* 📄 **[REST API Reference](backend/docs/api_documentation.md)**: Comprehensive endpoints list and JSON payload structures.
+

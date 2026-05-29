@@ -2,6 +2,9 @@
 
 This document provides a comprehensive technical overview of the backend REST API for the **Travel Planner** application. It details the layered architecture, design patterns, SOLID principles conformance, Traveling Salesperson Problem (TSP) optimization engine, and testing strategy.
 
+> [!NOTE]
+> For instructions on how to use the Travel Planner application features (such as creating/saving tours, editing public/private places, managing hotel clustering loops, etc.), please refer to the **[Application User Guide](../../user_guide.md)**.
+
 ---
 
 ## 🏛️ System Architecture

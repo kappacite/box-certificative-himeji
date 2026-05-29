@@ -87,7 +87,7 @@
                   class="stop-badge"
                   :class="stop.is_hotel ? (brokenHotels.has(stop._uid) ? 'hotel-broken' : 'hotel') : 'regular'"
                 >
-                  {{ stop.is_hotel ? '🏨' : idx + 1 }}
+                  {{ getStopLabel(idx) }}
                 </span>
 
                 <span class="stop-name">{{ shortName(stop.name) }}</span>
@@ -453,6 +453,21 @@ async function handleDelete() {
   } finally {
     deleting.value = false
   }
+}
+
+function getStopLabel(index) {
+  if (!editableStops.value[index]) return ''
+  const stop = editableStops.value[index]
+  if (stop.is_hotel) {
+    return 'H'
+  }
+  let count = 0
+  for (let i = 0; i <= index; i++) {
+    if (!editableStops.value[i].is_hotel) {
+      count++
+    }
+  }
+  return count.toString()
 }
 
 function handleClose() {

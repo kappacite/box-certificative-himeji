@@ -50,12 +50,15 @@
             <span v-if="tour.max_distance" class="tour-max-dist-badge">Max Hotel: {{ tour.max_distance }} km</span>
           </p>
           <div class="places-preview-container">
-            <ol class="places-preview">
-              <li v-for="place in visiblePlaces(tour)" :key="place.id">
-                {{ getPlaceName(place) }}
+            <ul class="places-preview-list">
+              <li v-for="(place, index) in visiblePlaces(tour)" :key="place.id">
+                <span class="preview-index-badge" :class="{ 'hotel': place.is_hotel }">
+                  {{ getStopLabel(tour, index) }}
+                </span>
+                <span class="preview-place-name">{{ getPlaceName(place) }}</span>
                 <span v-if="place.is_hotel" class="badge-hotel-inline">🏨 Hotel</span>
               </li>
-            </ol>
+            </ul>
             <button 
               v-if="tour.places && tour.places.length > 10" 
               class="expand-button" 
@@ -96,12 +99,15 @@
             <span v-if="tour.max_distance" class="tour-max-dist-badge">Max Hotel: {{ tour.max_distance }} km</span>
           </p>
           <div class="places-preview-container">
-            <ol class="places-preview">
-              <li v-for="place in visiblePlaces(tour)" :key="place.id">
-                {{ getPlaceName(place) }}
+            <ul class="places-preview-list">
+              <li v-for="(place, index) in visiblePlaces(tour)" :key="place.id">
+                <span class="preview-index-badge" :class="{ 'hotel': place.is_hotel }">
+                  {{ getStopLabel(tour, index) }}
+                </span>
+                <span class="preview-place-name">{{ getPlaceName(place) }}</span>
                 <span v-if="place.is_hotel" class="badge-hotel-inline">🏨 Hotel</span>
               </li>
-            </ol>
+            </ul>
             <button 
               v-if="tour.places && tour.places.length > 10" 
               class="expand-button" 
@@ -219,6 +225,21 @@ function visiblePlaces(tour) {
     return tour.places
   }
   return tour.places.slice(0, 10)
+}
+
+function getStopLabel(tour, index) {
+  if (!tour.places || !tour.places[index]) return ''
+  const place = tour.places[index]
+  if (place.is_hotel) {
+    return 'H'
+  }
+  let count = 0
+  for (let i = 0; i <= index; i++) {
+    if (!tour.places[i].is_hotel) {
+      count++
+    }
+  }
+  return count.toString()
 }
 
 onMounted(async () => {
@@ -426,11 +447,44 @@ onMounted(async () => {
   gap: 0.5rem;
 }
 
-.places-preview {
+.places-preview-list {
   margin: 0;
-  padding-left: 1.25rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.places-preview-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   color: #4b5563;
-  line-height: 1.7;
+  font-size: 0.925rem;
+}
+
+.preview-index-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: #e5e7eb;
+  color: #374151;
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.preview-index-badge.hotel {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.preview-place-name {
+  font-weight: 500;
 }
 
 .badge-hotel-inline {

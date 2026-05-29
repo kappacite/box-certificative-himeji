@@ -44,7 +44,7 @@
                     :class="['timeline-item', { 'timeline-hotel': place.is_hotel }]"
                   >
                     <div class="timeline-marker">
-                      <span class="marker-index">{{ index + 1 }}</span>
+                      <span class="marker-index">{{ getStopLabel(tour, index) }}</span>
                     </div>
                     <div class="timeline-details-card">
                       <div class="timeline-card-header">
@@ -97,6 +97,21 @@ function formatDistance(distance) {
 
 function getPlaceName(place) {
   return place.name?.split(', ')[0] || place.name || 'Unknown place'
+}
+
+function getStopLabel(tour, index) {
+  if (!tour.places || !tour.places[index]) return ''
+  const place = tour.places[index]
+  if (place.is_hotel) {
+    return 'H'
+  }
+  let count = 0
+  for (let i = 0; i <= index; i++) {
+    if (!tour.places[i].is_hotel) {
+      count++
+    }
+  }
+  return count.toString()
 }
 </script>
 

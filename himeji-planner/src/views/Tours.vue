@@ -31,7 +31,19 @@
         >
           <div class="tour-card-header">
             <h3>{{ tour.name }}</h3>
-            <span class="visibility-badge private">Private</span>
+            <div class="badges-row">
+              <span class="visibility-badge" :class="tour.visibility">
+                {{ tour.visibility === 'public' ? '🌍 Public' : '🔒 Private' }}
+              </span>
+              <button
+                class="edit-btn"
+                type="button"
+                aria-label="Edit tour"
+                @click.stop="openEdit(tour)"
+              >
+                ✏️ Edit
+              </button>
+            </div>
           </div>
           <p class="tour-distance">
             <span>{{ formatDistance(tour.total_distance) }}</span>
@@ -113,6 +125,14 @@
       :tour="selectedTour" 
       @close="selectedTour = null" 
     />
+
+    <!-- Tour Edit Modal -->
+    <TourEditModal
+      v-if="editingTour"
+      :tour="editingTour"
+      @close="editingTour = null"
+      @saved="onTourSaved"
+    />
   </div>
 </template>
 
@@ -122,11 +142,13 @@ import { useAuthStore } from '@/stores/authStore'
 import { useTours } from '@/composables/useTours'
 import BaseCard from '@/components/BaseCard.vue'
 import TourDetailsModal from '@/components/tours/TourDetailsModal.vue'
+import TourEditModal from '@/components/tours/TourEditModal.vue'
 
 const authStore = useAuthStore()
 const { publicTours, privateTours, loading, error, loadPublicTours, loadMyTours } = useTours()
 
 const selectedTour = ref(null)
+const editingTour = ref(null)
 const expandedTours = ref({})
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
@@ -142,6 +164,19 @@ const friendlyErrorMessage = computed(() => {
 
 function selectTour(tour) {
   selectedTour.value = tour
+}
+
+function openEdit(tour) {
+  editingTour.value = tour
+}
+
+function onTourSaved(updatedTour) {
+  // Refresh the card data in-place
+  editingTour.value = null
+  // Also update selectedTour if it was open
+  if (selectedTour.value?.id === updatedTour.id) {
+    selectedTour.value = updatedTour
+  }
 }
 
 function formatDistance(distance) {
@@ -271,6 +306,35 @@ onMounted(async () => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.badges-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  background: linear-gradient(135deg, #2563eb, #0891b2);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.edit-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35);
 }
 
 .tour-card h3 {

@@ -194,9 +194,9 @@ erDiagram
     PLACES ||--|{ TOUR_PLACES : "belongs_to"
 ```
 
-### Database Optimization & Docker Integration
+### Database Optimization & Local Persistence
 * **Indices**: Index fields like `tours.share_token` and `places.owner_id` are indexed to speed up authorization and lookup checks.
-* **Docker Persistence**: The database file `travel.db` is stored inside a dedicated volume directory `/app/data/`, which is mounted as a named volume in `docker-compose.yml` to prevent data loss across container lifecycle events.
+* **Local Persistence**: The database file `travel.db` is stored inside the local filesystem (as defined by the `DATABASE_PATH` environment variable) to persist data between runs.
 
 ---
 
@@ -220,7 +220,7 @@ PYTHONPATH=. pytest
 
 ---
 
-## 🚀 Deployment & Administration
+## 🚀 Deployment & Local Execution
 
 ### Environment Variables
 Configure these variables in a `.env` file at the root of the project:
@@ -228,12 +228,19 @@ Configure these variables in a `.env` file at the root of the project:
 ```env
 APP_ENV=development
 SECRET_KEY=use-a-strong-random-key-in-production
-DATABASE_PATH=/app/data/travel.db
+DATABASE_PATH=backend/data/travel.db
 ```
 
-### Launching with Docker Compose
-To build and start both the backend API and frontend SPA:
-```bash
-docker compose up --build -d
-```
+### Launching the Application
+Cross-platform startup scripts are provided at the root of the project to automatically set up virtual environments, install dependencies, seed the database, and launch both services in parallel.
+
+* **Linux / macOS**:
+  ```bash
+  ./run.sh
+  ```
+* **Windows**:
+  Double-click or run from command prompt:
+  ```cmd
+  run.bat
+  ```
 The database will be automatically initialized and populated with 200 French landmarks via `seed_places.py` on the first launch.

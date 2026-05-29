@@ -108,6 +108,7 @@ const getFriendlyErrorMessage = (code) => {
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, #1e40af, #3b82f6);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

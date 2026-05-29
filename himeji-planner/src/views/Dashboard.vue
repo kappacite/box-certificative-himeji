@@ -21,15 +21,15 @@
       <BaseCard class="stat-card">
         <div class="stat-icon">🗺️</div>
         <div class="stat-content">
-          <span class="stat-number">0</span>
-          <span class="stat-label">Saved itineraries</span>
+          <span class="stat-number">{{ myTours.length }}</span>
+          <span class="stat-label">Itineraries published</span>
         </div>
       </BaseCard>
       
       <BaseCard highlight class="stat-card">
         <div class="stat-icon">🚀</div>
         <div class="stat-content">
-          <span class="stat-number">0.0 km</span>
+          <span class="stat-number">{{ totalOptimizedKm }} km</span>
           <span class="stat-label">Total optimized km</span>
         </div>
       </BaseCard>
@@ -37,7 +37,7 @@
       <BaseCard class="stat-card">
         <div class="stat-icon">🔒</div>
         <div class="stat-content">
-          <span class="stat-number">0</span>
+          <span class="stat-number">{{ privateTours.length }}</span>
           <span class="stat-label">Private itineraries</span>
         </div>
       </BaseCard>
@@ -50,7 +50,6 @@
       </div>
 
       <div class="dashboard-grid">
-        <!-- Card 1: Popular Sights Explorer -->
         <BaseCard highlight hoverable class="dashboard-card">
           <div class="card-icon">🌸</div>
           <h3>Explore Popular Sights</h3>
@@ -85,11 +84,28 @@
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
+import { useTours } from '@/composables/useTours'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
 
 const authStore = useAuthStore()
+const { myTours, privateTours, loadMyTours } = useTours()
+
+const totalOptimizedKm = computed(() => {
+  const sum = myTours.value.reduce((acc, tour) => {
+    const dist = Number(tour.total_distance)
+    return acc + (Number.isFinite(dist) ? dist : 0)
+  }, 0)
+  return sum.toFixed(1)
+})
+
+onMounted(async () => {
+  if (authStore.isAuthenticated) {
+    await loadMyTours()
+  }
+})
 
 const handleManageChecklist = () => {
   alert('Travel luggage checklist feature coming soon!')
@@ -125,6 +141,7 @@ const handleBrowseGuides = () => {
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, #1e40af, #3b82f6);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

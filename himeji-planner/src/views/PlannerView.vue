@@ -411,6 +411,7 @@ const handleSaveTour = async () => {
   font-weight: 800;
   background: linear-gradient(135deg, #4f46e5, #2563eb);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

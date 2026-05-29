@@ -129,7 +129,8 @@ class PlaceService:
         owner_id: int,
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
-        visibility: str = "public",
+        visibility: str = "private",
+        city: Optional[str] = None,
     ) -> Place:
         """Create a new place, optionally geocoding its name if coordinates are omitted.
 
@@ -139,6 +140,7 @@ class PlaceService:
             latitude: Optional latitude.
             longitude: Optional longitude.
             visibility: The sharing visibility ('private' or 'public').
+            city: Optional city name.
 
         Returns:
             The created Place.
@@ -155,7 +157,9 @@ class PlaceService:
 
         # Resolve coordinates via Nominatim if not provided
         if latitude is None and longitude is None:
-            latitude, longitude = self.geocode_place_name(name)
+            latitude, longitude, resolved_city = self.geocode_place_name(name)
+            if city is None:
+                city = resolved_city
 
         new_place = Place(
             name=name.strip(),
@@ -163,6 +167,7 @@ class PlaceService:
             longitude=longitude,
             owner_id=owner_id,
             visibility=visibility,
+            city=city,
         )
         from dao.database import db
 
@@ -178,6 +183,7 @@ class PlaceService:
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
         visibility: Optional[str] = None,
+        city: Optional[str] = None,
     ) -> Place:
         """Update a place. Re-geocodes the name if it changes and coordinates are not provided.
 
@@ -188,6 +194,7 @@ class PlaceService:
             latitude: Optional updated latitude.
             longitude: Optional updated longitude.
             visibility: Optional updated visibility.
+            city: Optional updated city.
 
         Returns:
             The updated Place data object.
@@ -215,6 +222,9 @@ class PlaceService:
         if visibility is not None:
             place.visibility = visibility
 
+        if city is not None:
+            place.city = city
+
         self.validate_coordinate_pair(latitude, longitude)
 
         # If coordinates are explicitly given, use them
@@ -223,9 +233,11 @@ class PlaceService:
             place.longitude = longitude
         # If the name changed and coordinates were not provided, re-geocode
         elif place.name != old_name:
-            lat, lon = self.geocode_place_name(place.name)
+            lat, lon, resolved_city = self.geocode_place_name(place.name)
             place.latitude = lat
             place.longitude = lon
+            if city is None:
+                place.city = resolved_city
 
         from dao.database import db
 
@@ -241,9 +253,11 @@ class PlaceService:
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
         visibility: Optional[str] = None,
+        city: Optional[str] = None,
         update_name: bool = False,
         update_coords: bool = False,
         update_visibility: bool = False,
+        update_city: bool = False,
     ) -> Place:
         """Partially update a place.
 
@@ -254,9 +268,11 @@ class PlaceService:
             latitude: Optional updated latitude.
             longitude: Optional updated longitude.
             visibility: Optional updated visibility.
+            city: Optional updated city.
             update_name: True if name should be updated.
             update_coords: True if coordinates should be updated.
             update_visibility: True if visibility should be updated.
+            update_city: True if city should be updated.
 
         Returns:
             The updated Place data object.
@@ -287,6 +303,9 @@ class PlaceService:
                 )
             place.visibility = visibility
 
+        if update_city:
+            place.city = city
+
         if update_coords:
             self.validate_coordinate_pair(latitude, longitude, allow_both_missing=False)
             if latitude is not None and longitude is not None:
@@ -294,9 +313,11 @@ class PlaceService:
                 place.longitude = longitude
         elif update_name and place.name != old_name:
             # If name changed but coordinates were not explicitly updated, re-geocode
-            lat, lon = self.geocode_place_name(place.name)
+            lat, lon, resolved_city = self.geocode_place_name(place.name)
             place.latitude = lat
             place.longitude = lon
+            if not update_city:
+                place.city = resolved_city
 
         from dao.database import db
 
@@ -355,14 +376,14 @@ class PlaceService:
             raise ForbiddenException("You do not have access to this place")
         return place
 
-    def geocode_place_name(self, name: str) -> Tuple[float, float]:
-        """Call OpenStreetMap Nominatim API to resolve a name to coordinates.
+    def geocode_place_name(self, name: str) -> Tuple[float, float, Optional[str]]:
+        """Call OpenStreetMap Nominatim API to resolve a name to coordinates and city.
 
         Args:
             name: The search query (place name).
 
         Returns:
-            A tuple of (latitude, longitude) as floats.
+            A tuple of (latitude, longitude, city) as floats and string.
 
         Raises:
             ValidationException: If Nominatim cannot resolve the place.
@@ -374,7 +395,7 @@ class PlaceService:
                 "Chrome/120.0.0.0 Safari/537.36"
             )
         }
-        params = {"q": name, "format": "json", "limit": 1}
+        params = {"q": name, "format": "json", "limit": 1, "addressdetails": 1}
         try:
             session = requests.Session()
             session.trust_env = False
@@ -395,7 +416,9 @@ class PlaceService:
             result = data[0]
             lat = float(result["lat"])
             lon = float(result["lon"])
-            return lat, lon
+            address = result.get("address", {})
+            city = address.get("city") or address.get("town") or address.get("village") or address.get("municipality") or address.get("suburb")
+            return lat, lon, city
         except (KeyError, ValueError, IndexError):
             raise ValidationException(
                 f"Invalid geocoding response format for place: '{name}'"

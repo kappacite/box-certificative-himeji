@@ -25,9 +25,9 @@ def mock_geocoding(monkeypatch):
         if "nominatim" in url:
             query = kwargs.get("params", {}).get("q", "")
             if "Paris" in query:
-                return MockResponse([{"lat": "48.8566", "lon": "2.3522"}])
+                return MockResponse([{"lat": "48.8566", "lon": "2.3522", "address": {"city": "Paris"}}])
             elif "Lyon" in query:
-                return MockResponse([{"lat": "45.7640", "lon": "4.8357"}])
+                return MockResponse([{"lat": "45.7640", "lon": "4.8357", "address": {"city": "Lyon"}}])
             else:
                 return MockResponse([])  # No results found
         return MockResponse([], 404)
@@ -70,6 +70,7 @@ def test_create_place_with_geocoding(client, auth_headers, mock_geocoding):
     assert place["name"] == "Paris"
     assert place["latitude"] == 48.8566
     assert place["longitude"] == 2.3522
+    assert place["city"] == "Paris"
 
 
 def test_create_place_validation_error(client, auth_headers, mock_geocoding):
@@ -327,3 +328,51 @@ def test_places_search_and_pagination(client, auth_headers, mock_geocoding):
     assert res_pub_page.status_code == 200
     places_pub = res_pub_page.get_json()["data"]["places"]
     assert len(places_pub) <= 1
+
+
+def test_place_city_operations(client, auth_headers):
+    """Test explicit city operations (creation, update, patching)."""
+    # 1. Create with explicit coordinates and city
+    response = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={
+            "name": "Eiffel Tower",
+            "latitude": 48.8584,
+            "longitude": 2.2945,
+            "city": "Paris",
+            "visibility": "private",
+        },
+    )
+    assert response.status_code == 201
+    place = response.get_json()["data"]["place"]
+    assert place["name"] == "Eiffel Tower"
+    assert place["city"] == "Paris"
+    place_id = place["id"]
+
+    # 2. Update via PUT (updating name and city)
+    response_put = client.put(
+        f"/api/places/{place_id}",
+        headers=auth_headers,
+        json={
+            "name": "Eiffel Tower Modified",
+            "latitude": 48.8584,
+            "longitude": 2.2945,
+            "city": "Paris (75)",
+            "visibility": "private",
+        },
+    )
+    assert response_put.status_code == 200
+    place_put = response_put.get_json()["data"]["place"]
+    assert place_put["name"] == "Eiffel Tower Modified"
+    assert place_put["city"] == "Paris (75)"
+
+    # 3. Patch city via PATCH
+    response_patch = client.patch(
+        f"/api/places/{place_id}",
+        headers=auth_headers,
+        json={"city": "Paris Cedex"},
+    )
+    assert response_patch.status_code == 200
+    place_patch = response_patch.get_json()["data"]["place"]
+    assert place_patch["city"] == "Paris Cedex"

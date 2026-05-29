@@ -47,13 +47,14 @@ def create_place():
     name = data.get("name")
     latitude = data.get("latitude")
     longitude = data.get("longitude")
-    visibility = data.get("visibility", "public")
+    visibility = data.get("visibility", "private")
+    city = data.get("city")
 
     # If coordinates are passed as empty strings, convert to None
     lat = place_service.parse_coordinate(latitude, "latitude")
     lon = place_service.parse_coordinate(longitude, "longitude")
 
-    place = place_service.create_place(name, g.current_user.id, lat, lon, visibility)
+    place = place_service.create_place(name, g.current_user.id, lat, lon, visibility, city=city)
     return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 201
 
 
@@ -63,9 +64,9 @@ def search_place():
     q = request.args.get("q")
     if not q or not q.strip():
         raise ValidationException("Query parameter 'q' is required")
-    lat, lon = place_service.geocode_place_name(q)
+    lat, lon, city = place_service.geocode_place_name(q)
     return (
-        jsonify({"status": "success", "data": {"latitude": lat, "longitude": lon}}),
+        jsonify({"status": "success", "data": {"latitude": lat, "longitude": lon, "city": city}}),
         200,
     )
 
@@ -77,9 +78,9 @@ def geocode_place():
     name = data.get("name")
     if not name or not name.strip():
         raise ValidationException("Place name is required")
-    lat, lon = place_service.geocode_place_name(name)
+    lat, lon, city = place_service.geocode_place_name(name)
     return (
-        jsonify({"status": "success", "data": {"latitude": lat, "longitude": lon}}),
+        jsonify({"status": "success", "data": {"latitude": lat, "longitude": lon, "city": city}}),
         200,
     )
 
@@ -132,12 +133,13 @@ def update_place(place_id):
     latitude = data.get("latitude")
     longitude = data.get("longitude")
     visibility = data.get("visibility")
+    city = data.get("city")
 
     lat = place_service.parse_coordinate(latitude, "latitude")
     lon = place_service.parse_coordinate(longitude, "longitude")
 
     place = place_service.update_place(
-        place_id, name, g.current_user.id, lat, lon, visibility
+        place_id, name, g.current_user.id, lat, lon, visibility, city=city
     )
     return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 200
 
@@ -152,11 +154,13 @@ def patch_place(place_id):
     update_name = "name" in data
     update_coords = "latitude" in data or "longitude" in data
     update_visibility = "visibility" in data
+    update_city = "city" in data
 
     name = data.get("name")
     latitude = data.get("latitude")
     longitude = data.get("longitude")
     visibility = data.get("visibility")
+    city = data.get("city")
 
     lat = None
     lon = None
@@ -171,9 +175,11 @@ def patch_place(place_id):
         latitude=lat,
         longitude=lon,
         visibility=visibility,
+        city=city,
         update_name=update_name,
         update_coords=update_coords,
         update_visibility=update_visibility,
+        update_city=update_city,
     )
     return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 200
 

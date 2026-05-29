@@ -29,6 +29,7 @@ class TourDAO(BaseDAO[Tour, int]):
             total_distance=entity.total_distance,
             visibility=entity.visibility,
             share_token=entity.share_token,
+            max_distance=entity.max_distance,
         )
         db.session.add(tour_model)
         # Flush to get the tour_model.id
@@ -48,6 +49,7 @@ class TourDAO(BaseDAO[Tour, int]):
                 place_id=place.id,
                 position=index,
                 locked=place.locked,
+                is_hotel=place.is_hotel,
             )
             db.session.add(assoc)
 
@@ -66,6 +68,7 @@ class TourDAO(BaseDAO[Tour, int]):
         tour_model.total_distance = entity.total_distance
         tour_model.visibility = entity.visibility
         tour_model.share_token = entity.share_token
+        tour_model.max_distance = entity.max_distance
 
         # Replace ordered list of places: delete existing, add new ones
         TourPlaceModel.query.filter_by(tour_id=entity.id).delete()
@@ -81,6 +84,7 @@ class TourDAO(BaseDAO[Tour, int]):
                 place_id=place.id,
                 position=index,
                 locked=place.locked,
+                is_hotel=place.is_hotel,
             )
             db.session.add(assoc)
 
@@ -181,6 +185,7 @@ class TourDAO(BaseDAO[Tour, int]):
                 owner_id=tp.place.owner_id,
                 visibility=tp.place.visibility,
                 locked=getattr(tp, "locked", False),
+                is_hotel=getattr(tp, "is_hotel", False),
             )
             places.append(place_do)
 
@@ -192,4 +197,5 @@ class TourDAO(BaseDAO[Tour, int]):
             total_distance=model.total_distance,
             visibility=model.visibility,
             share_token=model.share_token,
+            max_distance=model.max_distance,
         )

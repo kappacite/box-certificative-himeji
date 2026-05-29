@@ -59,6 +59,7 @@ def logout():
             token = parts[1]
             from dao.models import RevokedTokenModel
             from dao.database import db
+
             exists = RevokedTokenModel.query.filter_by(token=token).first()
             if not exists:
                 revoked = RevokedTokenModel(token=token)
@@ -75,4 +76,7 @@ def logout():
 @require_auth
 def get_current_user():
     """Retrieve the profile of the currently authenticated user."""
-    return jsonify({"status": "success", "data": {"user": g.current_user.to_dict()}}), 200
+    return (
+        jsonify({"status": "success", "data": {"user": g.current_user.to_dict()}}),
+        200,
+    )

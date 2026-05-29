@@ -4,7 +4,7 @@ from dao.tour_dao import TourDAO
 from dao.place_dao import PlaceDAO
 from dataobject.tour import Tour
 from dataobject.place import Place
-from services.algorithm import optimize, haversine
+from services.algorithm import optimize_with_hotels, haversine
 from exceptions import NotFoundException, ForbiddenException, ValidationException
 
 
@@ -55,6 +55,7 @@ class TourService:
         visibility: str = "private",
         locked_positions: dict = None,
         locked_places: list = None,
+        max_distance: float = 100.0,
     ) -> Tour:
         """Generate an optimized tour from a list of place IDs, optionally locking some steps.
 
@@ -66,6 +67,7 @@ class TourService:
             visibility: The sharing visibility ('private' or 'public').
             locked_positions: Dict mapping place_id (as str) to target position.
             locked_places: List of place_ids to lock at their input positions.
+            max_distance: Maximum distance in km for round trips.
 
         Returns:
             The created and persisted Tour.
@@ -133,11 +135,13 @@ class TourService:
             places.append(place)
 
         # Optimize the place ordering respecting locks
-        optimized_places = optimize(places, locked_map)
+        optimized_places = optimize_with_hotels(
+            places, locked_map, max_distance=max_distance
+        )
 
         # Apply locked property on returned place objects
         for place in optimized_places:
-            place.locked = (place.id in locked_map)
+            place.locked = place.id in locked_map
 
         # Calculate total distance (closed loop)
         total_dist = self.calculate_tour_distance(optimized_places)
@@ -152,6 +156,7 @@ class TourService:
             total_distance=total_dist,
             visibility=visibility,
             share_token=share_token,
+            max_distance=max_distance,
         )
 
         return self.tour_dao.create(new_tour)
@@ -162,6 +167,7 @@ class TourService:
         owner_id: int,
         locked_positions: dict = None,
         locked_places: list = None,
+        max_distance: float = 100.0,
     ) -> Tour:
         """Generate an optimized tour preview without persisting it.
 
@@ -170,6 +176,7 @@ class TourService:
             owner_id: The ID of the owner user.
             locked_positions: Dict mapping place_id (as str) to target position.
             locked_places: List of place_ids to lock at their input positions.
+            max_distance: Maximum distance in km for round trips.
 
         Returns:
             A transient (unsaved) Tour data object.
@@ -233,11 +240,13 @@ class TourService:
             places.append(place)
 
         # Optimize the place ordering respecting locks
-        optimized_places = optimize(places, locked_map)
+        optimized_places = optimize_with_hotels(
+            places, locked_map, max_distance=max_distance
+        )
 
         # Apply locked property on returned place objects
         for place in optimized_places:
-            place.locked = (place.id in locked_map)
+            place.locked = place.id in locked_map
 
         # Calculate total distance (closed loop)
         total_dist = self.calculate_tour_distance(optimized_places)
@@ -250,6 +259,7 @@ class TourService:
             total_distance=total_dist,
             visibility="private",
             share_token="",
+            max_distance=max_distance,
             id=None,
         )
 
@@ -259,6 +269,7 @@ class TourService:
         owner_id: int,
         locked_positions: dict = None,
         locked_places: list = None,
+        max_distance: float = 100.0,
     ) -> dict:
         """Optimize place sequence according to coordinates and locked constraints.
 
@@ -267,6 +278,7 @@ class TourService:
             owner_id: The ID of the owner user.
             locked_positions: Dict mapping place_id (as str) to target position.
             locked_places: List of place_ids to lock at their input positions.
+            max_distance: Maximum distance in km for round trips.
 
         Returns:
             A dictionary containing:
@@ -332,11 +344,13 @@ class TourService:
             places.append(place)
 
         # Optimize the place ordering respecting locks
-        optimized_places = optimize(places, locked_map)
+        optimized_places = optimize_with_hotels(
+            places, locked_map, max_distance=max_distance
+        )
 
         # Apply locked property on returned place objects
         for place in optimized_places:
-            place.locked = (place.id in locked_map)
+            place.locked = place.id in locked_map
 
         # Calculate total distance (closed loop)
         total_dist = self.calculate_tour_distance(optimized_places)
@@ -362,7 +376,9 @@ class TourService:
         Returns:
             A list of Tour data objects.
         """
-        return self.tour_dao.query_tours(visibility="public", q=q, page=page, limit=limit)
+        return self.tour_dao.query_tours(
+            visibility="public", q=q, page=page, limit=limit
+        )
 
     def get_tours(
         self,
@@ -444,14 +460,23 @@ class TourService:
         tour = self.get_tour_by_id(tour_id, owner_id)
 
         locked_map = {}
-        for index, place in enumerate(tour.places):
+        unique_places = []
+        seen = set()
+        for p in tour.places:
+            if p.id not in seen:
+                seen.add(p.id)
+                unique_places.append(p)
+
+        for index, place in enumerate(unique_places):
             if place.locked:
                 locked_map[place.id] = index
 
-        optimized_places = optimize(tour.places, locked_map)
+        optimized_places = optimize_with_hotels(
+            unique_places, locked_map, max_distance=tour.max_distance
+        )
 
         for place in optimized_places:
-            place.locked = (place.id in locked_map)
+            place.locked = place.id in locked_map
 
         tour.places = optimized_places
         tour.total_distance = self.calculate_tour_distance(optimized_places)
@@ -481,6 +506,7 @@ class TourService:
         owner_id: int,
         locked_positions: Optional[dict] = None,
         locked_places: Optional[list] = None,
+        max_distance: Optional[float] = None,
     ) -> Tour:
         """Update tour.
 
@@ -492,6 +518,7 @@ class TourService:
             owner_id: The ID of the current user.
             locked_positions: Optional new locked positions mapping.
             locked_places: Optional new locked places list.
+            max_distance: Optional updated max_distance for clustering.
 
         Returns:
             The updated Tour.
@@ -508,16 +535,26 @@ class TourService:
                 raise ValidationException("Invalid visibility value.")
             tour.visibility = visibility
 
-        # Re-calculate routing if place list or locks are updated
+        if max_distance is not None:
+            tour.max_distance = max_distance
+
+        # Re-calculate routing if place list, max_distance, or locks are updated
         if (
             places_id is not None
             or locked_positions is not None
             or locked_places is not None
+            or max_distance is not None
         ):
             if places_id is not None:
                 raw_pids = places_id
             else:
-                raw_pids = [p.id for p in tour.places]
+                # Deduplicate while preserving order
+                raw_pids = []
+                seen_pid = set()
+                for p in tour.places:
+                    if p.id not in seen_pid:
+                        seen_pid.add(p.id)
+                        raw_pids.append(p.id)
 
             parsed_place_ids = []
             locked_map = {}
@@ -555,11 +592,7 @@ class TourService:
                         raise ValidationException("Invalid locked_places format")
 
             # If we did not pass new locks, preserve existing locks that are still in the list
-            if (
-                locked_positions is None
-                and locked_places is None
-                and places_id is None
-            ):
+            if locked_positions is None and locked_places is None and places_id is None:
                 for p in tour.places:
                     if p.locked and p.id in parsed_place_ids:
                         locked_map[p.id] = parsed_place_ids.index(p.id)
@@ -569,7 +602,9 @@ class TourService:
                     "At least 2 places are required to generate a tour"
                 )
 
-            places_by_id = {p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)}
+            places_by_id = {
+                p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)
+            }
             places = []
             for pid in parsed_place_ids:
                 place = places_by_id.get(pid)
@@ -581,11 +616,13 @@ class TourService:
                     )
                 places.append(place)
 
-            optimized_places = optimize(places, locked_map)
+            optimized_places = optimize_with_hotels(
+                places, locked_map, max_distance=tour.max_distance
+            )
 
             # Apply locked property on returned place objects
             for place in optimized_places:
-                place.locked = (place.id in locked_map)
+                place.locked = place.id in locked_map
 
             tour.places = optimized_places
             tour.total_distance = self.calculate_tour_distance(optimized_places)
@@ -610,7 +647,7 @@ class TourService:
         return tour
 
     def calculate_tour_distance(self, places: List[Place]) -> float:
-        """Calculate the total great-circle distance of a closed loop path.
+        """Calculate the total great-circle distance of a closed loop.
 
         Args:
             places: Ordered list of places.
@@ -623,6 +660,6 @@ class TourService:
         total = 0.0
         for i in range(len(places) - 1):
             total += haversine(places[i], places[i + 1])
-        # Return to start
+        # Loop closure: add distance from the last place back to the first
         total += haversine(places[-1], places[0])
         return total

@@ -38,7 +38,7 @@ first = places[0]
 m = folium.Map(
     location=[first["latitude"], first["longitude"]],
     zoom_start=6,
-    tiles="CartoDB positron"
+    tiles="CartoDB positron",
 )
 
 coordinates = []
@@ -84,27 +84,18 @@ for index, place in enumerate(places, start=1):
         location=[lat, lon],
         tooltip=f"{index} - {name}",
         popup=folium.Popup(popup_html, max_width=300),
-        icon=folium.Icon(color=color, icon=icon)
+        icon=folium.Icon(color=color, icon=icon),
     ).add_to(m)
 
 # ============================================================
 # TRACE DU PARCOURS
 # ============================================================
 
-folium.PolyLine(
-    coordinates,
-    color="blue",
-    weight=3,
-    opacity=0.7
-).add_to(m)
+folium.PolyLine(coordinates, color="blue", weight=3, opacity=0.7).add_to(m)
 
 # Ligne animée
 AntPath(
-    locations=coordinates,
-    delay=800,
-    color="red",
-    pulse_color="white",
-    weight=4
+    locations=coordinates, delay=800, color="red", pulse_color="white", weight=4
 ).add_to(m)
 
 # ============================================================

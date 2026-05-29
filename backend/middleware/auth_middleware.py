@@ -34,6 +34,7 @@ def require_auth(f):
 
         # Check if the token was blacklisted (logged out)
         from dao.models import RevokedTokenModel
+
         is_revoked = RevokedTokenModel.query.filter_by(token=token).first() is not None
         if is_revoked:
             raise UnauthorizedException("Token has been revoked")
@@ -100,6 +101,7 @@ def optional_auth(f):
     If a valid token is present in the Authorization header, it is decoded
     and the user is stored in flask.g.current_user. If not, g.current_user remains None.
     """
+
     @wraps(f)
     def decorated(*args, **kwargs):
         g.current_user = None
@@ -111,7 +113,10 @@ def optional_auth(f):
 
                 # Check if the token was blacklisted (logged out)
                 from dao.models import RevokedTokenModel
-                is_revoked = RevokedTokenModel.query.filter_by(token=token).first() is not None
+
+                is_revoked = (
+                    RevokedTokenModel.query.filter_by(token=token).first() is not None
+                )
                 if not is_revoked:
                     try:
                         auth_service = AuthService()

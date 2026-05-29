@@ -29,11 +29,7 @@ def get_places():
         owner_id = None
 
     places = place_service.get_places(
-        owner_id=owner_id,
-        visibility=visibility,
-        q=q,
-        page=page,
-        limit=limit
+        owner_id=owner_id, visibility=visibility, q=q, page=page, limit=limit
     )
     return (
         jsonify(
@@ -68,7 +64,10 @@ def search_place():
     if not q or not q.strip():
         raise ValidationException("Query parameter 'q' is required")
     lat, lon = place_service.geocode_place_name(q)
-    return jsonify({"status": "success", "data": {"latitude": lat, "longitude": lon}}), 200
+    return (
+        jsonify({"status": "success", "data": {"latitude": lat, "longitude": lon}}),
+        200,
+    )
 
 
 @place_bp.route("/geocode", methods=["POST"])
@@ -79,7 +78,10 @@ def geocode_place():
     if not name or not name.strip():
         raise ValidationException("Place name is required")
     lat, lon = place_service.geocode_place_name(name)
-    return jsonify({"status": "success", "data": {"latitude": lat, "longitude": lon}}), 200
+    return (
+        jsonify({"status": "success", "data": {"latitude": lat, "longitude": lon}}),
+        200,
+    )
 
 
 @place_bp.route("/public", methods=["GET"])
@@ -94,15 +96,14 @@ def get_public_places():
         raise ValidationException("Invalid page or limit parameter")
 
     places = place_service.get_places(
-        owner_id=None,
-        visibility="public",
-        q=q,
-        page=page,
-        limit=limit
+        owner_id=None, visibility="public", q=q, page=page, limit=limit
     )
-    return jsonify(
-        {"status": "success", "data": {"places": [p.to_dict() for p in places]}}
-    ), 200
+    return (
+        jsonify(
+            {"status": "success", "data": {"places": [p.to_dict() for p in places]}}
+        ),
+        200,
+    )
 
 
 @place_bp.route("/public/<int:place_id>", methods=["GET"])
@@ -172,7 +173,7 @@ def patch_place(place_id):
         visibility=visibility,
         update_name=update_name,
         update_coords=update_coords,
-        update_visibility=update_visibility
+        update_visibility=update_visibility,
     )
     return jsonify({"status": "success", "data": {"place": place.to_dict()}}), 200
 

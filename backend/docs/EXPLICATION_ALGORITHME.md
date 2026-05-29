@@ -80,6 +80,27 @@ Pour résoudre ce problème de manière optimale sur de grands réseaux (comme 2
 
 ---
 
+## 1.7. Regroupement par Hôtels (Clustering & Allers-retours)
+
+Afin d'optimiser les déplacements sur des groupes de villes/lieux proches, le système permet de regrouper les lieux à visiter autour d'un ensemble d'hôtels (lieux de séjour) :
+
+1. **Sélection des hôtels (Algorithme Glouton de Couverture d'Ensemble)** :
+   - Le point de départ (`places[0]`) est obligatoirement désigné comme hôtel de départ.
+   - Les lieux dans un rayon inférieur ou égal à `max_distance` de cet hôtel sont marqués comme couverts.
+   - Tant qu'il reste des lieux non couverts, l'algorithme sélectionne de façon gloutonne le lieu candidat qui couvre le maximum de lieux restants dans un rayon de `max_distance`. Ce candidat devient un nouvel hôtel.
+   - Les autres lieux (non sélectionnés comme hôtels) sont rattachés à l'hôtel le plus proche de chez eux.
+2. **Allers-retours (Round trips)** :
+   - Pour chaque hôtel $H_i$, les lieux qui lui sont rattachés sont visités sous forme d'allers-retours depuis cet hôtel ($H_i \to \text{Lieu} \to H_i$).
+   - Ces mouvements sont comptabilisés dans le calcul de la distance totale.
+3. **Résolution des verrous pour les non-hôtels (`resolve_hotel_locks`)** :
+   - Si l'utilisateur verrouille une étape non-hôtel à un index spécifique $P$ dans la séquence finale, l'algorithme de projection convertit cet index en un index cible pour l'hôtel qui la couvre.
+   - Il estime l'index de l'hôtel dans la liste des hôtels en fonction de la taille cumulée des groupes d'hôtels et applique les contraintes de verrouillage résultantes directement sur la séquence des hôtels dans OR-Tools.
+4. **Itinéraire final (Boucle Fermée)** :
+   - Le solveur optimise la séquence des hôtels sous forme de circuit fermé (TSP sur les hôtels).
+   - L'itinéraire complet est reconstitué en remplaçant chaque hôtel par sa visite et ses allers-retours, et se termine en rebouclant vers l'hôtel de départ initial.
+
+---
+
 ## 2. L'Algorithme Principal : Google OR-Tools (Production)
 
 Pour la résolution en production (dans [services/algorithm/optimizer.py](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/services/algorithm/optimizer.py)), le backend utilise **Google OR-Tools Routing**. Il combine des approches constructives robustes et de la programmation par contraintes.

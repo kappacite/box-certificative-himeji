@@ -44,10 +44,11 @@ class TourPlaceModel(db.Model):
         db.Integer, db.ForeignKey("tours.id", ondelete="CASCADE"), primary_key=True
     )
     place_id = db.Column(
-        db.Integer, db.ForeignKey("places.id", ondelete="CASCADE"), primary_key=True
+        db.Integer, db.ForeignKey("places.id", ondelete="CASCADE"), nullable=False
     )
-    position = db.Column(db.Integer, nullable=False)
+    position = db.Column(db.Integer, primary_key=True)
     locked = db.Column(db.Boolean, nullable=False, default=False)
+    is_hotel = db.Column(db.Boolean, nullable=False, default=False)
 
     # Relationship to access the Place entity directly
     place = db.relationship("PlaceModel", lazy="joined")
@@ -66,6 +67,7 @@ class TourModel(db.Model):
     total_distance = db.Column(db.Float, nullable=False, default=0.0)
     visibility = db.Column(db.String(20), nullable=False, default="private")
     share_token = db.Column(db.String(36), unique=True, nullable=True)
+    max_distance = db.Column(db.Float, nullable=False, default=100.0)
 
     # Ordered list of places via TourPlaceModel association
     tour_places = db.relationship(

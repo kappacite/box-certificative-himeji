@@ -239,10 +239,8 @@ def test_create_tour_with_locked_positions(client, auth_headers, mock_geocoding)
         json={
             "name": "Locked Tour",
             "place_ids": [p1_id, p2_id, p3_id],
-            "locked_positions": {
-                str(p3_id): 0,
-                str(p2_id): 1
-            }
+            "locked_positions": {str(p3_id): 0, str(p2_id): 1},
+            "max_distance": 0.0,
         },
     )
 
@@ -447,12 +445,7 @@ def test_optimize_tour_route(client, auth_headers):
     res_opt = client.post(
         "/api/tours/optimize",
         headers=auth_headers,
-        json={
-            "place_ids": [p1_id, p2_id, p3_id],
-            "locked_positions": {
-                str(p3_id): 1
-            }
-        }
+        json={"place_ids": [p1_id, p2_id, p3_id], "locked_positions": {str(p3_id): 1}},
     )
 
     assert res_opt.status_code == 200
@@ -460,6 +453,46 @@ def test_optimize_tour_route(client, auth_headers):
     assert "places" in res_data
     assert "total_distance" in res_data
     places = res_data["places"]
-    assert len(places) == 3
+    assert len(places) == 4
     # Marseille (p3_id) must be at index 1
     assert places[1]["id"] == p3_id
+
+
+def test_create_tour_with_hotels_grouping(client, auth_headers, mock_geocoding):
+    """Test generating a tour where nearby places are grouped into a hotel."""
+    # 1. Create three places: Paris, Lyon, Paris 2
+    res_p1 = client.post("/api/places", headers=auth_headers, json={"name": "Paris"})
+    res_p2 = client.post("/api/places", headers=auth_headers, json={"name": "Lyon"})
+    res_p3 = client.post("/api/places", headers=auth_headers, json={"name": "Paris 2"})
+
+    p1_id = res_p1.get_json()["data"]["place"]["id"]
+    p2_id = res_p2.get_json()["data"]["place"]["id"]
+    p3_id = res_p3.get_json()["data"]["place"]["id"]
+
+    # 2. Create tour with default max_distance=100.0 km
+    res_tour = client.post(
+        "/api/tours",
+        headers=auth_headers,
+        json={
+            "name": "Grouping Tour",
+            "place_ids": [p1_id, p2_id, p3_id],
+        },
+    )
+
+    assert res_tour.status_code == 201
+    tour_data = res_tour.get_json()["data"]["tour"]
+
+    # Places sequence should be:
+    # Paris 1 (H1) -> Paris 2 -> Paris 1 -> Lyon (H2) -> Paris 1 (H1)
+    places = tour_data["places"]
+    assert len(places) == 5
+    assert places[0]["id"] == p1_id
+    assert places[0]["is_hotel"] is True
+    assert places[1]["id"] == p3_id
+    assert places[1]["is_hotel"] is False
+    assert places[2]["id"] == p1_id
+    assert places[2]["is_hotel"] is True
+    assert places[3]["id"] == p2_id
+    assert places[3]["is_hotel"] is True
+    assert places[4]["id"] == p1_id
+    assert places[4]["is_hotel"] is True

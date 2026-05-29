@@ -3,7 +3,6 @@ from services.tour_service import TourService
 from middleware.auth_middleware import require_auth, require_owner
 from exceptions import ValidationException
 
-
 tour_bp = Blueprint("tours", __name__, url_prefix="/api/tours")
 tour_service = TourService()
 
@@ -21,10 +20,7 @@ def get_tours():
         raise ValidationException("Invalid page or limit parameter")
 
     tours = tour_service.get_tours(
-        owner_id=g.current_user.id,
-        q=q,
-        page=page,
-        limit=limit
+        owner_id=g.current_user.id, q=q, page=page, limit=limit
     )
     return (
         jsonify({"status": "success", "data": {"tours": [t.to_dict() for t in tours]}}),
@@ -43,6 +39,14 @@ def create_tour():
     locked_positions = data.get("locked_positions")
     locked_places = data.get("locked_places")
 
+    max_distance_val = data.get("max_distance")
+    max_distance = 100.0
+    if max_distance_val is not None:
+        try:
+            max_distance = float(max_distance_val)
+        except (ValueError, TypeError):
+            raise ValidationException("max_distance must be a number")
+
     tour = tour_service.create_tour(
         name=name,
         place_ids=place_ids,
@@ -50,6 +54,7 @@ def create_tour():
         visibility=visibility,
         locked_positions=locked_positions,
         locked_places=locked_places,
+        max_distance=max_distance,
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 201
 
@@ -63,11 +68,20 @@ def preview_tour():
     locked_positions = data.get("locked_positions")
     locked_places = data.get("locked_places")
 
+    max_distance_val = data.get("max_distance")
+    max_distance = 100.0
+    if max_distance_val is not None:
+        try:
+            max_distance = float(max_distance_val)
+        except (ValueError, TypeError):
+            raise ValidationException("max_distance must be a number")
+
     tour = tour_service.preview_tour(
         place_ids=place_ids,
         owner_id=g.current_user.id,
         locked_positions=locked_positions,
         locked_places=locked_places,
+        max_distance=max_distance,
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 
@@ -103,6 +117,14 @@ def patch_tour(tour_id):
     locked_positions = data.get("locked_positions")
     locked_places = data.get("locked_places")
 
+    max_distance_val = data.get("max_distance")
+    max_distance = None
+    if max_distance_val is not None:
+        try:
+            max_distance = float(max_distance_val)
+        except (ValueError, TypeError):
+            raise ValidationException("max_distance must be a number")
+
     tour = tour_service.patch_tour(
         tour_id=tour_id,
         visibility=visibility,
@@ -111,6 +133,7 @@ def patch_tour(tour_id):
         owner_id=g.current_user.id,
         locked_positions=locked_positions,
         locked_places=locked_places,
+        max_distance=max_distance,
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 
@@ -132,7 +155,7 @@ def share_tour(tour_id):
         visibility=visibility,
         places_id=None,
         name=None,
-        owner_id=g.current_user.id
+        owner_id=g.current_user.id,
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 
@@ -188,10 +211,19 @@ def optimize_tour():
     locked_positions = data.get("locked_positions")
     locked_places = data.get("locked_places")
 
+    max_distance_val = data.get("max_distance")
+    max_distance = 100.0
+    if max_distance_val is not None:
+        try:
+            max_distance = float(max_distance_val)
+        except (ValueError, TypeError):
+            raise ValidationException("max_distance must be a number")
+
     result = tour_service.optimize_places(
         place_ids=place_ids,
         owner_id=g.current_user.id,
         locked_positions=locked_positions,
         locked_places=locked_places,
+        max_distance=max_distance,
     )
     return jsonify({"status": "success", "data": result}), 200

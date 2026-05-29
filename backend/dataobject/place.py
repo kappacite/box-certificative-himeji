@@ -13,6 +13,7 @@ class Place:
     visibility: str = "private"  # "private" or "public"
     id: Optional[int] = None
     locked: bool = False
+    is_hotel: bool = False
 
     def to_dict(self) -> dict:
         """Convert the Place dataclass instance to a dictionary.
@@ -40,4 +41,5 @@ class Place:
             visibility=data.get("visibility", "private"),
             id=data.get("id"),
             locked=data.get("locked", False),
+            is_hotel=data.get("is_hotel", False),
         )

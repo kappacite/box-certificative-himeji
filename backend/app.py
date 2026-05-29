@@ -61,6 +61,7 @@ def create_app(config_name: str = None) -> Flask:
         """Health check verifying database connection availability."""
         try:
             from sqlalchemy import text
+
             db.session.execute(text("SELECT 1"))
             return (
                 jsonify(

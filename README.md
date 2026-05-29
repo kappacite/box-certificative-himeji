@@ -1,4 +1,4 @@
-# 🌍 Travel Planner — Dynamic Route Optimizer
+# 🌍 Himeji Planner — Dynamic Route Optimizer
 
 Travel Planner is a complete web application designed to help travelers plan, organize, and optimize their itineraries. The platform features an advanced routing engine that solves the **Traveling Salesperson Problem (TSP)** with support for fixed/locked stops and structured hotel layovers, presenting an interactive animated route map.
 

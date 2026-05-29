@@ -22,6 +22,8 @@ def require_auth(f):
 
     @wraps(f)
     def decorated(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return f(*args, **kwargs)
         auth_header = request.headers.get("Authorization")
         if not auth_header:
             raise UnauthorizedException("Authorization header is missing")
@@ -59,6 +61,8 @@ def require_owner(resource_type: str):
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
+            if request.method == "OPTIONS":
+                return f(*args, **kwargs)
             current_user = getattr(g, "current_user", None)
             if not current_user:
                 raise UnauthorizedException("Authentication required")
@@ -97,6 +101,8 @@ def optional_auth(f):
 
     @wraps(f)
     def decorated(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return f(*args, **kwargs)
         g.current_user = None
         auth_header = request.headers.get("Authorization")
         if auth_header:

@@ -79,7 +79,14 @@ export function usePlaces() {
     try {
       const response = await placesApi.updatePlace(placeId, placeData)
       const updatedPlace = response.data?.place
-      placesStore.updatePlace(updatedPlace)
+      if (typeof placesStore.updatePlace === 'function') {
+        placesStore.updatePlace(updatedPlace)
+      } else {
+        const idx = placesStore.places.findIndex((p) => p.id === updatedPlace.id)
+        if (idx !== -1) {
+          placesStore.places[idx] = updatedPlace
+        }
+      }
       return updatedPlace
     } catch (err) {
       placesStore.setError(err)

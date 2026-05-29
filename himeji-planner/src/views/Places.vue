@@ -23,15 +23,15 @@
       No places are available yet.
     </p>
 
-    <section v-if="isAuthenticated && privatePlaces.length > 0" class="places-section">
+    <section v-if="isAuthenticated && myPlaces.length > 0" class="places-section">
       <div class="section-header">
-        <h2>My Private Places</h2>
-        <span class="section-count">{{ privatePlaces.length }}</span>
+        <h2>My Places</h2>
+        <span class="section-count">{{ myPlaces.length }}</span>
       </div>
 
       <div class="places-grid">
         <PlaceCard
-          v-for="place in privatePlaces"
+          v-for="place in myPlaces"
           :key="place.id"
           :name="getPlaceName(place)"
           :latitude="place.latitude"
@@ -42,15 +42,15 @@
       </div>
     </section>
 
-    <section v-if="publicPlaces.length > 0" class="places-section">
+    <section v-if="otherPublicPlaces.length > 0" class="places-section">
       <div class="section-header">
         <h2>Public Places</h2>
-        <span class="section-count">{{ publicPlaces.length }}</span>
+        <span class="section-count">{{ otherPublicPlaces.length }}</span>
       </div>
 
       <div class="places-grid">
         <PlaceCard
-          v-for="place in publicPlaces"
+          v-for="place in otherPublicPlaces"
           :key="place.id"
           :name="getPlaceName(place)"
           :latitude="place.latitude"
@@ -110,8 +110,9 @@ const isEditPlaceOpen = ref(false)
 const placeToEdit = ref(null)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
-const privatePlaces = computed(() => places.value.filter((place) => place.visibility === 'private'))
-const publicPlaces = computed(() => places.value.filter((place) => place.visibility !== 'private'))
+const currentUserId = computed(() => authStore.user?.id ?? null)
+const myPlaces = computed(() => places.value.filter((place) => place.owner_id === currentUserId.value))
+const otherPublicPlaces = computed(() => places.value.filter((place) => place.visibility === 'public' && place.owner_id !== currentUserId.value))
 const friendlyErrorMessage = computed(() => getFriendlyErrorMessage(error.value?.code))
 
 const canManagePlace = computed(() => {

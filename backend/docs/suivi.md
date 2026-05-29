@@ -8,14 +8,14 @@ Ce document récapitule l'état d'avancement de l'implémentation du backend, l'
 
 | Composant | Statut | Description |
 | :--- | :--- | :--- |
-| [Configuration & Initialisation](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/part_config_init.md) | 🟢 Complet | Configuration d'environnement et initialisation de l'application Flask. |
-| [Couche Modèles (dataobject/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/part_dataobjects.md) | 🟢 Complet | Conteneurs de données purs pour `User`, `Place` et `Tour`. |
-| [Couche Accès Données (dao/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/part_dao.md) | 🟢 Complet | Architecture BaseDAO générique, modèles SQLAlchemy et classes DAO spécifiques. |
-| [Couche Services métier (services/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/part_services.md) | 🟢 Complet | Chiffrement bcrypt, gestion JWT, géocodage Nominatim et heuristique TSP. |
-| [Algorithmes d'optimisation](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/part_algorithms.md) | 🟢 Complet | Distance de Haversine exacte et solveur TSP professionnel avec Google OR-Tools. |
-| [Couche Routes API (routes/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/part_routes.md) | 🟢 Complet | Endpoints REST conformes, gestion des réponses normalisées et codes HTTP. |
-| [Middlewares & Exceptions](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/part_middlewares_exceptions.md) | 🟢 Complet | Décorateurs d'authentification (`@require_auth`) et de propriété (`@require_owner`), gestionnaire global d'erreurs. |
-| [Suite de Tests (tests/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/part_tests.md) | 🟢 Complet | 19 tests unitaires et intégration couvrant 100% des cas d'utilisation clés. |
+| [Configuration & Initialisation](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md#1-single-responsibility-principle-srp) | 🟢 Complet | Configuration d'environnement et initialisation de l'application Flask. |
+| [Couche Modèles (dataobject/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md#1-single-responsibility-principle-srp) | 🟢 Complet | Conteneurs de données purs pour `User`, `Place` et `Tour`. |
+| [Couche Accès Données (dao/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md#3-liskov-substitution-principle-lsp) | 🟢 Complet | Architecture BaseDAO générique, modèles SQLAlchemy et classes DAO spécifiques. |
+| [Couche Services métier (services/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md#5-dependency-inversion-principle-dip) | 🟢 Complet | Chiffrement bcrypt, gestion JWT, géocodage Nominatim et heuristique TSP. |
+| [Algorithmes d'optimisation](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md#%F0%9F%A7%A0-core-optimization-engine-tsp-solver) | 🟢 Complet | Distance de Haversine exacte et solveur TSP professionnel avec Google OR-Tools. |
+| [Couche Routes API (routes/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md#4-interface-segregation-principle-isp) | 🟢 Complet | Endpoints REST conformes, gestion des réponses normalisées et codes HTTP. |
+| [Middlewares & Exceptions](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md#architectural-layers) | 🟢 Complet | Décorateurs d'authentification (`@require_auth`) et de propriété (`@require_owner`), gestionnaire global d'erreurs. |
+| [Suite de Tests (tests/)](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/docs/TECHNICAL_DOCUMENTATION.md#%F0%9F%A7%AA-testing--verification) | 🟢 Complet | 19 tests unitaires et intégration couvrant 100% des cas d'utilisation clés. |
 | **Formatage & Linting** | 🟢 Complet | Nettoyage complet sous `black` et linter `flake8` valide à 100%. |
 
 *Légende : 🔴 Non démarré | 🟡 En cours | 🟢 Complet / Validé*

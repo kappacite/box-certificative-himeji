@@ -10,10 +10,11 @@ class Place:
     latitude: float
     longitude: float
     owner_id: int
-    visibility: str = "private"  # "private" or "public"
+    visibility: str = "public"  # "private" or "public"
     id: Optional[int] = None
     locked: bool = False
     is_hotel: bool = False
+    city: Optional[str] = None
 
     def to_dict(self) -> dict:
         """Convert the Place dataclass instance to a dictionary.
@@ -38,8 +39,9 @@ class Place:
             latitude=float(data.get("latitude")),
             longitude=float(data.get("longitude")),
             owner_id=data.get("owner_id"),
-            visibility=data.get("visibility", "private"),
+            visibility=data.get("visibility", "public"),
             id=data.get("id"),
             locked=data.get("locked", False),
             is_hotel=data.get("is_hotel", False),
+            city=data.get("city"),
         )

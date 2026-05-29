@@ -3,10 +3,10 @@
     <div class="hero-content">
       <span class="hero-badge">🌸 Global Travel Planner</span>
       <h1 class="hero-title">
-        Design your dream trip, from <span>Himeji</span> to the world
+        Design your dream trip by <span>optimizing your time</span>
       </h1>
       <p class="hero-subtitle">
-        Plan detailed itineraries, discover cultural gems worldwide, and calculate optimal travel routes with advanced spherical distance calculations effortlessly.
+        Plan detailed itineraries, discover others' travels and rest assured that your travels will be the best.
       </p>
       
       <div class="hero-actions">
@@ -39,22 +39,22 @@
           <div class="timeline-item active">
             <span class="time">09:00</span>
             <div class="details">
-              <h4>Arrival at Himeji Station 🚄</h4>
-              <p>Shinkansen bullet train from Kyoto/Osaka</p>
+              <h4>Tour Eiffel</h4>
+              <p>Paris</p>
             </div>
           </div>
           <div class="timeline-item">
             <span class="time">10:00</span>
             <div class="details">
-              <h4>Himeji Castle (White Heron) 🏯</h4>
-              <p>Guided tour of the main keep and fortresses</p>
+              <h4>Tokyo Tower</h4>
+              <p>Tokyo-to</p>
             </div>
           </div>
           <div class="timeline-item">
-            <span class="time">13:30</span>
+            <span class="time">15:00</span>
             <div class="details">
-              <h4>Lunch & Tea Ceremony at Koko-en 🍵</h4>
-              <p>Traditional matcha tasting in the historic garden</p>
+              <h4>Little Poucet's Boot</h4>
+              <p>Listenbourg</p>
             </div>
           </div>
         </div>
@@ -91,9 +91,9 @@ const authStore = useAuthStore()
 }
 
 .hero-badge {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  color: #2563eb;
+  background: rgba(246, 59, 221, 0.08);
+  border: 1px solid rgba(246, 59, 230, 0.2);
+  color: #f77acd;
   padding: 0.5rem 1rem;
   border-radius: 2rem;
   font-size: 0.875rem;
@@ -109,8 +109,9 @@ const authStore = useAuthStore()
 }
 
 .hero-title span {
-  background: linear-gradient(135deg, #2563eb, #db2777);
+  background: linear-gradient(135deg, #a15aa3 0%, #f77acd 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -205,8 +206,8 @@ const authStore = useAuthStore()
 .timeline-item .time {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #9ca3af;
-  background: #f3f4f6;
+  color: #a07ca1;
+  background: #f1e4f1;
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
   min-width: 42px;
@@ -214,8 +215,8 @@ const authStore = useAuthStore()
 }
 
 .timeline-item.active .time {
-  color: #2563eb;
-  background: rgba(59, 130, 246, 0.1);
+  color: #f77acd;
+  background: #f1d5e7;
 }
 
 .timeline-item .details h4 {

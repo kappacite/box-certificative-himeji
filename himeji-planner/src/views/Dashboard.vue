@@ -3,7 +3,7 @@
     <!-- Header banner -->
     <header class="dashboard-header">
       <div class="welcome-section">
-        <h1>Hello, {{ authStore.user?.username || 'Traveler' }}! 👋</h1>
+        <h1>Hello, {{ authStore.user?.username || 'Traveler' }}!</h1>
         <p class="subtitle">Welcome to your personal travel workspace. Ready to plan your next journey?</p>
       </div>
       
@@ -21,15 +21,15 @@
       <BaseCard class="stat-card">
         <div class="stat-icon">🗺️</div>
         <div class="stat-content">
-          <span class="stat-number">0</span>
-          <span class="stat-label">Saved itineraries</span>
+          <span class="stat-number">{{ myTours.length }}</span>
+          <span class="stat-label">Itineraries published</span>
         </div>
       </BaseCard>
       
       <BaseCard highlight class="stat-card">
         <div class="stat-icon">🚀</div>
         <div class="stat-content">
-          <span class="stat-number">0.0 km</span>
+          <span class="stat-number">{{ totalOptimizedKm }} km</span>
           <span class="stat-label">Total optimized km</span>
         </div>
       </BaseCard>
@@ -37,7 +37,7 @@
       <BaseCard class="stat-card">
         <div class="stat-icon">🔒</div>
         <div class="stat-content">
-          <span class="stat-number">0</span>
+          <span class="stat-number">{{ privateTours.length }}</span>
           <span class="stat-label">Private itineraries</span>
         </div>
       </BaseCard>
@@ -50,7 +50,6 @@
       </div>
 
       <div class="dashboard-grid">
-        <!-- Card 1: Popular Sights Explorer -->
         <BaseCard highlight hoverable class="dashboard-card">
           <div class="card-icon">🌸</div>
           <h3>Explore Popular Sights</h3>
@@ -60,24 +59,23 @@
           </RouterLink>
         </BaseCard>
 
-        <!-- Card 2: Travel Essentials Checklist -->
         <BaseCard hoverable class="dashboard-card">
           <div class="card-icon">🎒</div>
-          <h3>Travel Checklist</h3>
-          <p>Prepare your baggage optimally: follow our curated list of essentials for an enjoyable stay abroad.</p>
-          <BaseButton @click="handleManageChecklist">
-            Manage My Checklist
-          </BaseButton>
+          <h3>Plan your next trip</h3>
+          <p>Prepare your baggage optimally: select your destinations and we will optimize your journeys and hotels.</p>
+          <RouterLink :to="{ name: 'planner' }" class="card-action">
+            Create a new travel →
+          </RouterLink>
         </BaseCard>
 
         <!-- Card 3: Saved Travel Guides -->
         <BaseCard hoverable class="dashboard-card">
           <div class="card-icon">🗺️</div>
-          <h3>My Saved Itineraries</h3>
-          <p>Your saved routes, itineraries, and custom offline guides will be listed here. Explore destinations to compile a guide.</p>
-          <BaseButton variant="secondary" @click="handleBrowseGuides">
-            Browse Guides
-          </BaseButton>
+          <h3>My Itineraries</h3>
+          <p>Your saved routes, custom it and and explore destinations.</p>
+          <RouterLink :to="{ name: 'tours' }" class="card-action">
+            Check your tours →
+          </RouterLink>
         </BaseCard>
       </div>
     </div>
@@ -85,11 +83,28 @@
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
+import { useTours } from '@/composables/useTours'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
 
 const authStore = useAuthStore()
+const { myTours, privateTours, loadMyTours } = useTours()
+
+const totalOptimizedKm = computed(() => {
+  const sum = myTours.value.reduce((acc, tour) => {
+    const dist = Number(tour.total_distance)
+    return acc + (Number.isFinite(dist) ? dist : 0)
+  }, 0)
+  return sum.toFixed(1)
+})
+
+onMounted(async () => {
+  if (authStore.isAuthenticated) {
+    await loadMyTours()
+  }
+})
 
 const handleManageChecklist = () => {
   alert('Travel luggage checklist feature coming soon!')
@@ -123,8 +138,9 @@ const handleBrowseGuides = () => {
   color: #111827;
   font-weight: 800;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  background: linear-gradient(135deg, #cc67cf 0%, #f77acd 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -147,14 +163,14 @@ const handleBrowseGuides = () => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #a15aa3, #f77acd);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 1.1rem;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 4px 10px rgba(246, 59, 230, 0.2);
 }
 
 .user-details {
@@ -215,7 +231,7 @@ const handleBrowseGuides = () => {
 }
 
 .stat-card.card-highlight .stat-number {
-  color: #2563eb;
+  color: #f77acd;
 }
 
 .stat-label {
@@ -266,7 +282,7 @@ const handleBrowseGuides = () => {
 }
 
 .card-action {
-  color: #2563eb;
+  color: #f77acd;
   font-weight: 600;
   text-decoration: none;
   font-size: 0.95rem;
@@ -277,7 +293,7 @@ const handleBrowseGuides = () => {
 
 .card-action:hover {
   transform: translateX(3px);
-  color: #1d4ed8;
+  color: #c962a6;
 }
 
 @media (max-width: 640px) {

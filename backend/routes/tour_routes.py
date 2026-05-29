@@ -116,6 +116,7 @@ def patch_tour(tour_id):
     name = data.get("name")
     locked_positions = data.get("locked_positions")
     locked_places = data.get("locked_places")
+    optimize = data.get("optimize", True)  # False → save order as-is, skip algorithm
 
     max_distance_val = data.get("max_distance")
     max_distance = None
@@ -134,6 +135,7 @@ def patch_tour(tour_id):
         locked_positions=locked_positions,
         locked_places=locked_places,
         max_distance=max_distance,
+        optimize=optimize,
     )
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 
@@ -225,13 +227,6 @@ def recalculate_tour(tour_id):
     tour = tour_service.recalculate_tour(tour_id, g.current_user.id)
     return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 200
 
-
-@tour_bp.route("/<int:tour_id>/duplicate", methods=["POST"])
-@require_auth
-def duplicate_tour(tour_id):
-    """Duplicate a public or owned tour into the current user's space."""
-    tour = tour_service.duplicate_tour(tour_id, g.current_user.id)
-    return jsonify({"status": "success", "data": {"tour": tour.to_dict()}}), 201
 
 
 @tour_bp.route("/optimize", methods=["POST"])

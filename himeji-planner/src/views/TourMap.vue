@@ -28,6 +28,66 @@ L.Icon.Default.mergeOptions({
   shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
 })
 
+const getStopIcon = (stopNumber, isHotel) => {
+  if (isHotel) {
+    return L.divIcon({
+      className: 'custom-hotel-marker',
+      html: `
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          background: #ef4444;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+          border: 2px solid white;
+        ">
+          <span style="
+            transform: rotate(45deg);
+            font-size: 14px;
+            display: inline-block;
+          ">🏨</span>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    })
+  } else {
+    return L.divIcon({
+      className: 'custom-stop-marker',
+      html: `
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          background: #2563eb;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+          border: 2px solid white;
+        ">
+          <span style="
+            transform: rotate(45deg);
+            font-size: 11px;
+            font-weight: 800;
+            color: white;
+            display: inline-block;
+          ">${stopNumber}</span>
+        </div>
+      `,
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30]
+    })
+  }
+}
+
 const renderMap = () => {
   if (!map) {
     map = L.map('tour-map').setView([0, 0], 2)
@@ -44,14 +104,33 @@ const renderMap = () => {
   if (props.route && props.route.length > 0) {
     const latlngs = props.route.map(stop => [stop.latitude, stop.longitude])
     
-    // Group markers and polyline into one layer
+    // Build markers with correct numbering:
+    // Hotels always show 'H', only non-hotel stops get a sequential number
+    let stopCounter = 0
     const layers = latlngs.map((latlng, index) => {
-      return L.marker(latlng).bindPopup(`<b>Stop ${index + 1}</b><br>${props.route[index].name}`)
+      const stop = props.route[index]
+      if (!stop.is_hotel) stopCounter++
+      return L.marker(latlng, { icon: getStopIcon(stop.is_hotel ? null : stopCounter, stop.is_hotel) })
+        .bindPopup(`<b>${stop.is_hotel ? '🏨 Hotel' : `Stop ${stopCounter}`}</b><br>${stop.name}`)
     })
     
-    // Draw line between markers
-    const polyline = L.polyline(latlngs, { color: '#2563eb', weight: 4 })
-    layers.push(polyline)
+    // Draw a solid base route line (semi-transparent)
+    const basePolyline = L.polyline(latlngs, {
+      color: '#2563eb',
+      weight: 5,
+      opacity: 0.45
+    })
+    layers.push(basePolyline)
+
+    // Draw an animated flowing line on top of the base line
+    const animatedPolyline = L.polyline(latlngs, {
+      color: '#1d4ed8',
+      weight: 5,
+      opacity: 0.95,
+      dashArray: '12, 18',
+      className: 'animated-flow-line'
+    })
+    layers.push(animatedPolyline)
 
     routeLayer = L.featureGroup(layers).addTo(map)
     
@@ -89,5 +168,15 @@ onUnmounted(() => {
 .map-container {
   width: 100%;
   height: 100%;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
+:deep(.animated-flow-line) {
+  animation: flow 1.5s linear infinite;
 }
 </style>

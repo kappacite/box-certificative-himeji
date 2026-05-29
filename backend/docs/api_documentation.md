@@ -213,7 +213,7 @@ Renvoie la liste des lieux personnels ou publics avec filtres et pagination.
 ---
 
 ### 🗺️ Rechercher les coordonnées d'un lieu (GET)
-Récupère les coordonnées (latitude et longitude) d'une adresse ou d'un nom de lieu via le service Nominatim, sans enregistrer le lieu en base de données.
+Récupère les coordonnées (latitude et longitude) et la ville d'une adresse ou d'un nom de lieu via le service Nominatim, sans enregistrer le lieu en base de données.
 
 * **Méthode** : `GET`
 * **URL** : `/api/places/search?q=<nom_du_lieu>`
@@ -224,7 +224,8 @@ Récupère les coordonnées (latitude et longitude) d'une adresse ou d'un nom de
       "status": "success",
       "data": {
         "latitude": 48.8566,
-        "longitude": 2.3522
+        "longitude": 2.3522,
+        "city": "Paris"
       }
     }
     ```
@@ -250,7 +251,8 @@ Identique à la route de recherche GET, mais via un corps de requête POST. Util
       "status": "success",
       "data": {
         "latitude": 48.8566,
-        "longitude": 2.3522
+        "longitude": 2.3522,
+        "city": "Paris"
       }
     }
     ```
@@ -291,7 +293,7 @@ Renvoie la liste globale de tous les lieux publics présents en base de données
 ---
 
 ### ➕ Créer un lieu **[Auth Requise]**
-Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitude`/`longitude`) ne sont pas fournies, l'API utilise automatiquement l'API OpenStreetMap Nominatim pour géocoder le nom.
+Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitude`/`longitude`) ne sont pas fournies, l'API utilise automatiquement l'API OpenStreetMap Nominatim pour géocoder le nom et en résoudre la ville.
 
 * **Méthode** : `POST`
 * **URL** : `/api/places`
@@ -301,6 +303,7 @@ Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitu
     "name": "Lyon",
     "latitude": 45.7640,          // Optionnel
     "longitude": 4.8357,         // Optionnel
+    "city": "Lyon",              // Optionnel (défaut: extrait via géocodage si coordonnées non fournies)
     "visibility": "public"       // Optionnel ("private" ou "public", défaut: "private")
   }
   ```
@@ -316,7 +319,10 @@ Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitu
           "latitude": 45.764,
           "longitude": 4.8357,
           "owner_id": 2,
-          "visibility": "public"
+          "visibility": "public",
+          "city": "Lyon",
+          "is_hotel": false,
+          "locked": false
         }
       }
     }
@@ -485,9 +491,9 @@ Affiche tous les itinéraires de la plateforme configurés avec une visibilité 
 ---
 
 ### 🧩 Générer et créer un itinéraire optimisé **[Auth Requise]**
-Prend une liste d'IDs de lieux (qui doivent appartenir à l'utilisateur, ou être publics), calcule l'ordre optimal pour parcourir ces points (problème TSP résolu par Google OR-Tools) et enregistre l'itinéraire résultant en circuit fermé (retour au point de départ).
+Prend une liste d'IDs de lieux (qui doivent appartenir à l'utilisateur, ou être publics), calcule l'ordre optimal pour parcourir ces points (problème TSP avec regroupement par hôtels et allers-retours via OR-Tools) et enregistre l'itinéraire résultant en circuit fermé (retour au point de départ).
 
-L'API supporte le **verrouillage de certaines étapes** (lieux) à des positions fixes de l'itinéraire.
+L'API supporte le **verrouillage de certaines étapes** (lieux) à des positions fixes de l'itinéraire et le **regroupement par hôtels** basé sur la distance maximale fournie.
 
 * **Méthode** : `POST`
 * **URL** : `/api/tours`
@@ -506,6 +512,8 @@ L'API supporte le **verrouillage de certaines étapes** (lieux) à des positions
     },
     // Optionnel : liste des IDs des lieux à figer à leur index d'entrée
     "locked_places": [201],
+    // Optionnel : distance maximale en km pour allers-retours depuis l'hôtel (défaut: 100.0)
+    "max_distance": 100.0,
     "visibility": "public" // Optionnel ("private" ou "public", défaut: "private")
   }
   ```
@@ -521,14 +529,15 @@ L'API supporte le **verrouillage de certaines étapes** (lieux) à des positions
           "name": "Mon Circuit Opti",
           "owner_id": 2,
           "places": [
-            { "id": 202, "name": "Lyon", "locked": true, ... },
-            { "id": 201, "name": "Mon Lieu Privé", "locked": true, ... },
-            { "id": 1, "name": "Tour Eiffel, Paris", "locked": false, ... },
-            { "id": 202, "name": "Lyon", "locked": true, ... }
+            { "id": 202, "name": "Lyon", "latitude": 45.7640, "longitude": 4.8357, "owner_id": 2, "visibility": "public", "locked": true, "is_hotel": true },
+            { "id": 201, "name": "Mon Lieu Privé", "latitude": 48.8566, "longitude": 2.3522, "owner_id": 2, "visibility": "private", "locked": true, "is_hotel": false },
+            { "id": 1, "name": "Tour Eiffel, Paris", "latitude": 48.8584, "longitude": 2.2945, "owner_id": 1, "visibility": "public", "locked": false, "is_hotel": false },
+            { "id": 202, "name": "Lyon", "latitude": 45.7640, "longitude": 4.8357, "owner_id": 2, "visibility": "public", "locked": true, "is_hotel": true }
           ],
           "total_distance": 783.52,
           "visibility": "public",
-          "share_token": "59b8d2d1-9f93-4a11-a83d-9de1e9a2bcae"
+          "share_token": "59b8d2d1-9f93-4a11-a83d-9de1e9a2bcae",
+          "max_distance": 100.0
         }
       }
     }
@@ -568,7 +577,8 @@ Identique à la création d'itinéraire (`POST /api/tours`), mais **ne persiste 
     "locked_positions": {
       "202": 0
     },
-    "locked_places": [201]
+    "locked_places": [201],
+    "max_distance": 100.0
   }
   ```
 * **Codes HTTP de réponse** :
@@ -582,14 +592,15 @@ Identique à la création d'itinéraire (`POST /api/tours`), mais **ne persiste 
           "name": "Preview",
           "owner_id": 2,
           "places": [
-            { "id": 202, "name": "Lyon", "locked": true },
-            { "id": 201, "name": "Mon Lieu Privé", "locked": true },
-            { "id": 1, "name": "Tour Eiffel, Paris", "locked": false },
-            { "id": 202, "name": "Lyon", "locked": true }
+            { "id": 202, "name": "Lyon", "latitude": 45.7640, "longitude": 4.8357, "owner_id": 2, "visibility": "public", "locked": true, "is_hotel": true },
+            { "id": 201, "name": "Mon Lieu Privé", "latitude": 48.8566, "longitude": 2.3522, "owner_id": 2, "visibility": "private", "locked": true, "is_hotel": false },
+            { "id": 1, "name": "Tour Eiffel, Paris", "latitude": 48.8584, "longitude": 2.2945, "owner_id": 1, "visibility": "public", "locked": false, "is_hotel": false },
+            { "id": 202, "name": "Lyon", "latitude": 45.7640, "longitude": 4.8357, "owner_id": 2, "visibility": "public", "locked": true, "is_hotel": true }
           ],
           "total_distance": 783.52,
           "visibility": "private",
-          "share_token": ""
+          "share_token": "",
+          "max_distance": 100.0
         }
       }
     }
@@ -600,7 +611,7 @@ Identique à la création d'itinéraire (`POST /api/tours`), mais **ne persiste 
 ---
 
 ### ✏️ Modifier un itinéraire **[Auth Requise / Propriétaire uniquement]**
-Permet de modifier les informations d'un itinéraire (nom, visibilité, liste de lieux et contraintes de verrous). Si la liste des lieux ou les verrous sont modifiés, l'itinéraire est ré-optimisé. Si aucun verrou n'est spécifié, les verrous existants encore présents dans la liste de lieux sont conservés par défaut.
+Permet de modifier les informations d'un itinéraire (nom, visibilité, liste de lieux, contraintes de verrous et distance maximale de regroupement). Si la liste des lieux, les verrous ou `max_distance` sont modifiés, l'itinéraire est ré-optimisé. Si aucun verrou n'est spécifié, les verrous existants encore présents dans la liste de lieux sont conservés par défaut.
 
 * **Méthode** : `PATCH`
 * **URL** : `/api/tours/<int:tour_id>`
@@ -613,7 +624,8 @@ Permet de modifier les informations d'un itinéraire (nom, visibilité, liste de
     "locked_positions": {                         // Optionnel (nouveau dictionnaire de verrous)
       "203": 0
     },
-    "locked_places": [201]                        // Optionnel (nouvelle liste de verrous d'origine)
+    "locked_places": [201],                       // Optionnel (nouvelle liste de verrous d'origine)
+    "max_distance": 120.0                         // Optionnel (nouvelle distance max en km pour regroupement)
   }
   ```
 * **Codes HTTP de réponse** :
@@ -666,6 +678,7 @@ Modifie la visibilité d'un itinéraire. Si aucun corps n'est passé, la route a
           "id": 15,
           "visibility": "private", // ou "public"
           "share_token": "59b8d2d1-9f93-4a11-a83d-9de1e9a2bcae",
+          "max_distance": 100.0
           // ...
         }
       }
@@ -687,21 +700,8 @@ Recalcule l'ordre optimal et la distance totale d'un itinéraire existant. Utile
   * **`404 Not Found`** : L'itinéraire n'existe pas.
 
 ---
-
-### 👯 Dupliquer un itinéraire **[Auth Requise]**
-Copie un itinéraire public (ou appartenant à l'utilisateur) dans son espace personnel. Si l'itinéraire d'origine contient des lieux privés appartenant à un tiers, l'API clone automatiquement ces lieux en tant que nouveaux lieux privés pour le destinataire, évitant ainsi les erreurs de permission.
-
-* **Méthode** : `POST`
-* **URL** : `/api/tours/<int:tour_id>/duplicate`
-* **Codes HTTP de réponse** :
-  * **`201 Created`** : Copie créée.
-  * **`403 Forbidden`** : L'itinéraire d'origine est privé et appartient à un autre utilisateur (copie interdite).
-  * **`404 Not Found`** : L'itinéraire n'existe pas.
-
----
-
 ### ⚡ Optimiser un itinéraire (sans sauvegarde) **[Auth Requise]**
-Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sans créer ni enregistrer de tournée en base de données. Il permet également de tester l'impact de verrous de position ou de lieux spécifiques.
+Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sans créer ni enregistrer de tournée en base de données. Il permet également de tester l'impact de verrous de position, de lieux spécifiques, ou de la distance de clustering `max_distance`.
 
 * **Méthode** : `POST`
 * **URL** : `/api/tours/optimize`
@@ -712,7 +712,8 @@ Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sa
     "locked_positions": {   // Optionnel (dictionnaire identifiant_lieu_str -> position_int)
       "3": 1
     },
-    "locked_places": [1]    // Optionnel (liste d'identifiants à verrouiller à leur index d'entrée dans place_ids)
+    "locked_places": [1],   // Optionnel (liste d'identifiants à verrouiller à leur index d'entrée dans place_ids)
+    "max_distance": 100.0   // Optionnel (défaut: 100.0) — distance max en km pour les allers-retours depuis l'hôtel
   }
   ```
 * **Codes HTTP de réponse** :
@@ -729,7 +730,8 @@ Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sa
             "longitude": 2.3522,
             "owner_id": 1,
             "visibility": "private",
-            "locked": true
+            "locked": true,
+            "is_hotel": true
           },
           {
             "id": 3,
@@ -738,7 +740,8 @@ Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sa
             "longitude": 5.3697,
             "owner_id": 1,
             "visibility": "private",
-            "locked": true
+            "locked": true,
+            "is_hotel": true
           },
           {
             "id": 2,
@@ -747,7 +750,8 @@ Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sa
             "longitude": 4.8357,
             "owner_id": 1,
             "visibility": "private",
-            "locked": false
+            "locked": false,
+            "is_hotel": false
           }
         ],
         "total_distance": 783.52
@@ -772,10 +776,15 @@ Permet à n'importe quel internaute d'accéder aux détails d'un itinéraire via
       "data": {
         "tour": {
           "name": "Mon Circuit Opti",
-          "places": [ ... ],
+          "places": [
+            { "name": "Lyon", "latitude": 45.7640, "longitude": 4.8357, "visibility": "public", "locked": true, "is_hotel": true },
+            { "name": "Tour Eiffel, Paris", "latitude": 48.8584, "longitude": 2.2945, "visibility": "public", "locked": false, "is_hotel": false },
+            { "name": "Lyon", "latitude": 45.7640, "longitude": 4.8357, "visibility": "public", "locked": true, "is_hotel": true }
+          ],
           "total_distance": 783.52,
           "visibility": "public",
-          "share_token": "59b8d2d1-9f93-4a11-a83d-9de1e9a2bcae"
+          "share_token": "59b8d2d1-9f93-4a11-a83d-9de1e9a2bcae",
+          "max_distance": 100.0
         }
       }
     }

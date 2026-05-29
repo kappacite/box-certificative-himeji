@@ -20,6 +20,25 @@ export function usePlaces() {
     }
   }
 
+  async function loadVisiblePlaces(isAuthenticated) {
+    placesStore.clearError()
+    placesStore.loading = true
+
+    try {
+      const publicResponse = await placesApi.getPublicPlaces()
+      placesStore.setPlaces(publicResponse.data?.places ?? [])
+
+      if (isAuthenticated) {
+        const privateResponse = await placesApi.getMyPlaces()
+        placesStore.mergePlaces(privateResponse.data?.places ?? [])
+      }
+    } catch (err) {
+      placesStore.setError(err)
+    } finally {
+      placesStore.loading = false
+    }
+  }
+
   async function deletePlace(placeId) {
     placesStore.clearError()
     placesStore.loading = true
@@ -53,12 +72,38 @@ export function usePlaces() {
     }
   }
 
+  async function updatePlace(placeId, placeData) {
+    placesStore.clearError()
+    placesStore.loading = true
+
+    try {
+      const response = await placesApi.updatePlace(placeId, placeData)
+      const updatedPlace = response.data?.place
+      if (typeof placesStore.updatePlace === 'function') {
+        placesStore.updatePlace(updatedPlace)
+      } else {
+        const idx = placesStore.places.findIndex((p) => p.id === updatedPlace.id)
+        if (idx !== -1) {
+          placesStore.places[idx] = updatedPlace
+        }
+      }
+      return updatedPlace
+    } catch (err) {
+      placesStore.setError(err)
+      return null
+    } finally {
+      placesStore.loading = false
+    }
+  }
+
   return {
     places,
     loading,
     error,
     loadPublicPlaces,
+    loadVisiblePlaces,
     createPlace,
+    updatePlace,
     deletePlace
   }
 }

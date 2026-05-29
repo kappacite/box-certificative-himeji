@@ -1,12 +1,12 @@
 <template>
   <Teleport to="body">
     <Transition name="modal-fade">
-      <div v-if="open" class="modal-backdrop" @click.self="$emit('close')">
-        <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="create-place-title">
+      <div v-if="open && place" class="modal-backdrop" @click.self="$emit('close')">
+        <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="edit-place-title">
           <header class="modal-header">
             <div>
-              <p class="eyebrow">New place</p>
-              <h2 id="create-place-title">Add a place</h2>
+              <p class="eyebrow">Edit place</p>
+              <h2 id="edit-place-title">Modify place details</h2>
             </div>
             <button class="icon-button" type="button" aria-label="Close form" @click="$emit('close')">
               x
@@ -15,7 +15,7 @@
 
           <form class="place-form" @submit.prevent="handleSubmit">
             <BaseInput
-              id="place-name"
+              id="edit-place-name"
               v-model="form.name"
               label="Place name"
               placeholder="e.g. Himeji Castle"
@@ -24,7 +24,7 @@
             />
 
             <BaseInput
-              id="place-city"
+              id="edit-place-city"
               v-model="form.city"
               label="City"
               placeholder="e.g. Himeji"
@@ -34,7 +34,7 @@
 
             <div class="search-panel">
               <BaseInput
-                id="place-search"
+                id="edit-place-search"
                 v-model="searchQuery"
                 label="Search places in this city"
                 placeholder="e.g. cathedral, museum, station"
@@ -66,7 +66,7 @@
 
             <div class="field-row">
               <BaseInput
-                id="place-latitude"
+                id="edit-place-latitude"
                 v-model="form.latitude"
                 type="number"
                 label="Latitude"
@@ -75,7 +75,7 @@
                 step="any"
               />
               <BaseInput
-                id="place-longitude"
+                id="edit-place-longitude"
                 v-model="form.longitude"
                 type="number"
                 label="Longitude"
@@ -103,7 +103,7 @@
                 Cancel
               </BaseButton>
               <BaseButton type="submit" :loading="loading">
-                Add place
+                Save Changes
               </BaseButton>
             </footer>
           </form>
@@ -124,6 +124,10 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  place: {
+    type: Object,
+    default: null
+  },
   loading: {
     type: Boolean,
     default: false
@@ -134,7 +138,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'create'])
+const emit = defineEmits(['close', 'update'])
 
 const form = reactive({
   name: '',
@@ -152,23 +156,32 @@ const friendlyErrorMessage = computed(() => {
   const messages = {
     BAD_REQUEST: 'Please check the place information.',
     VALIDATION_ERROR: 'Please check the place information.',
-    FORBIDDEN: 'You do not have permission to create this place.',
-    UNAUTHORIZED: 'Please log in again before adding a place.',
+    FORBIDDEN: 'You do not have permission to update this place.',
+    UNAUTHORIZED: 'Please log in again before updating a place.',
     NETWORK_ERROR: 'Unable to reach the API. Please check that the backend is running.',
-    INTERNAL_SERVER_ERROR: 'The server could not create this place. Please check the backend logs.',
-    UNKNOWN_ERROR: 'Unable to add this place. Please try again.'
+    INTERNAL_SERVER_ERROR: 'The server could not update this place. Please check the backend logs.',
+    UNKNOWN_ERROR: 'Unable to update this place. Please try again.'
   }
 
   return props.error?.message || messages[props.error?.code] || messages.UNKNOWN_ERROR
 })
 
 watch(
-  () => props.open,
-  (isOpen) => {
-    if (isOpen) {
-      resetForm()
+  [() => props.open, () => props.place],
+  ([isOpen, currentPlace]) => {
+    if (isOpen && currentPlace) {
+      const nameParts = currentPlace.name?.split(', ') ?? []
+      form.name = nameParts[0] || currentPlace.name || ''
+      form.city = nameParts[1] || currentPlace.city || ''
+      form.latitude = currentPlace.latitude !== undefined && currentPlace.latitude !== null ? currentPlace.latitude.toString() : ''
+      form.longitude = currentPlace.longitude !== undefined && currentPlace.longitude !== null ? currentPlace.longitude.toString() : ''
+      form.isPrivate = currentPlace.visibility === 'private'
+      searchQuery.value = ''
+      localError.value = ''
+      clearResults()
     }
-  }
+  },
+  { immediate: true }
 )
 
 function handleSubmit() {
@@ -189,7 +202,7 @@ function handleSubmit() {
     return
   }
 
-  emit('create', buildPayload())
+  emit('update', props.place.id, buildPayload())
 }
 
 async function handleSearch() {
@@ -208,15 +221,20 @@ function selectSearchResult(result) {
 function buildPayload() {
   const payload = {
     name: `${form.name.trim()}, ${form.city.trim()}`,
-    visibility: form.isPrivate ? 'private' : 'public'
+    visibility: form.isPrivate ? 'private' : 'public',
+    city: form.city.trim()
   }
 
   if (form.latitude !== '') {
     payload.latitude = Number(form.latitude)
+  } else {
+    payload.latitude = null
   }
 
   if (form.longitude !== '') {
     payload.longitude = Number(form.longitude)
+  } else {
+    payload.longitude = null
   }
 
   return payload
@@ -232,17 +250,6 @@ function hasValidCoordinates() {
   }
 
   return Number.isFinite(Number(form.latitude)) && Number.isFinite(Number(form.longitude))
-}
-
-function resetForm() {
-  form.name = ''
-  form.city = ''
-  form.latitude = ''
-  form.longitude = ''
-  form.isPrivate = false
-  searchQuery.value = ''
-  localError.value = ''
-  clearResults()
 }
 </script>
 

@@ -37,8 +37,8 @@ defineProps({
 }
 
 .card-highlight {
-  background: linear-gradient(135deg, #eff6ff, #ffffff);
-  border-color: rgba(191, 219, 254, 0.8);
+  background: linear-gradient(135deg, #ffeffe, #ffffff);
+  border-color: rgba(254, 191, 251, 0.8);
 }
 
 .card-hoverable:hover {

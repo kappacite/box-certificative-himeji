@@ -358,56 +358,7 @@ class TourService:
         """
         return self.tour_dao.query_tours(owner_id=owner_id, q=q, page=page, limit=limit)
 
-    def duplicate_tour(self, tour_id: int, owner_id: int) -> Tour:
-        """Duplicate a tour (if public or owned) into the user's personal space.
 
-        Args:
-            tour_id: The ID of the tour to copy.
-            owner_id: The user ID duplicating the tour.
-
-        Returns:
-            The newly created Tour data object.
-
-        Raises:
-            NotFoundException: If the tour doesn't exist.
-            ForbiddenException: If the user cannot access the tour.
-        """
-        tour = self.tour_dao.get_by_id(tour_id)
-        if not tour:
-            raise NotFoundException("Tour not found")
-        if tour.owner_id != owner_id and tour.visibility != "public":
-            raise ForbiddenException("You do not have access to duplicate this tour")
-
-        duplicated_places = []
-        for place in tour.places:
-            if place.owner_id == owner_id or place.visibility == "public":
-                duplicated_places.append(place)
-            else:
-                cloned_place = Place(
-                    name=place.name,
-                    latitude=place.latitude,
-                    longitude=place.longitude,
-                    owner_id=owner_id,
-                    visibility="private",
-                )
-                saved_place = self.place_dao.create(cloned_place)
-                saved_place.locked = place.locked
-                duplicated_places.append(saved_place)
-
-        share_token = str(uuid.uuid4())
-        new_tour = Tour(
-            name=f"{tour.name} (Copy)",
-            owner_id=owner_id,
-            places=duplicated_places,
-            total_distance=tour.total_distance,
-            visibility="private",
-            share_token=share_token,
-        )
-        from dao.database import db
-
-        duplicated_tour = self.tour_dao.create(new_tour)
-        db.session.commit()
-        return duplicated_tour
 
     def recalculate_tour(self, tour_id: int, owner_id: int) -> Tour:
         """Recalculate the optimized routing and distance of a tour.
@@ -477,6 +428,7 @@ class TourService:
         locked_positions: Optional[dict] = None,
         locked_places: Optional[list] = None,
         max_distance: Optional[float] = None,
+        optimize: bool = True,
     ) -> Tour:
         """Update tour.
 
@@ -489,6 +441,8 @@ class TourService:
             locked_positions: Optional new locked positions mapping.
             locked_places: Optional new locked places list.
             max_distance: Optional updated max_distance for clustering.
+            optimize: When False, save places in the provided order without
+                      running the optimization algorithm (default True).
 
         Returns:
             The updated Tour.
@@ -543,13 +497,21 @@ class TourService:
 
             places = self._retrieve_and_validate_places(parsed_place_ids, owner_id)
 
-            optimized_places = optimize_with_hotels(
-                places, locked_map, max_distance=tour.max_distance
-            )
-
-            # Apply locked property on returned place objects
-            for place in optimized_places:
-                place.locked = place.id in locked_map
+            if optimize:
+                optimized_places = optimize_with_hotels(
+                    places, locked_map, max_distance=tour.max_distance
+                )
+                # Apply locked property on returned place objects
+                for place in optimized_places:
+                    place.locked = place.id in locked_map
+            else:
+                # Save in the exact order provided — no algorithm.
+                # Restore is_hotel from the existing tour so hotel markers are preserved.
+                existing_hotel_map = {p.id: p.is_hotel for p in tour.places}
+                optimized_places = places
+                for place in optimized_places:
+                    place.locked = place.id in locked_map
+                    place.is_hotel = existing_hotel_map.get(place.id, False)
 
             tour.places = optimized_places
             tour.total_distance = self.calculate_tour_distance(optimized_places)

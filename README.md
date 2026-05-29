@@ -1,6 +1,6 @@
 # 🌍 Himeji Planner — Dynamic Route Optimizer
 
-Travel Planner is a complete web application designed to help travelers plan, organize, and optimize their itineraries. The platform features an advanced routing engine that solves the **Traveling Salesperson Problem (TSP)** with support for fixed/locked stops and structured hotel layovers, presenting an interactive animated route map.
+Himeji Planner is a complete web application designed to help travelers plan, organize, and optimize their itineraries. The platform features an advanced routing engine that solves the **Traveling Salesperson Problem (TSP)** with support for fixed/locked stops and structured hotel layovers, presenting an interactive animated route map.
 
 The project is structured as a decoupled application:
 * 🛠️ **Backend API**: Flask (Python 3.11) with SQLite (SQLAlchemy) and Google OR-Tools routing solver.

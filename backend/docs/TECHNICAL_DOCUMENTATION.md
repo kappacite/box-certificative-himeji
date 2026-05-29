@@ -243,4 +243,18 @@ Cross-platform startup scripts are provided at the root of the project to automa
   ```cmd
   run.bat
   ```
-The database will be automatically initialized and populated with 200 French landmarks via `seed_places.py` on the first launch.
+
+### Automated Startup Workflow
+The scripts automate the complete local setup and execution pipeline:
+
+1. **Python Virtual Environment (`.venv`)**:
+   * Checks the `backend/` directory for an existing virtual environment.
+   * Creates one automatically using `python3 -m venv .venv` (Linux/macOS) or `python -m venv .venv` (Windows) if not found.
+2. **Dependency Management**:
+   * Installs Python packages from `backend/requirements.txt` inside the virtual environment.
+   * Runs `npm install` in `himeji-planner/` to fetch Node.js packages for the frontend SPA.
+3. **Database Setup & Seeding**:
+   * Runs the `seed_places.py` script. The database file (`travel.db`) is automatically initialized and loaded with 200 public landmarks in France. It skips already-existing places to avoid duplicate rows on subsequent launches.
+4. **Parallel Process Orchestration**:
+   * **Linux/macOS (`run.sh`)**: Starts the Flask API (port 5000) and Vite SPA (port 5173) as background processes. A trap listener captures `Ctrl+C` (SIGINT/SIGTERM) to kill both processes cleanly at exit.
+   * **Windows (`run.bat`)**: Spawns two separate terminal windows (`start cmd /c`) for the frontend and backend, enabling independent logs view and lifecycle management.

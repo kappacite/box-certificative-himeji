@@ -21,7 +21,8 @@ class TourService:
         locked_positions: dict = None,
         locked_places: list = None,
     ) -> Tuple[List[int], dict]:
-        """Parse raw place input list and merge locked constraints into a map of place_id -> position.
+        """Parse raw place input list and merge locked constraints into a map
+        of place_id -> position.
 
         Args:
             place_ids: A list of place IDs or dicts containing 'id', 'locked', 'position'.
@@ -199,6 +200,7 @@ class TourService:
         )
 
         from dao.database import db
+
         tour = self.tour_dao.create(new_tour)
         db.session.commit()
         return tour
@@ -402,6 +404,7 @@ class TourService:
             share_token=share_token,
         )
         from dao.database import db
+
         duplicated_tour = self.tour_dao.create(new_tour)
         db.session.commit()
         return duplicated_tour
@@ -441,6 +444,7 @@ class TourService:
         tour.total_distance = self.calculate_tour_distance(optimized_places)
 
         from dao.database import db
+
         updated_tour = self.tour_dao.update(tour)
         db.session.commit()
         return updated_tour
@@ -458,6 +462,7 @@ class TourService:
         # Triggers ownership verification
         self.get_tour_by_id(tour_id, owner_id)
         from dao.database import db
+
         deleted = self.tour_dao.delete(tour_id)
         db.session.commit()
         return deleted
@@ -550,6 +555,7 @@ class TourService:
             tour.total_distance = self.calculate_tour_distance(optimized_places)
 
         from dao.database import db
+
         updated_tour = self.tour_dao.update(tour)
         db.session.commit()
         return updated_tour

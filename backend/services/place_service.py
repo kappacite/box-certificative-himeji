@@ -165,6 +165,7 @@ class PlaceService:
             visibility=visibility,
         )
         from dao.database import db
+
         place = self.place_dao.create(new_place)
         db.session.commit()
         return place
@@ -227,6 +228,7 @@ class PlaceService:
             place.longitude = lon
 
         from dao.database import db
+
         updated = self.place_dao.update(place)
         db.session.commit()
         return updated
@@ -297,6 +299,7 @@ class PlaceService:
             place.longitude = lon
 
         from dao.database import db
+
         updated = self.place_dao.update(place)
         db.session.commit()
         return updated
@@ -318,6 +321,7 @@ class PlaceService:
         if place.owner_id != owner_id:
             raise ForbiddenException("You do not own this place")
         from dao.database import db
+
         deleted = self.place_dao.delete(place_id)
         db.session.commit()
         return deleted

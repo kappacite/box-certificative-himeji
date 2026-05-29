@@ -74,6 +74,7 @@ class AuthService:
         new_user = User(username=username, email=email, password_hash=password_hash)
 
         from dao.database import db
+
         user = self.user_dao.create(new_user)
         db.session.commit()
         return user
@@ -173,4 +174,5 @@ class AuthService:
             revoked = RevokedToken(token=token)
             self.revoked_token_dao.create(revoked)
             from dao.database import db
+
             db.session.commit()

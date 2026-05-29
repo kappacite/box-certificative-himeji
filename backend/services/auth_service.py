@@ -19,10 +19,21 @@ class AuthService:
 
     def __init__(self, user_dao: UserDAO = None):
         self.user_dao = user_dao or UserDAO()
-        self.secret_key = os.environ.get(
-            "SECRET_KEY", "change_me_in_production_default"
-        )
-        self.token_expiry_hours = int(os.environ.get("TOKEN_EXPIRY_HOURS", 24))
+        from flask import current_app
+
+        try:
+            self.secret_key = current_app.config.get("SECRET_KEY") or os.environ.get(
+                "SECRET_KEY", "change_me_in_production_default"
+            )
+            self.token_expiry_hours = int(
+                current_app.config.get("TOKEN_EXPIRY_HOURS")
+                or os.environ.get("TOKEN_EXPIRY_HOURS", 24)
+            )
+        except (RuntimeError, ValueError, TypeError):
+            self.secret_key = os.environ.get(
+                "SECRET_KEY", "change_me_in_production_default"
+            )
+            self.token_expiry_hours = int(os.environ.get("TOKEN_EXPIRY_HOURS", 24))
 
     def register(self, username: str, email: str, password: str) -> User:
         """Register a new user.

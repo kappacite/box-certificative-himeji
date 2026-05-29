@@ -280,9 +280,7 @@ class PlaceService:
             place.visibility = visibility
 
         if update_coords:
-            self.validate_coordinate_pair(
-                latitude, longitude, allow_both_missing=False
-            )
+            self.validate_coordinate_pair(latitude, longitude, allow_both_missing=False)
             if latitude is not None and longitude is not None:
                 place.latitude = latitude
                 place.longitude = longitude

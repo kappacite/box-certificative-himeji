@@ -244,9 +244,7 @@ def test_patch_place_partial(client, auth_headers, mock_geocoding):
     assert place_name["longitude"] == 4.8357
 
 
-def test_patch_place_rejects_partial_coordinates(
-    client, auth_headers, mock_geocoding
-):
+def test_patch_place_rejects_partial_coordinates(client, auth_headers, mock_geocoding):
     """Test PATCH endpoint rejects a single coordinate field."""
     res = client.post(
         "/api/places",

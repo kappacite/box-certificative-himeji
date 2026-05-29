@@ -61,7 +61,7 @@
           <div class="stops-section">
             <div class="stops-header">
               <h3 class="stops-title">Stop order</h3>
-              <p class="stops-hint">Drag to reorder · 🔒 to lock a stop in place</p>
+              <p class="stops-hint">Drag to reorder · 🔒 to lock · × to remove</p>
             </div>
 
             <div class="stops-list" ref="listEl">
@@ -72,7 +72,8 @@
                 :class="{
                   locked: stop.locked,
                   dragging: dragIndex === idx,
-                  'drag-over': dragOverIndex === idx
+                  'drag-over': dragOverIndex === idx,
+                  'broken-hotel': stop.is_hotel && brokenHotels.has(stop._uid)
                 }"
                 draggable="true"
                 @dragstart="onDragStart(idx, $event)"
@@ -84,12 +85,18 @@
 
                 <span
                   class="stop-badge"
-                  :class="stop.is_hotel ? 'hotel' : 'regular'"
+                  :class="stop.is_hotel ? (brokenHotels.has(stop._uid) ? 'hotel-broken' : 'hotel') : 'regular'"
                 >
                   {{ stop.is_hotel ? '🏨' : idx + 1 }}
                 </span>
 
                 <span class="stop-name">{{ shortName(stop.name) }}</span>
+
+                <span
+                  v-if="stop.is_hotel && brokenHotels.has(stop._uid)"
+                  class="broken-warning"
+                  title="This hotel return is no longer linked to its original stop"
+                >⚠️ link broken</span>
 
                 <span v-if="stop.locked" class="lock-indicator" title="Locked">🔒</span>
 
@@ -102,6 +109,13 @@
                 >
                   {{ stop.locked ? '🔓' : '🔒' }}
                 </button>
+
+                <button
+                  class="delete-btn"
+                  type="button"
+                  aria-label="Remove stop"
+                  @click="removeStop(idx)"
+                >×</button>
               </div>
             </div>
           </div>
@@ -150,6 +164,10 @@ const errorMessage = ref(null)
 const dragIndex = ref(null)
 const dragOverIndex = ref(null)
 
+// originalPredecessors: hotel _uid → predecessor _uid at init time
+// Used to detect when a hotel's upstream stop has been moved/removed
+const originalPredecessors = ref({})
+
 // ── Init when tour changes ───────────────────────────────────────────────────
 watch(
   () => props.tour,
@@ -159,14 +177,42 @@ watch(
     localVisibility.value = newTour.visibility ?? 'private'
     shouldOptimize.value = false
     errorMessage.value = null
-    editableStops.value = (newTour.places ?? []).map((p, i) => ({
+    const stops = (newTour.places ?? []).map((p, i) => ({
       ...p,
       _uid: `${p.id ?? i}-${i}`,
       locked: p.locked ?? false
     }))
+    editableStops.value = stops
+    // Record each hotel's original predecessor
+    const preds = {}
+    stops.forEach((stop, idx) => {
+      if (stop.is_hotel && idx > 0) {
+        preds[stop._uid] = stops[idx - 1]._uid
+      }
+    })
+    originalPredecessors.value = preds
   },
   { immediate: true }
 )
+
+// ── Broken-hotel detection ───────────────────────────────────────────────────
+// A hotel is "broken" when its current predecessor differs from the original one
+const brokenHotels = computed(() => {
+  const broken = new Set()
+  const currentUids = editableStops.value.map((s) => s._uid)
+  editableStops.value.forEach((stop, idx) => {
+    if (!stop.is_hotel) return
+    const origPred = originalPredecessors.value[stop._uid]
+    if (origPred == null) return          // hotel had no predecessor originally
+    const currentPred = idx > 0 ? editableStops.value[idx - 1]._uid : null
+    // Also broken if original predecessor was removed entirely
+    const origStillPresent = currentUids.includes(origPred)
+    if (currentPred !== origPred || !origStillPresent) {
+      broken.add(stop._uid)
+    }
+  })
+  return broken
+})
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function shortName(name) {
@@ -179,6 +225,10 @@ function toggleVisibility() {
 
 function toggleLock(idx) {
   editableStops.value[idx].locked = !editableStops.value[idx].locked
+}
+
+function removeStop(idx) {
+  editableStops.value.splice(idx, 1)
 }
 
 // ── Drag & drop ──────────────────────────────────────────────────────────────
@@ -491,6 +541,15 @@ function handleClose() {
 .stop-row:hover { background: #f0f9ff; border-color: #93c5fd; }
 .stop-row.locked { background: #fefce8; border-color: #fcd34d; }
 .stop-row.dragging { opacity: 0.45; }
+.stop-row.broken-hotel {
+  background: #fff1f1;
+  border-color: #ef4444;
+  animation: pulse-red 1.6s ease-in-out infinite;
+}
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  50%       { box-shadow: 0 0 0 4px rgba(239,68,68,0.18); }
+}
 .stop-row.drag-over { border-color: #2563eb; background: #eff6ff; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
 
 .drag-handle {
@@ -512,8 +571,9 @@ function handleClose() {
   font-weight: 900;
   flex-shrink: 0;
 }
-.stop-badge.regular { background: #eff6ff; color: #1d4ed8; border: 2px solid #bfdbfe; }
-.stop-badge.hotel   { background: #fef2f2; color: #b91c1c; border: 2px solid #fecaca; font-size: 1rem; }
+.stop-badge.regular      { background: #eff6ff; color: #1d4ed8; border: 2px solid #bfdbfe; }
+.stop-badge.hotel        { background: #fef2f2; color: #b91c1c; border: 2px solid #fecaca; font-size: 1rem; }
+.stop-badge.hotel-broken { background: #ef4444; color: #fff;    border: 2px solid #dc2626; font-size: 1rem; }
 
 .stop-name {
   flex: 1;
@@ -529,6 +589,14 @@ function handleClose() {
   font-size: 0.85rem;
 }
 
+.broken-warning {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #dc2626;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .lock-btn {
   background: transparent;
   border: none;
@@ -540,6 +608,30 @@ function handleClose() {
   flex-shrink: 0;
 }
 .lock-btn:hover { transform: scale(1.2); }
+
+.delete-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 50%;
+  color: #9ca3af;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.18s;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.delete-btn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: scale(1.15);
+}
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 .modal-actions {

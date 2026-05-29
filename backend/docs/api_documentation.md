@@ -694,19 +694,6 @@ Recalcule l'ordre optimal et la distance totale d'un itinéraire existant. Utile
   * **`404 Not Found`** : L'itinéraire n'existe pas.
 
 ---
-
-### 👯 Dupliquer un itinéraire **[Auth Requise]**
-Copie un itinéraire public (ou appartenant à l'utilisateur) dans son espace personnel. Si l'itinéraire d'origine contient des lieux privés appartenant à un tiers, l'API clone automatiquement ces lieux en tant que nouveaux lieux privés pour le destinataire, évitant ainsi les erreurs de permission.
-
-* **Méthode** : `POST`
-* **URL** : `/api/tours/<int:tour_id>/duplicate`
-* **Codes HTTP de réponse** :
-  * **`201 Created`** : Copie créée.
-  * **`403 Forbidden`** : L'itinéraire d'origine est privé et appartient à un autre utilisateur (copie interdite).
-  * **`404 Not Found`** : L'itinéraire n'existe pas.
-
----
-
 ### ⚡ Optimiser un itinéraire (sans sauvegarde) **[Auth Requise]**
 Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sans créer ni enregistrer de tournée en base de données. Il permet également de tester l'impact de verrous de position, de lieux spécifiques, ou de la distance de clustering `max_distance`.
 

@@ -1,4 +1,5 @@
 from typing import List
+from dataclasses import replace
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 
@@ -119,8 +120,9 @@ def optimize(
         An ordered list of Place data objects representing the optimal tour.
     """
     if len(places) <= 1:
-        return list(places)
+        return [replace(p) for p in places]
 
+    places = [replace(p) for p in places]
     num_places = len(places)
 
     if not locked_positions:
@@ -337,6 +339,10 @@ def optimize_with_hotels(
     Returns:
         The sequence of places representing the full itinerary of movements.
     """
+    if not places:
+        return []
+    places = [replace(p) for p in places]
+
     if len(places) <= 1:
         res = list(places)
         for p in res:

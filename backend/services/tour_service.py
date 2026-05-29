@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from dao.tour_dao import TourDAO
 from dao.place_dao import PlaceDAO
 from dataobject.tour import Tour
@@ -14,6 +14,88 @@ class TourService:
     def __init__(self, tour_dao: TourDAO = None, place_dao: PlaceDAO = None):
         self.tour_dao = tour_dao or TourDAO()
         self.place_dao = place_dao or PlaceDAO()
+
+    def _parse_place_inputs_and_locks(
+        self,
+        place_ids: List,
+        locked_positions: dict = None,
+        locked_places: list = None,
+    ) -> Tuple[List[int], dict]:
+        """Parse raw place input list and merge locked constraints into a map of place_id -> position.
+
+        Args:
+            place_ids: A list of place IDs or dicts containing 'id', 'locked', 'position'.
+            locked_positions: Dict mapping place_id (as str) to target position.
+            locked_places: List of place_ids to lock at their input positions.
+
+        Returns:
+            A tuple containing:
+                - A list of integer place IDs.
+                - A dictionary mapping place ID (int) to its locked position (int).
+        """
+        parsed_place_ids = []
+        locked_map = {}
+
+        for index, item in enumerate(place_ids):
+            if isinstance(item, dict):
+                pid = item.get("id")
+                if pid is not None:
+                    parsed_place_ids.append(pid)
+                    if item.get("locked") or item.get("position") is not None:
+                        locked_map[pid] = item.get("position", index)
+            else:
+                try:
+                    parsed_place_ids.append(int(item))
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid place ID format")
+
+        # Merge separately passed locked_positions
+        if locked_positions:
+            for pid_str, pos in locked_positions.items():
+                try:
+                    pid = int(pid_str)
+                    locked_map[pid] = int(pos)
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid locked_positions format")
+
+        # Merge separately passed locked_places
+        if locked_places:
+            for pid in locked_places:
+                try:
+                    pid = int(pid)
+                    if pid in parsed_place_ids:
+                        locked_map[pid] = parsed_place_ids.index(pid)
+                except (ValueError, TypeError):
+                    raise ValidationException("Invalid locked_places format")
+
+        return parsed_place_ids, locked_map
+
+    def _retrieve_and_validate_places(
+        self,
+        place_ids: List[int],
+        owner_id: int,
+    ) -> List[Place]:
+        """Retrieve places from DAO and validate ownership/visibility.
+
+        Args:
+            place_ids: List of place IDs.
+            owner_id: The ID of the current user.
+
+        Returns:
+            A list of Place data objects in the requested order.
+        """
+        places_by_id = {p.id: p for p in self.place_dao.get_by_ids(place_ids)}
+        places = []
+        for pid in place_ids:
+            place = places_by_id.get(pid)
+            if not place:
+                raise ValidationException(f"Place with ID {pid} does not exist")
+            if place.owner_id != owner_id and place.visibility != "public":
+                raise ForbiddenException(
+                    f"You do not own the place with ID {pid} and it is not public"
+                )
+            places.append(place)
+        return places
 
     def get_tours_by_owner(self, owner_id: int) -> List[Tour]:
         """Retrieve all tours belonging to an owner.
@@ -85,54 +167,11 @@ class TourService:
         if visibility not in ["private", "public"]:
             raise ValidationException("Visibility must be either 'private' or 'public'")
 
-        # Parse place_ids and locks
-        parsed_place_ids = []
-        locked_map = {}  # place_id -> position
+        parsed_place_ids, locked_map = self._parse_place_inputs_and_locks(
+            place_ids, locked_positions, locked_places
+        )
 
-        for index, item in enumerate(place_ids):
-            if isinstance(item, dict):
-                pid = item.get("id")
-                if pid is not None:
-                    parsed_place_ids.append(pid)
-                    if item.get("locked") or item.get("position") is not None:
-                        locked_map[pid] = item.get("position", index)
-            else:
-                try:
-                    parsed_place_ids.append(int(item))
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid place ID format")
-
-        # Merge separately passed locked_positions
-        if locked_positions:
-            for pid_str, pos in locked_positions.items():
-                try:
-                    pid = int(pid_str)
-                    locked_map[pid] = int(pos)
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid locked_positions format")
-
-        # Merge separately passed locked_places
-        if locked_places:
-            for pid in locked_places:
-                try:
-                    pid = int(pid)
-                    if pid in parsed_place_ids:
-                        locked_map[pid] = parsed_place_ids.index(pid)
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid locked_places format")
-
-        # Retrieve and validate all places belong to the owner or are public
-        places_by_id = {p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)}
-        places = []
-        for pid in parsed_place_ids:
-            place = places_by_id.get(pid)
-            if not place:
-                raise ValidationException(f"Place with ID {pid} does not exist")
-            if place.owner_id != owner_id and place.visibility != "public":
-                raise ForbiddenException(
-                    f"You do not own the place with ID {pid} and it is not public"
-                )
-            places.append(place)
+        places = self._retrieve_and_validate_places(parsed_place_ids, owner_id)
 
         # Optimize the place ordering respecting locks
         optimized_places = optimize_with_hotels(
@@ -193,54 +232,11 @@ class TourService:
                 "At least 2 places are required to generate a tour"
             )
 
-        # Parse place_ids and locks
-        parsed_place_ids = []
-        locked_map = {}  # place_id -> position
+        parsed_place_ids, locked_map = self._parse_place_inputs_and_locks(
+            place_ids, locked_positions, locked_places
+        )
 
-        for index, item in enumerate(place_ids):
-            if isinstance(item, dict):
-                pid = item.get("id")
-                if pid is not None:
-                    parsed_place_ids.append(pid)
-                    if item.get("locked") or item.get("position") is not None:
-                        locked_map[pid] = item.get("position", index)
-            else:
-                try:
-                    parsed_place_ids.append(int(item))
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid place ID format")
-
-        # Merge separately passed locked_positions
-        if locked_positions:
-            for pid_str, pos in locked_positions.items():
-                try:
-                    pid = int(pid_str)
-                    locked_map[pid] = int(pos)
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid locked_positions format")
-
-        # Merge separately passed locked_places
-        if locked_places:
-            for pid in locked_places:
-                try:
-                    pid = int(pid)
-                    if pid in parsed_place_ids:
-                        locked_map[pid] = parsed_place_ids.index(pid)
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid locked_places format")
-
-        # Retrieve and validate all places belong to the owner or are public
-        places_by_id = {p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)}
-        places = []
-        for pid in parsed_place_ids:
-            place = places_by_id.get(pid)
-            if not place:
-                raise ValidationException(f"Place with ID {pid} does not exist")
-            if place.owner_id != owner_id and place.visibility != "public":
-                raise ForbiddenException(
-                    f"You do not own the place with ID {pid} and it is not public"
-                )
-            places.append(place)
+        places = self._retrieve_and_validate_places(parsed_place_ids, owner_id)
 
         # Optimize the place ordering respecting locks
         optimized_places = optimize_with_hotels(
@@ -297,54 +293,11 @@ class TourService:
                 "At least 2 places are required to generate a tour"
             )
 
-        # Parse place_ids and locks
-        parsed_place_ids = []
-        locked_map = {}  # place_id -> position
+        parsed_place_ids, locked_map = self._parse_place_inputs_and_locks(
+            place_ids, locked_positions, locked_places
+        )
 
-        for index, item in enumerate(place_ids):
-            if isinstance(item, dict):
-                pid = item.get("id")
-                if pid is not None:
-                    parsed_place_ids.append(pid)
-                    if item.get("locked") or item.get("position") is not None:
-                        locked_map[pid] = item.get("position", index)
-            else:
-                try:
-                    parsed_place_ids.append(int(item))
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid place ID format")
-
-        # Merge separately passed locked_positions
-        if locked_positions:
-            for pid_str, pos in locked_positions.items():
-                try:
-                    pid = int(pid_str)
-                    locked_map[pid] = int(pos)
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid locked_positions format")
-
-        # Merge separately passed locked_places
-        if locked_places:
-            for pid in locked_places:
-                try:
-                    pid = int(pid)
-                    if pid in parsed_place_ids:
-                        locked_map[pid] = parsed_place_ids.index(pid)
-                except (ValueError, TypeError):
-                    raise ValidationException("Invalid locked_places format")
-
-        # Retrieve and validate all places belong to the owner or are public
-        places_by_id = {p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)}
-        places = []
-        for pid in parsed_place_ids:
-            place = places_by_id.get(pid)
-            if not place:
-                raise ValidationException(f"Place with ID {pid} does not exist")
-            if place.owner_id != owner_id and place.visibility != "public":
-                raise ForbiddenException(
-                    f"You do not own the place with ID {pid} and it is not public"
-                )
-            places.append(place)
+        places = self._retrieve_and_validate_places(parsed_place_ids, owner_id)
 
         # Optimize the place ordering respecting locks
         optimized_places = optimize_with_hotels(
@@ -568,40 +521,9 @@ class TourService:
                         seen_pid.add(p.id)
                         raw_pids.append(p.id)
 
-            parsed_place_ids = []
-            locked_map = {}
-
-            for index, item in enumerate(raw_pids):
-                if isinstance(item, dict):
-                    pid = item.get("id")
-                    if pid is not None:
-                        parsed_place_ids.append(pid)
-                        if item.get("locked") or item.get("position") is not None:
-                            locked_map[pid] = item.get("position", index)
-                else:
-                    try:
-                        parsed_place_ids.append(int(item))
-                    except (ValueError, TypeError):
-                        raise ValidationException("Invalid place ID format")
-
-            # Merge separately passed locked_positions
-            if locked_positions is not None:
-                for pid_str, pos in locked_positions.items():
-                    try:
-                        pid = int(pid_str)
-                        locked_map[pid] = int(pos)
-                    except (ValueError, TypeError):
-                        raise ValidationException("Invalid locked_positions format")
-
-            # Merge separately passed locked_places
-            if locked_places is not None:
-                for pid in locked_places:
-                    try:
-                        pid = int(pid)
-                        if pid in parsed_place_ids:
-                            locked_map[pid] = parsed_place_ids.index(pid)
-                    except (ValueError, TypeError):
-                        raise ValidationException("Invalid locked_places format")
+            parsed_place_ids, locked_map = self._parse_place_inputs_and_locks(
+                raw_pids, locked_positions, locked_places
+            )
 
             # If we did not pass new locks, preserve existing locks that are still in the list
             if locked_positions is None and locked_places is None and places_id is None:
@@ -614,19 +536,7 @@ class TourService:
                     "At least 2 places are required to generate a tour"
                 )
 
-            places_by_id = {
-                p.id: p for p in self.place_dao.get_by_ids(parsed_place_ids)
-            }
-            places = []
-            for pid in parsed_place_ids:
-                place = places_by_id.get(pid)
-                if not place:
-                    raise ValidationException(f"Place with ID {pid} does not exist")
-                if place.owner_id != owner_id and place.visibility != "public":
-                    raise ForbiddenException(
-                        f"You do not own the place with ID {pid} and it is not public"
-                    )
-                places.append(place)
+            places = self._retrieve_and_validate_places(parsed_place_ids, owner_id)
 
             optimized_places = optimize_with_hotels(
                 places, locked_map, max_distance=tour.max_distance

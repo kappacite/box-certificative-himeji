@@ -391,12 +391,19 @@ def optimize_with_hotels(
                 best_covered = covers
                 best_candidate = candidate
             elif len(covers) == len(best_covered) and len(covers) > 0:
-                # Tie-breaker: prefer the one that appears earlier in the input list
-                if best_candidate is None or places.index(candidate) < places.index(
-                    best_candidate
-                ):
+                # Tie-breaker: prefer the candidate that is geographically central to its covered set
+                dist_candidate = sum(haversine(candidate, p) for p in places if p.id in covers)
+                dist_best = sum(haversine(best_candidate, p) for p in places if p.id in best_covered)
+                if dist_candidate < dist_best:
                     best_candidate = candidate
                     best_covered = covers
+                elif dist_candidate == dist_best:
+                    # Fallback to input list order
+                    if best_candidate is None or places.index(candidate) < places.index(
+                        best_candidate
+                    ):
+                        best_candidate = candidate
+                        best_covered = covers
 
         if best_candidate is None:
             # If no candidate covers anything new, pick first uncovered place.

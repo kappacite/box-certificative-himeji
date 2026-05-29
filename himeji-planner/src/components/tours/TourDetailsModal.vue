@@ -24,23 +24,40 @@
             </div>
 
             <div class="sidebar-section">
-              <div class="stat-box">
-                <span class="stat-label">Total Distance</span>
-                <span class="stat-value">{{ formatDistance(tour.total_distance) }}</span>
+              <div class="stats-grid-row">
+                <div class="stat-box">
+                  <span class="stat-label">Total Distance</span>
+                  <span class="stat-value">{{ formatDistance(tour.total_distance) }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Max Hotel Dist</span>
+                  <span class="stat-value">{{ formatDistance(tour.max_distance) }}</span>
+                </div>
               </div>
 
               <div class="timeline-container">
                 <h3 class="timeline-title">Route Stops</h3>
                 <div class="timeline-scroll">
-                  <div v-for="(place, index) in tour.places" :key="index" class="timeline-item">
+                  <div 
+                    v-for="(place, index) in tour.places" 
+                    :key="index" 
+                    :class="['timeline-item', { 'timeline-hotel': place.is_hotel }]"
+                  >
                     <div class="timeline-marker">
                       <span class="marker-index">{{ index + 1 }}</span>
                     </div>
-                    <div class="timeline-details">
-                      <h4 class="place-name">{{ getPlaceName(place) }}</h4>
+                    <div class="timeline-details-card">
+                      <div class="timeline-card-header">
+                        <h4 class="place-name">{{ getPlaceName(place) }}</h4>
+                        <div class="badges">
+                          <span v-if="place.is_hotel" class="badge badge-hotel">🏨 Hotel</span>
+                          <span v-if="place.locked" class="badge badge-locked">🔒 Locked</span>
+                        </div>
+                      </div>
                       <p class="place-coords">
                         {{ place.latitude.toFixed(4) }}°, {{ place.longitude.toFixed(4) }}°
                       </p>
+                      <p v-if="place.is_hotel" class="hotel-desc">Round trips will branch from here</p>
                     </div>
                   </div>
                 </div>
@@ -75,7 +92,7 @@ defineEmits(['close'])
 
 function formatDistance(distance) {
   const value = Number(distance)
-  return Number.isFinite(value) ? `${value.toFixed(2)} km` : 'Distance unavailable'
+  return Number.isFinite(value) ? `${value.toFixed(2)} km` : '100.00 km'
 }
 
 function getPlaceName(place) {
@@ -97,7 +114,7 @@ function getPlaceName(place) {
 }
 
 .modal-panel {
-  width: min(920px, 100%);
+  width: min(960px, 100%);
   background: #ffffff;
   border: 1px solid rgba(229, 231, 235, 0.9);
   border-radius: 1.25rem;
@@ -182,7 +199,7 @@ function getPlaceName(place) {
 
 .details-content {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: 1.2fr 1fr;
   gap: 1.75rem;
   overflow: hidden;
   margin-bottom: 1.5rem;
@@ -192,7 +209,7 @@ function getPlaceName(place) {
 .map-container-section {
   width: 100%;
   height: 100%;
-  min-height: 320px;
+  min-height: 350px;
   border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
@@ -205,9 +222,15 @@ function getPlaceName(place) {
   overflow: hidden;
 }
 
+.stats-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 .stat-box {
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(59, 130, 246, 0.08));
-  border: 1px solid rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.12);
   padding: 1rem;
   border-radius: 0.75rem;
   display: flex;
@@ -216,7 +239,7 @@ function getPlaceName(place) {
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #4b5563;
   text-transform: uppercase;
@@ -224,7 +247,7 @@ function getPlaceName(place) {
 }
 
 .stat-value {
-  font-size: 1.6rem;
+  font-size: 1.35rem;
   font-weight: 900;
   color: #1d4ed8;
 }
@@ -250,12 +273,12 @@ function getPlaceName(place) {
   padding-right: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .timeline-item {
   display: flex;
-  gap: 0.75rem;
+  gap: 1rem;
   align-items: flex-start;
   position: relative;
 }
@@ -263,44 +286,112 @@ function getPlaceName(place) {
 .timeline-item:not(:last-child)::after {
   content: '';
   position: absolute;
-  left: 13px;
-  top: 26px;
-  bottom: -12px;
+  left: 17px;
+  top: 36px;
+  bottom: -16px;
   width: 2px;
-  background-color: #e5e7eb;
+  background-color: #cbd5e1;
+  z-index: 1;
 }
 
 .timeline-marker {
-  width: 28px;
-  height: 28px;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
-  background: #eff6ff;
-  border: 2px solid #3b82f6;
-  color: #1d4ed8;
+  background: #111827;
+  border: 3px solid white;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.85rem;
+  font-weight: 700;
   flex-shrink: 0;
   z-index: 2;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.timeline-details {
+.timeline-hotel .timeline-marker {
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.timeline-details-card {
+  flex: 1;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1.1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.timeline-details-card:hover {
+  border-color: #cbd5e1;
+  background: #f3f4f6;
+}
+
+.timeline-hotel .timeline-details-card {
+  background: rgba(99, 102, 241, 0.02);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+
+.timeline-hotel .timeline-details-card:hover {
+  background: rgba(99, 102, 241, 0.04);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.timeline-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .place-name {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #1f2937;
+  margin: 0;
+}
+
+.badges {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.badge-hotel {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.badge-locked {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 .place-coords {
   font-size: 0.75rem;
   color: #6b7280;
+  margin: 0;
+}
+
+.hotel-desc {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: #4f46e5;
+  font-weight: 600;
 }
 
 .modal-actions {

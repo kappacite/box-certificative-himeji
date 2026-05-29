@@ -33,11 +33,15 @@
             <h3>{{ tour.name }}</h3>
             <span class="visibility-badge private">Private</span>
           </div>
-          <p class="tour-distance">{{ formatDistance(tour.total_distance) }}</p>
+          <p class="tour-distance">
+            <span>{{ formatDistance(tour.total_distance) }}</span>
+            <span v-if="tour.max_distance" class="tour-max-dist-badge">Max Hotel: {{ tour.max_distance }} km</span>
+          </p>
           <div class="places-preview-container">
             <ol class="places-preview">
               <li v-for="place in visiblePlaces(tour)" :key="place.id">
                 {{ getPlaceName(place) }}
+                <span v-if="place.is_hotel" class="badge-hotel-inline">🏨 Hotel</span>
               </li>
             </ol>
             <button 
@@ -75,11 +79,15 @@
             <h3>{{ tour.name }}</h3>
             <span class="visibility-badge public">Public</span>
           </div>
-          <p class="tour-distance">{{ formatDistance(tour.total_distance) }}</p>
+          <p class="tour-distance">
+            <span>{{ formatDistance(tour.total_distance) }}</span>
+            <span v-if="tour.max_distance" class="tour-max-dist-badge">Max Hotel: {{ tour.max_distance }} km</span>
+          </p>
           <div class="places-preview-container">
             <ol class="places-preview">
               <li v-for="place in visiblePlaces(tour)" :key="place.id">
                 {{ getPlaceName(place) }}
+                <span v-if="place.is_hotel" class="badge-hotel-inline">🏨 Hotel</span>
               </li>
             </ol>
             <button 
@@ -293,6 +301,20 @@ onMounted(async () => {
   color: #2563eb;
   font-size: 1rem;
   font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tour-max-dist-badge {
+  font-size: 0.75rem;
+  background-color: rgba(99, 102, 241, 0.08);
+  color: #4f46e5;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
 }
 
 .places-preview-container {
@@ -308,6 +330,19 @@ onMounted(async () => {
   line-height: 1.7;
 }
 
+.badge-hotel-inline {
+  background-color: #e0e7ff;
+  color: #4338ca;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  margin-left: 0.4rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .expand-button {
   background: transparent;
   border: none;
@@ -319,7 +354,7 @@ onMounted(async () => {
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   transition: background-color 0.2s, color 0.2s;
-  z-index: 2; /* Ensure it stays above other card components if styled closely */
+  z-index: 2;
 }
 
 .expand-button:hover {

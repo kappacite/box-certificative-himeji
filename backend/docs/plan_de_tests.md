@@ -425,3 +425,23 @@ Toutes les réponses de l'API doivent correspondre au format enveloppe JSON stan
        curl -X GET http://localhost:5000/api/health/ready
        ```
      - *Résultat attendu* : Code 200, base de données joignable.
+
+---
+
+## Notes d'exécution locale
+
+Dans `backend/`, la suite peut être lancée simplement avec :
+
+```bash
+pytest tests -q
+```
+
+La configuration `pytest.ini` ajoute le dossier courant au `pythonpath`, ce qui évite de devoir lancer systématiquement `python -m pytest`.
+
+## Règressions à couvrir
+
+Les tests doivent inclure les cas suivants, ajoutés ou rendus explicites récemment :
+
+1. `POST /api/places` refuse une coordonnée partielle si `latitude` ou `longitude` manque.
+2. `PUT /api/places/<id>` refuse une coordonnée partielle si une seule des deux valeurs est envoyée.
+3. `PATCH /api/places/<id>` refuse une coordonnée partielle si une seule des deux valeurs est envoyée.

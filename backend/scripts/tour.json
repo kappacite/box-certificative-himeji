@@ -1,1822 +1,1613 @@
 {
     "data": {
         "tour": {
-            "id": 3,
+            "id": 1,
             "name": "Grand Tour de France (200 Lieux)",
             "owner_id": 1,
             "places": [
                 {
-                    "id": 1,
+                    "id": 7,
                     "latitude": 48.8584,
-                    "locked": false,
                     "longitude": 2.2945,
                     "name": "Tour Eiffel, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 17,
+                    "id": 23,
                     "latitude": 48.8566,
-                    "locked": false,
                     "longitude": 2.3127,
                     "name": "Les Invalides, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 15,
+                    "id": 21,
                     "latitude": 48.8639,
-                    "locked": false,
                     "longitude": 2.3136,
                     "name": "Pont Alexandre III, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 14,
+                    "id": 20,
                     "latitude": 48.8656,
-                    "locked": false,
                     "longitude": 2.3212,
                     "name": "Place de la Concorde, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 16,
+                    "id": 22,
                     "latitude": 48.8638,
-                    "locked": false,
                     "longitude": 2.3226,
                     "name": "Musée de l'Orangerie, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 20,
+                    "id": 26,
                     "latitude": 48.8635,
-                    "locked": false,
                     "longitude": 2.3274,
                     "name": "Jardin des Tuileries, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 9,
+                    "id": 15,
                     "latitude": 48.8599,
-                    "locked": false,
                     "longitude": 2.3265,
                     "name": "Musée d'Orsay, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 2,
+                    "id": 8,
                     "latitude": 48.8606,
-                    "locked": false,
                     "longitude": 2.3376,
                     "name": "Musée du Louvre, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 8,
+                    "id": 14,
                     "latitude": 48.8554,
-                    "locked": false,
                     "longitude": 2.345,
                     "name": "Sainte-Chapelle, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 3,
+                    "id": 9,
                     "latitude": 48.853,
-                    "locked": false,
                     "longitude": 2.3499,
                     "name": "Cathédrale Notre-Dame, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 7,
+                    "id": 13,
                     "latitude": 48.8462,
-                    "locked": false,
                     "longitude": 2.3464,
                     "name": "Panthéon, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 11,
+                    "id": 17,
                     "latitude": 48.8462,
-                    "locked": false,
                     "longitude": 2.3371,
                     "name": "Jardin du Luxembourg, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 22,
+                    "id": 28,
                     "latitude": 48.8338,
-                    "locked": false,
                     "longitude": 2.3324,
                     "name": "Catacombes de Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 27,
+                    "id": 33,
                     "latitude": 48.7739,
-                    "locked": false,
                     "longitude": 2.2974,
                     "name": "Parc de Sceaux",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 6,
+                    "id": 12,
                     "latitude": 48.8049,
-                    "locked": false,
                     "longitude": 2.1204,
                     "name": "Château de Versailles",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 42,
+                    "id": 48,
                     "latitude": 49.0753,
-                    "locked": false,
                     "longitude": 1.5339,
                     "name": "Fondation Claude Monet, Giverny",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 33,
+                    "id": 39,
                     "latitude": 49.4402,
-                    "locked": false,
                     "longitude": 1.0949,
                     "name": "Cathédrale de Rouen",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 34,
+                    "id": 40,
                     "latitude": 49.4419,
-                    "locked": false,
                     "longitude": 1.091,
                     "name": "Gros-Horloge, Rouen",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 38,
+                    "id": 44,
                     "latitude": 49.4194,
-                    "locked": false,
                     "longitude": 0.2333,
                     "name": "Vieux Bassin, Honfleur",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 37,
+                    "id": 43,
                     "latitude": 49.1867,
-                    "locked": false,
                     "longitude": -0.3628,
                     "name": "Château de Caen",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 36,
+                    "id": 42,
                     "latitude": 49.2008,
-                    "locked": false,
                     "longitude": -0.3789,
                     "name": "Mémorial de Caen",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 31,
+                    "id": 37,
                     "latitude": 48.6361,
-                    "locked": false,
                     "longitude": -1.5115,
                     "name": "Mont Saint-Michel",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 44,
+                    "id": 50,
                     "latitude": 48.649,
-                    "locked": false,
                     "longitude": -2.026,
                     "name": "Cité Corsaire, Saint-Malo",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 60,
+                    "id": 66,
                     "latitude": 48.4502,
-                    "locked": false,
                     "longitude": -2.0433,
                     "name": "Dinan - Château de Dinan",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 58,
+                    "id": 64,
                     "latitude": 48.1142,
-                    "locked": false,
                     "longitude": -1.6698,
                     "name": "Jardin du Thabor, Rennes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 47,
+                    "id": 53,
                     "latitude": 48.1128,
-                    "locked": false,
                     "longitude": -1.6778,
                     "name": "Parlement de Bretagne, Rennes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 46,
+                    "id": 52,
                     "latitude": 48.1114,
-                    "locked": false,
                     "longitude": -1.6853,
                     "name": "Cathédrale de Rennes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 57,
+                    "id": 63,
                     "latitude": 48.0167,
-                    "locked": false,
                     "longitude": -2.1667,
                     "name": "Foret de Paimpont (Brocéliande)",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 45,
+                    "id": 51,
                     "latitude": 47.6582,
-                    "locked": false,
                     "longitude": -2.7561,
                     "name": "Remparts de Vannes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 56,
+                    "id": 62,
                     "latitude": 47.596,
-                    "locked": false,
                     "longitude": -2.793,
                     "name": "Golfe du Morbihan",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 43,
+                    "id": 49,
                     "latitude": 47.5906,
-                    "locked": false,
                     "longitude": -3.0817,
                     "name": "Alignements de Carnac",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 53,
+                    "id": 59,
                     "latitude": 47.8727,
-                    "locked": false,
                     "longitude": -3.9189,
                     "name": "Concarneau - Ville Close",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 54,
+                    "id": 60,
                     "latitude": 47.9961,
-                    "locked": false,
                     "longitude": -4.1025,
                     "name": "Quimper - Cathédrale Saint-Corentin",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 52,
+                    "id": 58,
                     "latitude": 48.0392,
-                    "locked": false,
                     "longitude": -4.7378,
                     "name": "Pointe du Raz",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 51,
+                    "id": 57,
                     "latitude": 48.3377,
-                    "locked": false,
                     "longitude": -4.6148,
                     "name": "Phare du Petit Minou, Plouzané",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 55,
+                    "id": 61,
                     "latitude": 48.3811,
-                    "locked": false,
                     "longitude": -4.4947,
                     "name": "Brest - Château de Brest",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 59,
+                    "id": 65,
                     "latitude": 48.3897,
-                    "locked": false,
                     "longitude": -4.4375,
                     "name": "Océanopolis, Brest",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 50,
+                    "id": 56,
                     "latitude": 48.8319,
-                    "locked": false,
                     "longitude": -3.48,
                     "name": "Côte de Granit Rose, Ploumanac'h",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 40,
+                    "id": 46,
                     "latitude": 49.645,
-                    "locked": false,
                     "longitude": -1.635,
                     "name": "Port militaire de Cherbourg",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 41,
+                    "id": 47,
                     "latitude": 49.6974,
-                    "locked": false,
                     "longitude": -1.2657,
                     "name": "Phare de Gatteville",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 39,
+                    "id": 45,
                     "latitude": 49.3592,
-                    "locked": false,
                     "longitude": -0.8436,
                     "name": "Plages du Débarquement, Colleville-sur-Mer",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 35,
+                    "id": 41,
                     "latitude": 49.2744,
-                    "locked": false,
                     "longitude": -0.7011,
                     "name": "Tapisserie de Bayeux",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 32,
+                    "id": 38,
                     "latitude": 49.7073,
-                    "locked": false,
                     "longitude": 0.2018,
                     "name": "Falaises d'Étretat",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 68,
+                    "id": 74,
                     "latitude": 50.1878,
-                    "locked": false,
                     "longitude": 1.5833,
                     "name": "Baie de Somme",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 87,
+                    "id": 93,
                     "latitude": 50.7314,
-                    "locked": false,
                     "longitude": 1.5947,
                     "name": "Nausicaá, Boulogne-sur-Mer",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 84,
+                    "id": 90,
                     "latitude": 50.6403,
-                    "locked": false,
                     "longitude": 3.0444,
                     "name": "La Citadelle de Lille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 61,
+                    "id": 67,
                     "latitude": 50.6369,
-                    "locked": false,
                     "longitude": 3.0636,
                     "name": "Grand-Place de Lille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 48,
-                    "latitude": 47.2162,
-                    "locked": true,
-                    "longitude": -1.5499,
-                    "name": "Château des ducs de Bretagne, Nantes",
-                    "owner_id": 1,
-                    "visibility": "public"
-                },
-                {
-                    "id": 62,
+                    "id": 68,
                     "latitude": 50.6372,
-                    "locked": false,
                     "longitude": 3.0645,
                     "name": "Vieille Bourse, Lille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 64,
+                    "id": 70,
                     "latitude": 50.6925,
-                    "locked": false,
                     "longitude": 3.1678,
                     "name": "La Piscine, Roubaix",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 63,
+                    "id": 69,
                     "latitude": 50.6303,
-                    "locked": false,
                     "longitude": 3.0703,
                     "name": "Beffroi de Lille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 88,
+                    "id": 94,
                     "latitude": 49.8972,
-                    "locked": false,
                     "longitude": 2.3275,
                     "name": "Les Hortillonnages d'Amiens",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 67,
+                    "id": 73,
                     "latitude": 49.8949,
-                    "locked": false,
                     "longitude": 2.3023,
                     "name": "Cathédrale d'Amiens",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 85,
+                    "id": 91,
                     "latitude": 49.4326,
-                    "locked": false,
                     "longitude": 2.0815,
                     "name": "Cathédrale Saint-Pierre, Beauvais",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 65,
+                    "id": 71,
                     "latitude": 49.1939,
-                    "locked": false,
                     "longitude": 2.4853,
                     "name": "Château de Chantilly",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 86,
+                    "id": 92,
                     "latitude": 49.4181,
-                    "locked": false,
                     "longitude": 2.8314,
                     "name": "Château de Compiègne",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 66,
+                    "id": 72,
                     "latitude": 49.3469,
-                    "locked": false,
                     "longitude": 2.9806,
                     "name": "Château de Pierrefonds",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 75,
+                    "id": 81,
                     "latitude": 49.2537,
-                    "locked": false,
                     "longitude": 4.0341,
                     "name": "Cathédrale de Reims",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 76,
+                    "id": 82,
                     "latitude": 49.2536,
-                    "locked": false,
                     "longitude": 4.035,
                     "name": "Palais du Tau, Reims",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 90,
+                    "id": 96,
                     "latitude": 49.2169,
-                    "locked": false,
                     "longitude": 5.4389,
                     "name": "Fort de Douaumont, Verdun",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 89,
+                    "id": 95,
                     "latitude": 49.1939,
-                    "locked": false,
                     "longitude": 5.4344,
                     "name": "Mémorial de Verdun",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 78,
+                    "id": 84,
                     "latitude": 48.4428,
-                    "locked": false,
                     "longitude": 5.6749,
                     "name": "Maison de Jeanne d'Arc, Domrémy-la-Pucelle",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 77,
+                    "id": 83,
                     "latitude": 48.6936,
-                    "locked": false,
                     "longitude": 6.1832,
                     "name": "Place Stanislas, Nancy",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 79,
+                    "id": 85,
                     "latitude": 49.1083,
-                    "locked": false,
                     "longitude": 6.1817,
                     "name": "Centre Pompidou-Metz",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 80,
+                    "id": 86,
                     "latitude": 49.1202,
-                    "locked": false,
                     "longitude": 6.1754,
                     "name": "Cathédrale Saint-Étienne, Metz",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 81,
+                    "id": 87,
                     "latitude": 48.9664,
-                    "locked": false,
                     "longitude": 7.8767,
                     "name": "Ligne Maginot - Fort de Schoenenbourg",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 71,
+                    "id": 77,
                     "latitude": 48.5975,
-                    "locked": false,
                     "longitude": 7.7717,
                     "name": "Parlement Européen, Strasbourg",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 121,
+                    "id": 75,
                     "latitude": 48.5817,
-                    "locked": false,
-                    "longitude": 7.7508,
-                    "name": "Basilique Notre-Dame de Fourvière, Lyon",
-                    "owner_id": 1,
-                    "visibility": "public"
-                },
-                {
-                    "id": 69,
-                    "latitude": 48.5817,
-                    "locked": false,
                     "longitude": 7.7508,
                     "name": "Cathédrale Notre-Dame, Strasbourg",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 70,
+                    "id": 76,
                     "latitude": 48.5809,
-                    "locked": false,
                     "longitude": 7.7423,
                     "name": "Petite France, Strasbourg",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 72,
+                    "id": 78,
                     "latitude": 48.2494,
-                    "locked": false,
                     "longitude": 7.3442,
                     "name": "Château du Haut-Koenigsbourg, Orschwiller",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 74,
+                    "id": 80,
                     "latitude": 48.0797,
-                    "locked": false,
                     "longitude": 7.3556,
                     "name": "Musée Unterlinden, Colmar",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 73,
+                    "id": 79,
                     "latitude": 48.0736,
-                    "locked": false,
                     "longitude": 7.3592,
                     "name": "Petite Venise, Colmar",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 83,
+                    "id": 89,
                     "latitude": 47.8222,
-                    "locked": false,
                     "longitude": 6.8406,
                     "name": "Ballon d'Alsace",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 82,
+                    "id": 88,
                     "latitude": 47.6369,
-                    "locked": false,
                     "longitude": 6.8653,
                     "name": "Citadelle de Belfort",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 150,
+                    "id": 156,
                     "latitude": 47.2319,
-                    "locked": false,
                     "longitude": 6.0319,
                     "name": "Citadelle de Besançon",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 149,
+                    "id": 155,
                     "latitude": 46.9383,
-                    "locked": false,
                     "longitude": 5.8778,
                     "name": "Salins-les-Bains - Grande Saline",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 112,
+                    "id": 118,
                     "latitude": 47.3219,
-                    "locked": false,
                     "longitude": 5.0422,
                     "name": "Musée des Beaux-Arts de Dijon",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 103,
+                    "id": 109,
                     "latitude": 47.3217,
-                    "locked": false,
                     "longitude": 5.0417,
                     "name": "Palais des Ducs de Bourgogne, Dijon",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 108,
+                    "id": 114,
                     "latitude": 47.64,
-                    "locked": false,
                     "longitude": 4.39,
                     "name": "Abbaye de Fontenay, Marmagne",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 107,
+                    "id": 113,
                     "latitude": 47.5372,
-                    "locked": false,
                     "longitude": 4.4983,
                     "name": "Site d'Alésia, Alise-Sainte-Reine",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 104,
+                    "id": 110,
                     "latitude": 47.0219,
-                    "locked": false,
                     "longitude": 4.8369,
                     "name": "Hospices de Beaune",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 105,
+                    "id": 111,
                     "latitude": 46.435,
-                    "locked": false,
                     "longitude": 4.6592,
                     "name": "Abbaye de Cluny",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 109,
+                    "id": 115,
                     "latitude": 46.2975,
-                    "locked": false,
                     "longitude": 4.7183,
                     "name": "Roche de Solutré",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 135,
+                    "id": 141,
                     "latitude": 46.1978,
-                    "locked": false,
                     "longitude": 5.2361,
                     "name": "Monastère royal de Brou, Bourg-en-Bresse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 124,
+                    "id": 130,
                     "latitude": 45.7786,
-                    "locked": false,
                     "longitude": 4.8547,
                     "name": "Parc de la Tête d'Or, Lyon",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 123,
+                    "id": 129,
                     "latitude": 45.7578,
-                    "locked": false,
                     "longitude": 4.8322,
                     "name": "Place Bellecour, Lyon",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 122,
+                    "id": 127,
+                    "latitude": 45.7622,
+                    "longitude": 4.8226,
+                    "name": "Basilique Notre-Dame de Fourvière, Lyon",
+                    "owner_id": 1,
+                    "visibility": "public"
+                },
+                {
+                    "id": 128,
                     "latitude": 45.7597,
-                    "locked": false,
                     "longitude": 4.8197,
                     "name": "Théâtre Antique de Lyon",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 125,
+                    "id": 131,
                     "latitude": 45.7328,
-                    "locked": false,
                     "longitude": 4.8181,
                     "name": "Musée des Confluences, Lyon",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 132,
+                    "id": 138,
                     "latitude": 45.2558,
-                    "locked": false,
                     "longitude": 5.0275,
                     "name": "Palais Idéal du Facteur Cheval, Hauterives",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 131,
+                    "id": 137,
                     "latitude": 45.1989,
-                    "locked": false,
                     "longitude": 5.7253,
                     "name": "Bastille de Grenoble",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 137,
+                    "id": 143,
                     "latitude": 45.5642,
-                    "locked": false,
                     "longitude": 5.9189,
                     "name": "Château de Chambéry",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 136,
+                    "id": 142,
                     "latitude": 45.7328,
-                    "locked": false,
                     "longitude": 5.8789,
                     "name": "Lac du Bourget, Aix-les-Bains",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 144,
+                    "id": 150,
                     "latitude": 45.7533,
-                    "locked": false,
                     "longitude": 5.8394,
                     "name": "Abbaye de Hautecombe, Saint-Pierre-de-Curtille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 127,
+                    "id": 133,
                     "latitude": 45.8975,
-                    "locked": false,
                     "longitude": 6.1256,
                     "name": "Château d'Annecy",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 126,
+                    "id": 132,
                     "latitude": 45.8988,
-                    "locked": false,
                     "longitude": 6.1261,
                     "name": "Palais de l'Île, Annecy",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 128,
+                    "id": 134,
                     "latitude": 45.85,
-                    "locked": false,
                     "longitude": 6.1667,
                     "name": "Lac d'Annecy",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 141,
+                    "id": 147,
                     "latitude": 45.9056,
-                    "locked": false,
                     "longitude": 6.425,
                     "name": "Via Ferrata de la Clusaz",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 140,
+                    "id": 146,
                     "latitude": 45.9186,
-                    "locked": false,
                     "longitude": 6.8703,
                     "name": "Téléphérique de l'Aiguille du Midi",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 130,
+                    "id": 136,
                     "latitude": 45.9227,
-                    "locked": false,
                     "longitude": 6.9175,
                     "name": "Mer de Glace, Chamonix",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 129,
+                    "id": 135,
                     "latitude": 45.8794,
-                    "locked": false,
                     "longitude": 6.8867,
                     "name": "Aiguille du Midi, Chamonix",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 139,
+                    "id": 145,
                     "latitude": 45.8325,
-                    "locked": false,
                     "longitude": 6.8647,
                     "name": "Mont Blanc",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 138,
+                    "id": 144,
                     "latitude": 45.3333,
-                    "locked": false,
                     "longitude": 6.8333,
                     "name": "Parc National de la Vanoise",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 142,
+                    "id": 148,
                     "latitude": 45.0642,
-                    "locked": false,
                     "longitude": 6.4078,
                     "name": "Col du Galibier",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 178,
+                    "id": 184,
                     "latitude": 44.2,
-                    "locked": false,
                     "longitude": 7.15,
                     "name": "Parc National du Mercantour",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 177,
+                    "id": 183,
                     "latitude": 43.7194,
-                    "locked": false,
                     "longitude": 7.2761,
                     "name": "Musée Matisse, Nice",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 176,
+                    "id": 182,
                     "latitude": 43.6969,
-                    "locked": false,
                     "longitude": 7.2764,
                     "name": "Vieux Nice",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 175,
+                    "id": 181,
                     "latitude": 43.6953,
-                    "locked": false,
                     "longitude": 7.2792,
                     "name": "Colline du Château, Nice",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 174,
+                    "id": 180,
                     "latitude": 43.6922,
-                    "locked": false,
                     "longitude": 7.2475,
                     "name": "Promenade des Anglais, Nice",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 173,
+                    "id": 179,
                     "latitude": 43.5517,
-                    "locked": false,
                     "longitude": 7.0178,
                     "name": "Palais des Festivals, Cannes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 200,
+                    "id": 206,
                     "latitude": 42.3667,
-                    "locked": false,
                     "longitude": 8.5667,
                     "name": "Réserve Naturelle de Scandola, Corse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 195,
+                    "id": 201,
                     "latitude": 42.25,
-                    "locked": false,
                     "longitude": 8.65,
                     "name": "Calanques de Piana, Corse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 196,
+                    "id": 202,
                     "latitude": 41.7956,
-                    "locked": false,
                     "longitude": 9.2247,
                     "name": "Aiguilles de Bavella, Corse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 194,
+                    "id": 200,
                     "latitude": 41.3875,
-                    "locked": false,
                     "longitude": 9.1583,
                     "name": "Citadelle de Bonifacio, Corse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 180,
+                    "id": 186,
                     "latitude": 43.2725,
-                    "locked": false,
                     "longitude": 6.6436,
                     "name": "Saint-Tropez - Citadelle",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 179,
+                    "id": 185,
                     "latitude": 43.7408,
-                    "locked": false,
                     "longitude": 6.3769,
                     "name": "Gorges du Verdon, Castellane",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 172,
+                    "id": 178,
                     "latitude": 43.2133,
-                    "locked": false,
                     "longitude": 5.4528,
                     "name": "Parc National des Calanques, Marseille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 169,
+                    "id": 175,
                     "latitude": 43.2848,
-                    "locked": false,
                     "longitude": 5.3703,
                     "name": "Basilique Notre-Dame de la Garde, Marseille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 168,
+                    "id": 174,
                     "latitude": 43.2953,
-                    "locked": false,
                     "longitude": 5.3744,
                     "name": "Vieux-Port de Marseille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 171,
+                    "id": 177,
                     "latitude": 43.2969,
-                    "locked": false,
                     "longitude": 5.3611,
                     "name": "Mucem, Marseille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 170,
+                    "id": 176,
                     "latitude": 43.2803,
-                    "locked": false,
                     "longitude": 5.3253,
                     "name": "Château d'If, Marseille",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 167,
+                    "id": 173,
                     "latitude": 43.5283,
-                    "locked": false,
                     "longitude": 4.4756,
                     "name": "Parc Naturel Régional de Camargue",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 166,
+                    "id": 172,
                     "latitude": 43.6787,
-                    "locked": false,
                     "longitude": 4.631,
                     "name": "Amphithéâtre d'Arles",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 153,
+                    "id": 159,
                     "latitude": 43.8349,
-                    "locked": false,
                     "longitude": 4.3597,
                     "name": "Arènes de Nîmes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 154,
+                    "id": 160,
                     "latitude": 43.8383,
-                    "locked": false,
                     "longitude": 4.3561,
                     "name": "Maison Carrée, Nîmes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 152,
+                    "id": 158,
                     "latitude": 43.9475,
-                    "locked": false,
                     "longitude": 4.535,
                     "name": "Pont du Gard, Vers-Pont-du-Gard",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 165,
+                    "id": 171,
                     "latitude": 43.9508,
-                    "locked": false,
                     "longitude": 4.8075,
                     "name": "Palais des Papes, Avignon",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 164,
+                    "id": 170,
                     "latitude": 43.9547,
-                    "locked": false,
                     "longitude": 4.8047,
                     "name": "Pont d'Avignon (Pont Saint-Bénézet)",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 134,
+                    "id": 140,
                     "latitude": 44.3819,
-                    "locked": false,
                     "longitude": 4.4167,
                     "name": "Pont d'Arc, Vallon-Pont-d'Arc",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 133,
+                    "id": 139,
                     "latitude": 44.3831,
-                    "locked": false,
                     "longitude": 4.4172,
                     "name": "Gorges de l'Ardèche, Vallon-Pont-d'Arc",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 143,
+                    "id": 149,
                     "latitude": 44.4072,
-                    "locked": false,
                     "longitude": 4.4206,
                     "name": "Grotte Chauvet 2, Vallon-Pont-d'Arc",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 145,
+                    "id": 151,
                     "latitude": 45.0456,
-                    "locked": false,
                     "longitude": 3.8847,
                     "name": "Le Puy-en-Velay - Cathédrale",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 146,
+                    "id": 152,
                     "latitude": 45.0472,
-                    "locked": false,
                     "longitude": 3.8856,
                     "name": "Statue Notre-Dame de France, Le Puy-en-Velay",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 120,
+                    "id": 126,
                     "latitude": 45.7903,
-                    "locked": false,
                     "longitude": 3.1056,
                     "name": "L'Aventure Michelin, Clermont-Ferrand",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 119,
+                    "id": 125,
                     "latitude": 45.7806,
-                    "locked": false,
                     "longitude": 3.0897,
                     "name": "Basilique de Notre-Dame du Port, Clermont-Ferrand",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 118,
+                    "id": 124,
                     "latitude": 45.7788,
-                    "locked": false,
                     "longitude": 3.0853,
                     "name": "Cathédrale de Clermont-Ferrand",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 117,
+                    "id": 123,
                     "latitude": 45.8133,
-                    "locked": false,
                     "longitude": 2.94,
                     "name": "Vulcain (Volcans d'Auvergne)",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 116,
+                    "id": 122,
                     "latitude": 45.7722,
-                    "locked": false,
                     "longitude": 2.9644,
                     "name": "Puy de Dôme",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 148,
+                    "id": 154,
                     "latitude": 45.4975,
-                    "locked": false,
                     "longitude": 2.8872,
                     "name": "Lac Pavin, Besse-et-Saint-Anastaise",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 147,
+                    "id": 153,
                     "latitude": 45.5292,
-                    "locked": false,
                     "longitude": 2.8156,
                     "name": "Puy de Sancy",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 187,
+                    "id": 193,
                     "latitude": 45.0594,
-                    "locked": false,
                     "longitude": 1.1683,
                     "name": "Grottes de Lascaux (Lascaux IV), Montignac",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 163,
+                    "id": 169,
                     "latitude": 44.7994,
-                    "locked": false,
                     "longitude": 1.6178,
                     "name": "Rocamadour - Cité Religieuse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 188,
+                    "id": 194,
                     "latitude": 44.8582,
-                    "locked": false,
                     "longitude": 1.7503,
                     "name": "Gouffre de Padirac",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 160,
+                    "id": 166,
                     "latitude": 44.3167,
-                    "locked": false,
                     "longitude": 3.3333,
                     "name": "Gorges du Tarn",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 159,
+                    "id": 165,
                     "latitude": 44.0792,
-                    "locked": false,
                     "longitude": 3.0222,
                     "name": "Viaduc de Millau",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 158,
+                    "id": 164,
                     "latitude": 43.9286,
-                    "locked": false,
                     "longitude": 2.1428,
                     "name": "Cathédrale d'Albi",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 151,
+                    "id": 157,
                     "latitude": 43.2064,
-                    "locked": false,
                     "longitude": 2.3636,
                     "name": "Cité de Carcassonne",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 197,
+                    "id": 203,
                     "latitude": 43.2111,
-                    "locked": false,
                     "longitude": 2.3514,
                     "name": "Palais des Papes, Carcassonne",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 157,
+                    "id": 163,
                     "latitude": 43.5867,
-                    "locked": false,
                     "longitude": 1.4933,
                     "name": "Cité de l'Espace, Toulouse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 155,
+                    "id": 161,
                     "latitude": 43.6044,
-                    "locked": false,
                     "longitude": 1.4442,
                     "name": "Place du Capitole, Toulouse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 156,
+                    "id": 162,
                     "latitude": 43.6083,
-                    "locked": false,
                     "longitude": 1.4419,
                     "name": "Basilique Saint-Sernin, Toulouse",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 161,
+                    "id": 167,
                     "latitude": 43.0975,
-                    "locked": false,
                     "longitude": -0.0583,
                     "name": "Sanctuaire de Notre-Dame de Lourdes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 162,
+                    "id": 168,
                     "latitude": 43.0976,
-                    "locked": false,
                     "longitude": -0.0585,
                     "name": "Grotte de Massabielle, Lourdes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 199,
+                    "id": 205,
                     "latitude": 43.2947,
-                    "locked": false,
                     "longitude": -0.3744,
                     "name": "Château de Pau",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 186,
+                    "id": 192,
                     "latitude": 43.4836,
-                    "locked": false,
                     "longitude": -1.5678,
                     "name": "Aquarium de Biarritz",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 185,
+                    "id": 191,
                     "latitude": 43.4839,
-                    "locked": false,
                     "longitude": -1.5692,
                     "name": "Rocher de la Vierge, Biarritz",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 183,
+                    "id": 189,
                     "latitude": 44.5897,
-                    "locked": false,
                     "longitude": -1.2133,
                     "name": "Dune du Pilat, La Teste-de-Buch",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 198,
+                    "id": 204,
                     "latitude": 44.6,
-                    "locked": false,
                     "longitude": -1.2,
                     "name": "Dune landaise du Pilat",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 181,
+                    "id": 187,
                     "latitude": 44.8415,
-                    "locked": false,
                     "longitude": -0.5699,
                     "name": "Place de la Bourse, Bordeaux",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 182,
+                    "id": 188,
                     "latitude": 44.8418,
-                    "locked": false,
                     "longitude": -0.5694,
                     "name": "Miroir d'eau, Bordeaux",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 184,
+                    "id": 190,
                     "latitude": 44.8625,
-                    "locked": false,
                     "longitude": -0.55,
                     "name": "Cité du Vin, Bordeaux",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 191,
+                    "id": 197,
                     "latitude": 46.1533,
-                    "locked": false,
                     "longitude": -1.1517,
                     "name": "Aquarium La Rochelle",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 190,
+                    "id": 196,
                     "latitude": 46.1558,
-                    "locked": false,
                     "longitude": -1.1553,
                     "name": "Tours de La Rochelle",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 189,
+                    "id": 195,
                     "latitude": 46.1583,
-                    "locked": false,
                     "longitude": -1.1528,
                     "name": "Port de La Rochelle",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 193,
+                    "id": 199,
                     "latitude": 46.2467,
-                    "locked": false,
                     "longitude": -1.5592,
                     "name": "Phare des Baleines, Île de Ré",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 49,
+                    "id": 55,
                     "latitude": 47.2057,
-                    "locked": false,
                     "longitude": -1.5642,
                     "name": "Les Machines de l'Île, Nantes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 100,
+                    "id": 54,
+                    "latitude": 47.2162,
+                    "longitude": -1.5499,
+                    "name": "Château des ducs de Bretagne, Nantes",
+                    "owner_id": 1,
+                    "visibility": "public"
+                },
+                {
+                    "id": 106,
                     "latitude": 47.47,
-                    "locked": false,
                     "longitude": -0.5601,
                     "name": "Château d'Angers",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 102,
+                    "id": 108,
                     "latitude": 47.2608,
-                    "locked": false,
                     "longitude": -0.0769,
                     "name": "Cadre Noir de Saumur",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 101,
+                    "id": 107,
                     "latitude": 47.1811,
-                    "locked": false,
                     "longitude": 0.0514,
                     "name": "Abbaye Royale de Fontevraud",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 192,
+                    "id": 198,
                     "latitude": 46.6698,
-                    "locked": false,
                     "longitude": 0.3697,
                     "name": "Futuroscope, Chasseneuil-du-Poitou",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 96,
+                    "id": 102,
                     "latitude": 47.259,
-                    "locked": false,
                     "longitude": 0.4658,
                     "name": "Château d'Azay-le-Rideau",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 97,
+                    "id": 103,
                     "latitude": 47.3406,
-                    "locked": false,
                     "longitude": 0.509,
                     "name": "Château de Villandry et Jardins",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 95,
+                    "id": 101,
                     "latitude": 47.4135,
-                    "locked": false,
                     "longitude": 0.9856,
                     "name": "Château d'Amboise",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 92,
+                    "id": 98,
                     "latitude": 47.3249,
-                    "locked": false,
                     "longitude": 1.0702,
                     "name": "Château de Chenonceau",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 94,
+                    "id": 100,
                     "latitude": 47.5861,
-                    "locked": false,
                     "longitude": 1.3308,
                     "name": "Château de Blois",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 91,
+                    "id": 97,
                     "latitude": 47.6162,
-                    "locked": false,
                     "longitude": 1.5172,
                     "name": "Château de Chambord",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 93,
+                    "id": 99,
                     "latitude": 47.5002,
-                    "locked": false,
                     "longitude": 1.4581,
                     "name": "Château de Cheverny",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 99,
+                    "id": 105,
                     "latitude": 47.0822,
-                    "locked": false,
                     "longitude": 2.3992,
                     "name": "Cathédrale de Bourges",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 111,
+                    "id": 117,
                     "latitude": 46.9875,
-                    "locked": false,
                     "longitude": 3.1575,
                     "name": "Cathédrale de Nevers",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 106,
+                    "id": 112,
                     "latitude": 47.4664,
-                    "locked": false,
                     "longitude": 3.7483,
                     "name": "Basilique de Vézelay",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 110,
+                    "id": 116,
                     "latitude": 47.5833,
-                    "locked": false,
                     "longitude": 3.1556,
                     "name": "Château de Guédelon, Treigny",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 113,
+                    "id": 119,
                     "latitude": 47.7675,
-                    "locked": false,
                     "longitude": 2.3753,
                     "name": "Château de Sully-sur-Loire",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 115,
+                    "id": 121,
                     "latitude": 47.9017,
-                    "locked": false,
                     "longitude": 1.9106,
                     "name": "Cathédrale d'Orléans",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 114,
+                    "id": 120,
                     "latitude": 47.9014,
-                    "locked": false,
                     "longitude": 1.9056,
                     "name": "Maison de Jeanne d'Arc, Orléans",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 98,
+                    "id": 104,
                     "latitude": 48.4472,
-                    "locked": false,
                     "longitude": 1.4878,
                     "name": "Cathédrale de Chartres",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 25,
+                    "id": 31,
                     "latitude": 48.4021,
-                    "locked": false,
                     "longitude": 2.6997,
                     "name": "Palais de Fontainebleau",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 26,
+                    "id": 32,
                     "latitude": 48.5658,
-                    "locked": false,
                     "longitude": 2.7141,
                     "name": "Château de Vaux-le-Vicomte",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 30,
+                    "id": 36,
                     "latitude": 48.8722,
-                    "locked": false,
                     "longitude": 2.7758,
                     "name": "Disneyland Paris, Marne-la-Vallée",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 28,
+                    "id": 34,
                     "latitude": 48.8427,
-                    "locked": false,
                     "longitude": 2.4361,
                     "name": "Château de Vincennes",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 23,
+                    "id": 29,
                     "latitude": 48.8614,
-                    "locked": false,
                     "longitude": 2.3933,
                     "name": "Cimetière du Père-Lachaise, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 21,
+                    "id": 27,
                     "latitude": 48.855,
-                    "locked": false,
                     "longitude": 2.3622,
                     "name": "Place des Vosges, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 10,
+                    "id": 16,
                     "latitude": 48.8606,
-                    "locked": false,
                     "longitude": 2.3522,
                     "name": "Centre Pompidou, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 12,
+                    "id": 18,
                     "latitude": 48.8719,
-                    "locked": false,
                     "longitude": 2.3316,
                     "name": "Palais Garnier, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 5,
+                    "id": 11,
                     "latitude": 48.8867,
-                    "locked": false,
                     "longitude": 2.3431,
                     "name": "Sacré-Cœur de Montmartre, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 29,
+                    "id": 35,
                     "latitude": 48.9355,
-                    "locked": false,
                     "longitude": 2.3598,
                     "name": "Basilique de Saint-Denis",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 24,
+                    "id": 30,
                     "latitude": 48.8928,
-                    "locked": false,
                     "longitude": 2.2361,
                     "name": "Grande Arche de la Défense, Puteaux",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 19,
+                    "id": 25,
                     "latitude": 48.8766,
-                    "locked": false,
                     "longitude": 2.2634,
                     "name": "Fondation Louis Vuitton, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 4,
+                    "id": 10,
                     "latitude": 48.8738,
-                    "locked": false,
                     "longitude": 2.295,
                     "name": "Arc de Triomphe, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 13,
+                    "id": 19,
                     "latitude": 48.8698,
-                    "locked": false,
                     "longitude": 2.3075,
                     "name": "Champs-Élysées, Paris",
                     "owner_id": 1,
                     "visibility": "public"
                 },
                 {
-                    "id": 18,
+                    "id": 24,
                     "latitude": 48.8609,
-                    "locked": false,
                     "longitude": 2.2975,
                     "name": "Musée du Quai Branly, Paris",
                     "owner_id": 1,
                     "visibility": "public"
-                },
-                {
-                    "id": 1,
-                    "latitude": 48.8584,
-                    "locked": false,
-                    "longitude": 2.2945,
-                    "name": "Tour Eiffel, Paris",
-                    "owner_id": 1,
-                    "visibility": "public"
                 }
             ],
-            "share_token": "d0d012aa-30f2-491d-888a-c25ae8c77bb2",
-            "total_distance": 8119.8580904778655,
+            "share_token": "7f6c53e2-0491-4600-8fc6-e6609efd0501",
+            "total_distance": 7103.099357886781,
             "visibility": "public"
         }
     },

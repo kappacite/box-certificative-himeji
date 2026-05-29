@@ -7,6 +7,16 @@ This document provides a comprehensive technical overview of the frontend Single
 
 ---
 
+## 🎯 Technical Interpretations & Design Choices
+
+The frontend structure and technology stack are based on specific requirements and design decisions:
+
+* **Choice of Vue.js (Shared Team Knowledge)**: **Vue 3** (using the Composition API) was chosen as the frontend SPA framework. Since all members of the development group share prior training and knowledge in Vue, this ensured a quick startup, frictionless collaboration, and a unified architecture.
+* **Sleek & Clean Visual Design (Site Épuré)**: The user interface prioritizes a minimalist and premium aesthetic. By using scoped vanilla CSS layouts, we built an uncluttered visual presentation focusing on legible data tables, cards, and an interactive map interface without unnecessary cognitive overload.
+* **Asynchronous Backend Integration**: The SPA connects dynamically to the backend API using Axios. All authentication, routes calculation, and CRUD modifications are requested asynchronously, providing a fluid single-page experience.
+
+---
+
 ## 🏛️ Layered Frontend Architecture
 
 The SPA is structured with a strict one-way data flow and separated layer concerns:

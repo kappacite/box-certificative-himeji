@@ -7,6 +7,16 @@ This document provides a comprehensive technical overview of the backend REST AP
 
 ---
 
+## 🎯 Technical Interpretations & Design Choices
+
+To satisfy the routing and usability requirements, the backend implementation relies on several key technical decisions:
+
+* **Efficient TSP Optimization (Google OR-Tools)**: Computing the shortest path between multiple locations is a classic **Traveling Salesperson Problem (TSP)**, which is NP-hard. Rather than writing a slow custom brute-force algorithm or naive heuristics, we integrated **Google OR-Tools Routing Solver** (configured with Path Cheapest Arc and Guided Local Search) to compute highly optimized itineraries within a strict 3-second timeout constraint.
+* **Hotel Clustering & Multi-Day Adaptations**: To handle longer trips realistically, the engine solves the "hotel clustering" problem. Sights are clustered around elected hotel bases using a **Greedy Set Cover heuristic** to construct a series of daily round-trips (`Hotel -> Stop -> Hotel`), preventing travelers from having to cover excessive linear distances without returning to a lodging base.
+* **Dedicated REST API**: The Flask backend exposes a clean REST API. By separating optimization logic and database management from the user interface, it provides a fast, stateless interface for the frontend application.
+
+---
+
 ## 🏛️ System Architecture
 
 The backend is built as a modular **Layered Architecture** using Flask (Python 3.11) and Flask-SQLAlchemy (SQLite). Each layer has a strict boundary of responsibility, promoting testability, maintainability, and clean separation of concerns.

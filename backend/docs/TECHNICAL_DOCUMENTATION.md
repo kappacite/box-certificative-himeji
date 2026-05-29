@@ -163,6 +163,45 @@ When the user configures a maximum distance between hotels and stops (`max_dista
 
 ---
 
+## 🌍 Geocoding Engine (Nominatim Integration)
+
+When creating or updating places in the Travel Planner, users can optionally specify the coordinates (latitude and longitude) of a location. If coordinates are omitted, the backend dynamically resolves them using the open-source **OpenStreetMap Nominatim Geocoding API**.
+
+### Integration Workflow
+
+```mermaid
+graph TD
+    Request["Create / Update Place Request"] --> CheckCoords{"Coordinates Provided?"}
+    
+    CheckCoords -->|Yes| Save["Validate & Save to DB"]
+    CheckCoords -->|No| HTTP["Build HTTP GET Request to Nominatim"]
+    
+    HTTP --> Send["Send Request with custom User-Agent"]
+    Send --> Response{"Response Received & Valid?"}
+    
+    Response -->|No / Empty| Fail["Raise ValidationException (400)"]
+    Response -->|Yes| Parse["Parse latitude, longitude, and city"]
+    
+    Parse --> Save
+```
+
+### Technical Details
+
+* **API Endpoint**: `https://nominatim.openstreetmap.org/search` (configurable via `GEOCODING_API_URL`).
+* **HTTP Method**: `GET`
+* **Query Parameters**:
+  * `q`: The string query containing the place name.
+  * `format`: `json` (to receive a structured JSON response).
+  * `limit`: `1` (restricts results to the single most relevant match).
+  * `addressdetails`: `1` (ensures structured address attributes like city, town, or suburb are included).
+* **User-Agent Requirement**: To comply with Nominatim's Usage Policy (which forbids generic or missing User-Agents to prevent abuse), the backend sends a custom Chrome browser User-Agent header with every request.
+* **Fallbacks**:
+  * Timeout is set to `10` seconds to avoid locking up thread execution.
+  * City parsing fallback: The backend maps the city name by reading the address object in order of specificity: `city` $\rightarrow$ `town` $\rightarrow$ `village` $\rightarrow$ `municipality` $\rightarrow$ `suburb`.
+* **Testing & Mocks**: To keep tests deterministic and prevent rate-limiting or network issues during CI/CD, all integration and unit tests mock Nominatim responses using `monkeypatch` on `requests.Session.get`.
+
+---
+
 ## 🗄️ Database Schema & Persistence
 
 The application uses SQLite as its default storage engine, configured for robustness and concurrency.

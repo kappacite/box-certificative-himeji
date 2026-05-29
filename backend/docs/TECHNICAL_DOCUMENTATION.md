@@ -150,6 +150,18 @@ The optimizer uses **Google OR-Tools**' routing solver.
 * **Local Search Metaheuristic**: Guided Local Search (GLS) or Tabu Search to escape local minima.
 * **Time limit**: Constrained to a maximum of 3 seconds to guarantee prompt HTTP responses.
 
+#### Comparative Benchmarking & Design Decision
+
+During development, we compared Google OR-Tools against a **Nearest Neighbor (NN) + 2-opt local search** heuristic and a **Dynamic Programming (Held-Karp) exact solver**. Detailed reports across various scaling dimensions ($N$) are stored under the `docs/` folder (see [comparison_results.md](comparison_results.md)).
+
+* **Small scales ($N \le 16$)**: The Dynamic Programming solver guarantees absolute mathematical optimality in under 1 second, but its $O(N^2 2^N)$ exponential complexity makes it unusable for larger itineraries.
+* **Larger scales ($N \ge 100$)**:
+  * At $N = 200$, OR-Tools computes a route of `7172.09 km` in `1.88` seconds, whereas NN + 2-opt takes `2.38` seconds and yields a longer route of `7436.39 km`.
+  * At $N = 1000$, OR-Tools resolves in `86.88` seconds (yielding `23723.23 km`) while NN + 2-opt takes `107.37` seconds (yielding `25933.18 km`).
+
+**Conclusion**: Google OR-Tools was selected for production because of its superior scalability, path quality, **flexibility** in handling custom constraints (such as locked positions and hotel clustering), and **ease of implementation** compared to writing and maintaining custom metaheuristic solvers.
+
+
 ### Hybrid Fixed-Index (Lock) Insertion
 To allow travelers to freeze/lock specific stops (e.g. reserving a museum at 2:00 PM), the optimizer runs a hybrid pipeline:
 1. **Decoupling**: Locked stops are extracted from the list.

@@ -260,12 +260,14 @@ function onDragEnd() {
   dragOverIndex.value = null
 }
 
-// ── Locked positions map ─────────────────────────────────────────────────────
+// ── Locked positions map — format: { place_id: position_index } ─────────────
+// The backend _parse_place_inputs_and_locks expects:
+//   locked_positions = { "<place_id>": <target_position>, ... }
 const lockedPositions = computed(() => {
   const result = {}
   editableStops.value.forEach((stop, idx) => {
     if (stop.locked && stop.id != null) {
-      result[idx] = stop.id
+      result[String(stop.id)] = idx
     }
   })
   return result
@@ -278,12 +280,13 @@ async function handleSave() {
 
   try {
     const placeIds = editableStops.value.map((s) => s.id).filter(Boolean)
-    const lockedPos = Object.keys(lockedPositions.value).length > 0 ? lockedPositions.value : null
 
     let saved
 
     if (shouldOptimize.value) {
-      // 1. Get optimized order from backend (respects locks)
+      // Optimize mode: only user-locked stops are fixed, backend routes the rest
+      const lockedPos = Object.keys(lockedPositions.value).length > 0 ? lockedPositions.value : null
+
       const optimized = await optimizeTour({
         place_ids: placeIds,
         locked_positions: lockedPos
@@ -292,7 +295,6 @@ async function handleSave() {
         errorMessage.value = 'Optimization failed. Please try again.'
         return
       }
-      // 2. Save tour with optimized order + visibility + name
       saved = await patchTour(props.tour.id, {
         name: localName.value,
         visibility: localVisibility.value,
@@ -300,12 +302,19 @@ async function handleSave() {
         locked_positions: lockedPos
       })
     } else {
-      // Save as-is (manual order)
+      // Manual order: lock EVERY stop at its current position so the
+      // backend algorithm cannot reorder anything.
+      // Format: { "<place_id>": <position_index> }
+      const allLocked = {}
+      placeIds.forEach((id, idx) => {
+        if (id != null) allLocked[String(id)] = idx
+      })
+
       saved = await patchTour(props.tour.id, {
         name: localName.value,
         visibility: localVisibility.value,
         place_ids: placeIds,
-        locked_positions: lockedPos
+        locked_positions: allLocked
       })
     }
 

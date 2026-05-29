@@ -27,15 +27,20 @@ export const useToursStore = defineStore('tours', () => {
 
   function updateTour(updatedTour) {
     if (!updatedTour) return
-    const idx = myTours.value.findIndex((t) => t.id === updatedTour.id)
-    if (idx !== -1) myTours.value[idx] = updatedTour
 
-    const pidx = publicTours.value.findIndex((t) => t.id === updatedTour.id)
+    // Replace the whole array so Vue's ref-level reactivity triggers reliably
+    myTours.value = myTours.value.map((t) => (t.id === updatedTour.id ? updatedTour : t))
+
     if (updatedTour.visibility === 'public') {
-      if (pidx !== -1) publicTours.value[pidx] = updatedTour
-      else publicTours.value = [updatedTour, ...publicTours.value]
-    } else if (pidx !== -1) {
-      publicTours.value.splice(pidx, 1)
+      const exists = publicTours.value.some((t) => t.id === updatedTour.id)
+      if (exists) {
+        publicTours.value = publicTours.value.map((t) => (t.id === updatedTour.id ? updatedTour : t))
+      } else {
+        publicTours.value = [updatedTour, ...publicTours.value]
+      }
+    } else {
+      // Removed from public or was never there
+      publicTours.value = publicTours.value.filter((t) => t.id !== updatedTour.id)
     }
   }
 

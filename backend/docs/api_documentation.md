@@ -329,6 +329,14 @@ Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitu
       "code": "VALIDATION_ERROR"
     }
     ```
+  * **`400 Bad Request`** : Coordonnées partielles fournies. `latitude` et `longitude` doivent être envoyées ensemble si l'on ne veut pas utiliser le géocodage automatique.
+    ```json
+    {
+      "status": "error",
+      "message": "Latitude and longitude must be provided together.",
+      "code": "VALIDATION_ERROR"
+    }
+    ```
 
 ---
 
@@ -384,6 +392,14 @@ Met à jour les informations d'un lieu. Si le nom est modifié et que les coordo
   * **`200 OK`** : Modification validée et persistée.
   * **`403 Forbidden`** : L'utilisateur n'est pas le créateur de ce lieu.
   * **`404 Not Found`** : Le lieu n'existe pas.
+  * **`400 Bad Request`** : Coordonnées partielles fournies. Si vous envoyez `latitude` ou `longitude`, il faut envoyer les deux.
+    ```json
+    {
+      "status": "error",
+      "message": "Latitude and longitude must be provided together.",
+      "code": "VALIDATION_ERROR"
+    }
+    ```
 
 ---
 
@@ -404,6 +420,7 @@ Permet de modifier un ou plusieurs champs d'un lieu (nom, coordonnées ou visibi
   * **`401 Unauthorized`** : Token absent ou invalide.
   * **`403 Forbidden`** : L'utilisateur n'est pas le propriétaire du lieu.
   * **`404 Not Found`** : Le lieu n'existe pas.
+  * **`400 Bad Request`** : Une seule coordonnée est fournie sans sa paire.
 
 ---
 

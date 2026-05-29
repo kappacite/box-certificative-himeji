@@ -13,6 +13,21 @@ from exceptions import (
 class PlaceService:
     """Business logic service for managing Places and calling external Geocoding API."""
 
+    def validate_coordinate_pair(
+        self,
+        latitude: Optional[float],
+        longitude: Optional[float],
+        allow_both_missing: bool = True,
+    ) -> None:
+        """Ensure latitude and longitude are provided together when explicit."""
+        both_missing = latitude is None and longitude is None
+        if both_missing and allow_both_missing:
+            return
+        if latitude is None or longitude is None:
+            raise ValidationException(
+                "Latitude and longitude must be provided together."
+            )
+
     def parse_coordinate(self, value, coord_name: str) -> Optional[float]:
         """Safely parse a coordinate to float and validate its valid geographical range.
 
@@ -136,8 +151,10 @@ class PlaceService:
         if visibility not in ["private", "public"]:
             raise ValidationException("Visibility must be either 'private' or 'public'")
 
+        self.validate_coordinate_pair(latitude, longitude)
+
         # Resolve coordinates via Nominatim if not provided
-        if latitude is None or longitude is None:
+        if latitude is None and longitude is None:
             latitude, longitude = self.geocode_place_name(name)
 
         new_place = Place(
@@ -193,6 +210,8 @@ class PlaceService:
 
         if visibility is not None:
             place.visibility = visibility
+
+        self.validate_coordinate_pair(latitude, longitude)
 
         # If coordinates are explicitly given, use them
         if latitude is not None and longitude is not None:
@@ -261,15 +280,12 @@ class PlaceService:
             place.visibility = visibility
 
         if update_coords:
+            self.validate_coordinate_pair(
+                latitude, longitude, allow_both_missing=False
+            )
             if latitude is not None and longitude is not None:
                 place.latitude = latitude
                 place.longitude = longitude
-            else:
-                # If they updated coordinates but passed None,
-                # trigger geocoding using the current name
-                lat, lon = self.geocode_place_name(place.name)
-                place.latitude = lat
-                place.longitude = lon
         elif update_name and place.name != old_name:
             # If name changed but coordinates were not explicitly updated, re-geocode
             lat, lon = self.geocode_place_name(place.name)

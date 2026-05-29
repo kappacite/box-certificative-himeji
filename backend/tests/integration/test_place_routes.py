@@ -84,6 +84,20 @@ def test_create_place_validation_error(client, auth_headers, mock_geocoding):
     assert "Could not resolve coordinates" in json_data["message"]
 
 
+def test_create_place_rejects_partial_coordinates(client, auth_headers):
+    """Test place creation rejects latitude without longitude."""
+    response = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Paris", "latitude": 48.8566},
+    )
+
+    assert response.status_code == 400
+    json_data = response.get_json()
+    assert json_data["status"] == "error"
+    assert "Latitude and longitude must be provided together" in json_data["message"]
+
+
 def test_get_places(client, auth_headers, mock_geocoding):
     """Test listing user's places."""
     # Create one place first
@@ -228,6 +242,29 @@ def test_patch_place_partial(client, auth_headers, mock_geocoding):
     assert place_name["name"] == "Lyon"
     assert place_name["latitude"] == 45.7640
     assert place_name["longitude"] == 4.8357
+
+
+def test_patch_place_rejects_partial_coordinates(
+    client, auth_headers, mock_geocoding
+):
+    """Test PATCH endpoint rejects a single coordinate field."""
+    res = client.post(
+        "/api/places",
+        headers=auth_headers,
+        json={"name": "Paris", "visibility": "private"},
+    )
+    place_id = res.get_json()["data"]["place"]["id"]
+
+    res_patch = client.patch(
+        f"/api/places/{place_id}",
+        headers=auth_headers,
+        json={"latitude": 45.0},
+    )
+
+    assert res_patch.status_code == 400
+    json_data = res_patch.get_json()
+    assert json_data["status"] == "error"
+    assert "Latitude and longitude must be provided together" in json_data["message"]
 
 
 def test_geocode_and_search_preview(client, mock_geocoding):

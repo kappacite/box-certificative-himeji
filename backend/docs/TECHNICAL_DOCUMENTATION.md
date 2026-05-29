@@ -143,6 +143,24 @@ To allow travelers to freeze/lock specific stops (e.g. reserving a museum at 2:0
 2. **Sub-tour Optimization**: OR-Tools calculates the optimal route sequence for the remaining unlocked stops.
 3. **Linear Insertion**: Locked stops are re-inserted into the optimized sequence at their exact user-specified indexes. If multiple locks overlap, they are placed sequentially to maintain relative positions without breaking the sub-tour optimality.
 
+### Clustered Hotel Routing (Set Cover Heuristic)
+When the user configures a maximum distance between hotels and stops (`max_distance > 0.0`), the system executes a **Clustered set-cover round-trip solver** to determine which stops serve as hotels and how the travel route flows:
+
+1. **Elected Hotels (Set Cover)**:
+   * The start/end landmark (index 0) is automatically marked as the first hotel.
+   * All interest points within `max_distance` (computed via Haversine) are covered by the start hotel.
+   * For remaining uncovered locations, the algorithm uses a **Greedy Set Cover** search: it iteratively elects the point that covers the maximum number of remaining uncovered stops until all points are covered.
+2. **Clustering & Round-Trips**:
+   * Non-hotel places are assigned to their nearest elected hotel.
+   * This partitions the itinerary into distinct hotel sub-clusters: `hotel_round_trips = { hotel_id: [place1, place2, ...] }`.
+3. **Global Hotel Pathing**:
+   * User-defined step locks are projected onto the hotel sequence.
+   * The elected hotels list is optimized via the OR-Tools TSP solver to find the optimal path connecting all hotels.
+4. **Itinerary Sequence Generation**:
+   * The final itinerary sequence is constructed by walking through the optimized hotel order.
+   * For each hotel, the solver appends the hotel itself, followed by a back-and-forth round trip for each assigned place: `[Hotel] -> [Place] -> [Hotel]`.
+   * The start hotel is appended at the end to close the global loop.
+
 ---
 
 ## 🗄️ Database Schema & Persistence

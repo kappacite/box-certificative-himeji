@@ -22,17 +22,33 @@
       </div>
 
       <div v-if="privateTours.length > 0" class="tours-grid">
-        <BaseCard v-for="tour in privateTours" :key="tour.id" class="tour-card">
+        <BaseCard 
+          v-for="tour in privateTours" 
+          :key="tour.id" 
+          class="tour-card interactive-card"
+          hoverable
+          @click="selectTour(tour)"
+        >
           <div class="tour-card-header">
             <h3>{{ tour.name }}</h3>
             <span class="visibility-badge private">Private</span>
           </div>
           <p class="tour-distance">{{ formatDistance(tour.total_distance) }}</p>
-          <ol class="places-preview">
-            <li v-for="place in tour.places" :key="place.id">
-              {{ getPlaceName(place) }}
-            </li>
-          </ol>
+          <div class="places-preview-container">
+            <ol class="places-preview">
+              <li v-for="place in visiblePlaces(tour)" :key="place.id">
+                {{ getPlaceName(place) }}
+              </li>
+            </ol>
+            <button 
+              v-if="tour.places && tour.places.length > 10" 
+              class="expand-button" 
+              @click.stop="toggleExpand(tour.id)"
+            >
+              {{ isExpanded(tour.id) ? 'Show less ▴' : `... View more (${tour.places.length - 10} more) ▾` }}
+            </button>
+          </div>
+          <span class="click-hint">Click to view route map →</span>
         </BaseCard>
       </div>
 
@@ -48,17 +64,33 @@
       </div>
 
       <div v-if="publicTours.length > 0" class="tours-grid">
-        <BaseCard v-for="tour in publicTours" :key="tour.id" class="tour-card">
+        <BaseCard 
+          v-for="tour in publicTours" 
+          :key="tour.id" 
+          class="tour-card interactive-card"
+          hoverable
+          @click="selectTour(tour)"
+        >
           <div class="tour-card-header">
             <h3>{{ tour.name }}</h3>
             <span class="visibility-badge public">Public</span>
           </div>
           <p class="tour-distance">{{ formatDistance(tour.total_distance) }}</p>
-          <ol class="places-preview">
-            <li v-for="place in tour.places" :key="place.id">
-              {{ getPlaceName(place) }}
-            </li>
-          </ol>
+          <div class="places-preview-container">
+            <ol class="places-preview">
+              <li v-for="place in visiblePlaces(tour)" :key="place.id">
+                {{ getPlaceName(place) }}
+              </li>
+            </ol>
+            <button 
+              v-if="tour.places && tour.places.length > 10" 
+              class="expand-button" 
+              @click.stop="toggleExpand(tour.id)"
+            >
+              {{ isExpanded(tour.id) ? 'Show less ▴' : `... View more (${tour.places.length - 10} more) ▾` }}
+            </button>
+          </div>
+          <span class="click-hint">Click to view route map →</span>
         </BaseCard>
       </div>
 
@@ -66,17 +98,28 @@
         No public tours have been published yet.
       </p>
     </section>
+
+    <!-- Tour Details Modal -->
+    <TourDetailsModal 
+      v-if="selectedTour" 
+      :tour="selectedTour" 
+      @close="selectedTour = null" 
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useTours } from '@/composables/useTours'
 import BaseCard from '@/components/BaseCard.vue'
+import TourDetailsModal from '@/components/tours/TourDetailsModal.vue'
 
 const authStore = useAuthStore()
 const { publicTours, privateTours, loading, error, loadPublicTours, loadMyTours } = useTours()
+
+const selectedTour = ref(null)
+const expandedTours = ref({})
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const friendlyErrorMessage = computed(() => {
@@ -89,6 +132,10 @@ const friendlyErrorMessage = computed(() => {
   return error.value?.message || messages[error.value?.code] || messages.UNKNOWN_ERROR
 })
 
+function selectTour(tour) {
+  selectedTour.value = tour
+}
+
 function formatDistance(distance) {
   const value = Number(distance)
   return Number.isFinite(value) ? `${value.toFixed(2)} km` : 'Distance unavailable'
@@ -96,6 +143,22 @@ function formatDistance(distance) {
 
 function getPlaceName(place) {
   return place.name?.split(', ')[0] || place.name || 'Unknown place'
+}
+
+function toggleExpand(tourId) {
+  expandedTours.value[tourId] = !expandedTours.value[tourId]
+}
+
+function isExpanded(tourId) {
+  return !!expandedTours.value[tourId]
+}
+
+function visiblePlaces(tour) {
+  if (!tour.places) return []
+  if (tour.places.length <= 10 || isExpanded(tour.id)) {
+    return tour.places
+  }
+  return tour.places.slice(0, 10)
 }
 
 onMounted(async () => {
@@ -168,6 +231,33 @@ onMounted(async () => {
   padding: 1.5rem !important;
 }
 
+.interactive-card {
+  cursor: pointer;
+  position: relative;
+  padding-bottom: 2.75rem !important;
+}
+
+.interactive-card:hover {
+  border-color: #3b82f6;
+}
+
+.click-hint {
+  position: absolute;
+  bottom: 1rem;
+  right: 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #3b82f6;
+  opacity: 0;
+  transform: translateX(-5px);
+  transition: all 0.25s ease;
+}
+
+.interactive-card:hover .click-hint {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .tour-card-header {
   display: flex;
   align-items: flex-start;
@@ -205,11 +295,36 @@ onMounted(async () => {
   font-weight: 800;
 }
 
+.places-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .places-preview {
   margin: 0;
   padding-left: 1.25rem;
   color: #4b5563;
   line-height: 1.7;
+}
+
+.expand-button {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s, color 0.2s;
+  z-index: 2; /* Ensure it stays above other card components if styled closely */
+}
+
+.expand-button:hover {
+  background-color: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
 }
 
 .loading-state,

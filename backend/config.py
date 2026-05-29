@@ -11,6 +11,7 @@ class Config:
     TOKEN_EXPIRY_HOURS = int(os.environ.get("TOKEN_EXPIRY_HOURS", 24))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = False
+    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*")
 
 
 class DevelopmentConfig(Config):

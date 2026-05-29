@@ -154,13 +154,42 @@ Invalide (côté client) la session en cours.
 
 ---
 
+### 👤 Obtenir l'utilisateur connecté **[Auth Requise]**
+Renvoie les détails du profil de l'utilisateur actuellement authentifié par son JWT.
+
+* **Méthode** : `GET`
+* **URL** : `/api/auth/me`
+* **Corps de la requête (JSON)** : Aucun (transmettre le header d'Auth)
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Profil récupéré avec succès.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "user": {
+          "id": 1,
+          "username": "monpseudo",
+          "email": "user@example.com"
+        }
+      }
+    }
+    ```
+  * **`401 Unauthorized`** : Token manquant ou invalide.
+
+---
+
 ## 📍 2. Gestion des Lieux (`/api/places/*`)
 
-### 📋 Lister mes lieux **[Auth Requise]**
-Renvoie tous les lieux personnels créés par l'utilisateur connecté.
+### 📋 Lister les lieux **[Auth Requise si privé / Facultatif si public]**
+Renvoie la liste des lieux personnels ou publics avec filtres et pagination.
 
 * **Méthode** : `GET`
 * **URL** : `/api/places`
+* **Paramètres de requête (Query Params)** :
+  * `visibility` : Optionnel (`public` ou `private`, par défaut `private`). Si `public`, liste les lieux publics (aucune authentification requise).
+  * `q` : Optionnel. Terme de recherche pour filtrer les lieux par nom (insensible à la casse).
+  * `page` : Optionnel (défaut `1`). Numéro de page.
+  * `limit` : Optionnel. Nombre de résultats par page.
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Liste récupérée.
     ```json
@@ -183,11 +212,61 @@ Renvoie tous les lieux personnels créés par l'utilisateur connecté.
 
 ---
 
+### 🗺️ Rechercher les coordonnées d'un lieu (GET)
+Récupère les coordonnées (latitude et longitude) d'une adresse ou d'un nom de lieu via le service Nominatim, sans enregistrer le lieu en base de données.
+
+* **Méthode** : `GET`
+* **URL** : `/api/places/search?q=<nom_du_lieu>`
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Recherche réussie.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "latitude": 48.8566,
+        "longitude": 2.3522
+      }
+    }
+    ```
+  * **`400 Bad Request`** : Paramètre `q` manquant ou vide, ou géolocalisation impossible.
+
+---
+
+### 🗺️ Prévisualiser les coordonnées d'un lieu (POST)
+Identique à la route de recherche GET, mais via un corps de requête POST. Utile pour envoyer des noms complexes.
+
+* **Méthode** : `POST`
+* **URL** : `/api/places/geocode`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "name": "Paris"
+  }
+  ```
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Géocodage réussi.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "latitude": 48.8566,
+        "longitude": 2.3522
+      }
+    }
+    ```
+  * **`400 Bad Request`** : Champ `name` manquant, ou géolocalisation impossible.
+
+---
+
 ### 🌍 Lister tous les lieux publics
 Renvoie la liste globale de tous les lieux publics présents en base de données. Ne nécessite aucune authentification.
 
 * **Méthode** : `GET`
 * **URL** : `/api/places/public`
+* **Paramètres de requête (Query Params)** :
+  * `q` : Optionnel. Terme de recherche pour filtrer les lieux publics par nom.
+  * `page` : Optionnel (défaut `1`). Numéro de page.
+  * `limit` : Optionnel. Nombre de résultats par page.
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Liste récupérée (ex: les 200 lieux notables français).
     ```json
@@ -250,17 +329,33 @@ Crée un nouveau lieu géographique. Si les coordonnées géographiques (`latitu
       "code": "VALIDATION_ERROR"
     }
     ```
+  * **`400 Bad Request`** : Coordonnées partielles fournies. `latitude` et `longitude` doivent être envoyées ensemble si l'on ne veut pas utiliser le géocodage automatique.
+    ```json
+    {
+      "status": "error",
+      "message": "Latitude and longitude must be provided together.",
+      "code": "VALIDATION_ERROR"
+    }
+    ```
 
 ---
 
-### 🔍 Obtenir les détails d'un lieu **[Auth Requise]**
-Affiche les informations d'un lieu par son ID.
+### 🔍 Obtenir les détails d'un lieu **[Accès Public si public / Auth Requise si privé]**
+Affiche les informations d'un lieu par son ID. Si le lieu est marqué public, n'importe qui (sans jeton) peut y accéder. S'il est privé, l'utilisateur doit être connecté et être le propriétaire du lieu.
 
 * **Méthode** : `GET`
 * **URL** : `/api/places/<int:place_id>`
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Détails envoyés.
-  * **`403 Forbidden`** : Le lieu est marqué privé et n'appartient pas à l'utilisateur connecté.
+  * **`401 Unauthorized`** : Le lieu est privé et l'utilisateur n'est pas authentifié.
+    ```json
+    {
+      "status": "error",
+      "message": "Authentication required",
+      "code": "UNAUTHORIZED"
+    }
+    ```
+  * **`403 Forbidden`** : Le lieu est privé et n'appartient pas à l'utilisateur connecté.
     ```json
     {
       "status": "error",
@@ -297,6 +392,35 @@ Met à jour les informations d'un lieu. Si le nom est modifié et que les coordo
   * **`200 OK`** : Modification validée et persistée.
   * **`403 Forbidden`** : L'utilisateur n'est pas le créateur de ce lieu.
   * **`404 Not Found`** : Le lieu n'existe pas.
+  * **`400 Bad Request`** : Coordonnées partielles fournies. Si vous envoyez `latitude` ou `longitude`, il faut envoyer les deux.
+    ```json
+    {
+      "status": "error",
+      "message": "Latitude and longitude must be provided together.",
+      "code": "VALIDATION_ERROR"
+    }
+    ```
+
+---
+
+### ✏️ Modifier partiellement un lieu **[Auth Requise / Propriétaire uniquement]**
+Permet de modifier un ou plusieurs champs d'un lieu (nom, coordonnées ou visibilité) sans avoir à ré-envoyer l'ensemble des données. Si le nom est modifié et que les coordonnées ne sont pas fournies, une nouvelle géolocalisation automatique s'effectue.
+
+* **Méthode** : `PATCH`
+* **URL** : `/api/places/<int:place_id>`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "visibility": "public"
+  }
+  ```
+  *(Vous pouvez spécifier "name", "latitude", "longitude" ou "visibility")*
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Modification partielle enregistrée avec succès.
+  * **`401 Unauthorized`** : Token absent ou invalide.
+  * **`403 Forbidden`** : L'utilisateur n'est pas le propriétaire du lieu.
+  * **`404 Not Found`** : Le lieu n'existe pas.
+  * **`400 Bad Request`** : Une seule coordonnée est fournie sans sa paire.
 
 ---
 
@@ -315,20 +439,28 @@ Supprime définitivement un lieu.
 ## 🗺️ 3. Gestion des Itinéraires (`/api/tours/*`)
 
 ### 📋 Lister mes itinéraires **[Auth Requise]**
-Renvoie tous les itinéraires appartenant à l'utilisateur connecté.
+Renvoie tous les itinéraires appartenant à l'utilisateur connecté avec filtres et pagination.
 
 * **Méthode** : `GET`
 * **URL** : `/api/tours`
+* **Paramètres de requête (Query Params)** :
+  * `q` : Optionnel. Terme de recherche pour filtrer par nom d'itinéraire.
+  * `page` : Optionnel (défaut `1`). Numéro de page.
+  * `limit` : Optionnel. Nombre de résultats par page.
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Liste d'itinéraires retournée.
 
 ---
 
 ### 🌍 Lister tous les itinéraires publics
-Affiche tous les itinéraires de la plateforme configurés avec une visibilité `"public"`. Aucun jeton n'est requis.
+Affiche tous les itinéraires de la plateforme configurés avec une visibilité `"public"` avec recherche et pagination. Aucun jeton n'est requis.
 
 * **Méthode** : `GET`
 * **URL** : `/api/tours/public`
+* **Paramètres de requête (Query Params)** :
+  * `q` : Optionnel. Terme de recherche pour filtrer les itinéraires publics par nom.
+  * `page` : Optionnel (défaut `1`). Numéro de page.
+  * `limit` : Optionnel. Nombre de résultats par page.
 * **Codes HTTP de réponse** :
   * **`200 OK`** : Liste récupérée.
     ```json
@@ -355,18 +487,31 @@ Affiche tous les itinéraires de la plateforme configurés avec une visibilité 
 ### 🧩 Générer et créer un itinéraire optimisé **[Auth Requise]**
 Prend une liste d'IDs de lieux (qui doivent appartenir à l'utilisateur, ou être publics), calcule l'ordre optimal pour parcourir ces points (problème TSP résolu par Google OR-Tools) et enregistre l'itinéraire résultant en circuit fermé (retour au point de départ).
 
+L'API supporte le **verrouillage de certaines étapes** (lieux) à des positions fixes de l'itinéraire.
+
 * **Méthode** : `POST`
 * **URL** : `/api/tours`
 * **Corps de la requête (JSON)** :
   ```json
   {
     "name": "Mon Circuit Opti",
-    "place_ids": [1, 201, 202],
-    "visibility": "public"       // Optionnel ("private" ou "public", défaut: "private")
+    "place_ids": [
+      1,
+      {"id": 201, "locked": true}, // Reste à sa position d'entrée (index 1)
+      {"id": 202, "position": 0}   // Reste à l'index 0 (départ de la boucle)
+    ],
+    // Optionnel : dictionnaire de verrous (ID lieu -> Position cible)
+    "locked_positions": {
+      "202": 0
+    },
+    // Optionnel : liste des IDs des lieux à figer à leur index d'entrée
+    "locked_places": [201],
+    "visibility": "public" // Optionnel ("private" ou "public", défaut: "private")
   }
   ```
 * **Codes HTTP de réponse** :
   * **`201 Created`** : Itinéraire généré et persisté avec succès.
+    * *Note sur la boucle fermée* : Le tableau `places` renvoyé comporte $N + 1$ éléments. Le premier et le dernier élément sont identiques (par exemple `[A, B, C, A]`) afin de matérialiser le retour au point de départ.
     ```json
     {
       "status": "success",
@@ -376,9 +521,10 @@ Prend une liste d'IDs de lieux (qui doivent appartenir à l'utilisateur, ou êtr
           "name": "Mon Circuit Opti",
           "owner_id": 2,
           "places": [
-            { "id": 1, "name": "Tour Eiffel, Paris", ... },
-            { "id": 202, "name": "Lyon", ... },
-            { "id": 201, "name": "Mon Lieu Privé", ... }
+            { "id": 202, "name": "Lyon", "locked": true, ... },
+            { "id": 201, "name": "Mon Lieu Privé", "locked": true, ... },
+            { "id": 1, "name": "Tour Eiffel, Paris", "locked": false, ... },
+            { "id": 202, "name": "Lyon", "locked": true, ... }
           ],
           "total_distance": 783.52,
           "visibility": "public",
@@ -403,6 +549,78 @@ Prend une liste d'IDs de lieux (qui doivent appartenir à l'utilisateur, ou êtr
       "code": "FORBIDDEN"
     }
     ```
+
+---
+
+### 🧩 Prévisualiser un itinéraire optimisé (sans sauvegarde) **[Auth Requise]**
+Identique à la création d'itinéraire (`POST /api/tours`), mais **ne persiste pas** l'itinéraire en base de données. Renvoie la liste ordonnée optimisée des lieux et la distance totale calculée.
+
+* **Méthode** : `POST`
+* **URL** : `/api/tours/preview`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "place_ids": [
+      1,
+      {"id": 201, "locked": true},
+      {"id": 202, "position": 0}
+    ],
+    "locked_positions": {
+      "202": 0
+    },
+    "locked_places": [201]
+  }
+  ```
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Aperçu calculé avec succès. (Le champ `id` retourné est à `null`).
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "tour": {
+          "id": null,
+          "name": "Preview",
+          "owner_id": 2,
+          "places": [
+            { "id": 202, "name": "Lyon", "locked": true },
+            { "id": 201, "name": "Mon Lieu Privé", "locked": true },
+            { "id": 1, "name": "Tour Eiffel, Paris", "locked": false },
+            { "id": 202, "name": "Lyon", "locked": true }
+          ],
+          "total_distance": 783.52,
+          "visibility": "private",
+          "share_token": ""
+        }
+      }
+    }
+    ```
+  * **`400 Bad Request`** : Moins de 2 points fournis, ou ID de lieu inexistant.
+  * **`403 Forbidden`** : Contient un lieu appartenant à autrui qui n'est **pas** configuré en visibilité `"public"`.
+
+---
+
+### ✏️ Modifier un itinéraire **[Auth Requise / Propriétaire uniquement]**
+Permet de modifier les informations d'un itinéraire (nom, visibilité, liste de lieux et contraintes de verrous). Si la liste des lieux ou les verrous sont modifiés, l'itinéraire est ré-optimisé. Si aucun verrou n'est spécifié, les verrous existants encore présents dans la liste de lieux sont conservés par défaut.
+
+* **Méthode** : `PATCH`
+* **URL** : `/api/tours/<int:tour_id>`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "name": "Mon Nouveau Nom",                   // Optionnel
+    "visibility": "private",                      // Optionnel ("private" ou "public")
+    "place_ids": [1, 201, 202, 203],              // Optionnel (nouvelle liste de lieux)
+    "locked_positions": {                         // Optionnel (nouveau dictionnaire de verrous)
+      "203": 0
+    },
+    "locked_places": [201]                        // Optionnel (nouvelle liste de verrous d'origine)
+  }
+  ```
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Modification appliquée et tournée recalculée si nécessaire.
+  * **`400 Bad Request`** : Données invalides.
+  * **`403 Forbidden`** : L'utilisateur n'est pas le propriétaire de cet itinéraire.
+  * **`404 Not Found`** : L'itinéraire n'existe pas.
 
 ---
 
@@ -458,6 +676,89 @@ Modifie la visibilité d'un itinéraire. Si aucun corps n'est passé, la route a
 
 ---
 
+### 🔄 Recalculer un itinéraire **[Auth Requise / Propriétaire uniquement]**
+Recalcule l'ordre optimal et la distance totale d'un itinéraire existant. Utile si les coordonnées de l'un des lieux de l'itinéraire ont été modifiées entre-temps.
+
+* **Méthode** : `POST`
+* **URL** : `/api/tours/<int:tour_id>/recalculate`
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Recalcul réussi.
+  * **`403 Forbidden`** : Utilisateur non propriétaire.
+  * **`404 Not Found`** : L'itinéraire n'existe pas.
+
+---
+
+### 👯 Dupliquer un itinéraire **[Auth Requise]**
+Copie un itinéraire public (ou appartenant à l'utilisateur) dans son espace personnel. Si l'itinéraire d'origine contient des lieux privés appartenant à un tiers, l'API clone automatiquement ces lieux en tant que nouveaux lieux privés pour le destinataire, évitant ainsi les erreurs de permission.
+
+* **Méthode** : `POST`
+* **URL** : `/api/tours/<int:tour_id>/duplicate`
+* **Codes HTTP de réponse** :
+  * **`201 Created`** : Copie créée.
+  * **`403 Forbidden`** : L'itinéraire d'origine est privé et appartient à un autre utilisateur (copie interdite).
+  * **`404 Not Found`** : L'itinéraire n'existe pas.
+
+---
+
+### ⚡ Optimiser un itinéraire (sans sauvegarde) **[Auth Requise]**
+Calcule l'ordre optimal et la distance totale pour une liste de lieux donnée sans créer ni enregistrer de tournée en base de données. Il permet également de tester l'impact de verrous de position ou de lieux spécifiques.
+
+* **Méthode** : `POST`
+* **URL** : `/api/tours/optimize`
+* **Corps de la requête (JSON)** :
+  ```json
+  {
+    "place_ids": [1, 2, 3], // Liste d'identifiants de lieux à inclure (ou objets {"id": 1, "locked": true, "position": 0})
+    "locked_positions": {   // Optionnel (dictionnaire identifiant_lieu_str -> position_int)
+      "3": 1
+    },
+    "locked_places": [1]    // Optionnel (liste d'identifiants à verrouiller à leur index d'entrée dans place_ids)
+  }
+  ```
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Calcul d'optimisation réussi.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "places": [
+          {
+            "id": 1,
+            "name": "Paris",
+            "latitude": 48.8566,
+            "longitude": 2.3522,
+            "owner_id": 1,
+            "visibility": "private",
+            "locked": true
+          },
+          {
+            "id": 3,
+            "name": "Marseille",
+            "latitude": 43.2964,
+            "longitude": 5.3697,
+            "owner_id": 1,
+            "visibility": "private",
+            "locked": true
+          },
+          {
+            "id": 2,
+            "name": "Lyon",
+            "latitude": 45.7640,
+            "longitude": 4.8357,
+            "owner_id": 1,
+            "visibility": "private",
+            "locked": false
+          }
+        ],
+        "total_distance": 783.52
+      }
+    }
+    ```
+  * **`400 Bad Request`** : Moins de 2 lieux fournis ou ID non valides.
+  * **`403 Forbidden`** : L'un des lieux spécifiés est privé et appartient à un tiers.
+
+---
+
 ### 🔗 Accéder à un itinéraire partagé
 Permet à n'importe quel internaute d'accéder aux détails d'un itinéraire via son UUID de partage (`share_token`). Aucune authentification n'est requise.
 
@@ -505,5 +806,31 @@ Permet à Docker, Kubernetes ou aux outils de monitoring de tester l'état du ba
       "data": {
         "message": "Service is healthy"
       }
+    }
+    ```
+
+---
+
+### 🔍 Vérification de l'état de préparation (Ready Healthcheck)
+Vérifie que le backend et la base de données SQLite/PostgreSQL sont connectés et prêts à répondre.
+
+* **Méthode** : `GET`
+* **URL** : `/api/health/ready`
+* **Codes HTTP de réponse** :
+  * **`200 OK`** : Le service et la base de données sont prêts.
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "message": "Database and service are ready"
+      }
+    }
+    ```
+  * **`500 Internal Server Error`** : La base de données n'est pas joignable.
+    ```json
+    {
+      "status": "error",
+      "message": "Database is not ready: <détails_erreur>",
+      "code": "DATABASE_ERROR"
     }
     ```

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from services.auth_service import AuthService
 from middleware.auth_middleware import require_auth
 
@@ -51,8 +51,25 @@ def login():
 @auth_bp.route("/logout", methods=["POST"])
 @require_auth
 def logout():
-    """Log out the current user (client-side token removal confirmation)."""
+    """Log out the current user and blacklist their JWT."""
+    auth_header = request.headers.get("Authorization")
+    if auth_header:
+        parts = auth_header.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+            auth_service.logout(token)
+
     return (
         jsonify({"status": "success", "data": {"message": "Logged out successfully"}}),
+        200,
+    )
+
+
+@auth_bp.route("/me", methods=["GET"])
+@require_auth
+def get_current_user():
+    """Retrieve the profile of the currently authenticated user."""
+    return (
+        jsonify({"status": "success", "data": {"user": g.current_user.to_dict()}}),
         200,
     )

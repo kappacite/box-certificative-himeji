@@ -93,12 +93,12 @@ Ce document récapitule l'état d'avancement de l'implémentation du backend, l'
   - *Corrigé* : Le code bride désormais la valeur d'entrée de `acos` entre `-1.0` et `1.0` avec `max(-1.0, min(1.0, cos_val))`, résolvant définitivement ce problème.
 
 #### 📄 [backend/services/algorithm/optimizer.py](file:///home/robyn/Documents/Programmation/box-certificative-himeji/backend/services/algorithm/optimizer.py)
-* **Rôle** : TSP Solver combinant Nearest Neighbour et 2-opt local search.
+* **Rôle** : Solveur TSP de production utilisant la bibliothèque Google OR-Tools.
 * **Problèmes identifiés** :
-  - L'heuristique 2-opt a une complexité temporelle de $O(N^2)$ par itération. Si un utilisateur essaie de générer un itinéraire avec un très grand nombre de villes (ex: > 150), le temps de calcul pourrait bloquer le thread synchrone de Flask.
-* **Actions à mener / Pistes d'amélioration** :
-  - Limiter le nombre maximum de lieux par itinéraire dans l'API (ex: maximum 50 lieux par circuit).
-  - Ajouter un garde-fou sur le nombre total d'itérations du 2-opt (actuellement fixé à `200`).
+  - L'application de contraintes de dimension strictes (Step) directement dans OR-Tools provoquait des freezes (boucles de recherche locale infinies) sur des tournées volumineuses (ex: 200 lieux).
+* **Actions menées & Corrections** :
+  - *Corrigé* : Passage à une méthode hybride de résolution par sous-tours et insertion. Les lieux verrouillés sont retirés, les lieux restants sont optimisés via OR-Tools en moins d'une seconde, puis les lieux verrouillés sont réinsérés à leurs positions respectives.
+  - *Garde-fou* : Ajout d'un paramètre de time-limit à 3 secondes dans les paramètres de recherche de la bibliothèque OR-Tools.
 
 ---
 

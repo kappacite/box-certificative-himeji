@@ -1,92 +1,63 @@
-# 📖 User Guide — Travel Planner Web Application
+# 📖 User Guide — Travel Planner
 
-Welcome to the **Travel Planner**! This guide explains how to use the web application to organize places, compute optimized routes, manage advanced constraints (locked stops, hotel clustering), and share your travel itineraries.
-
----
-
-## 🏛️ Getting Started & Authentication
-
-To start planning your trips, you need to register and authenticate.
-
-1. **Register**: Go to the **Register** page from the navigation bar. Enter a unique username, a valid email address, and a secure password.
-2. **Log In**: Enter your credentials on the **Login** page. Upon successful login, you will be redirected to your **Dashboard**.
-3. **Session Persistence**: The application securely remembers your session. If you close your browser, you will remain logged in until you explicitly click **Logout** in the navigation bar.
-
-> [!NOTE]
-> When you log out, your authentication token is revoked on the server for security.
+Welcome to **Travel Planner**! This guide explains how to use the web application to organize places, compute optimized routes, manage advanced constraints, and share your travel itineraries.
 
 ---
 
-## 📍 Managing Places & Landmarks
+## 🔑 1. Authentication (Guest View)
 
-Before building a tour, you need a list of places you want to visit. You can manage them in the **Places** section.
-
-### 1. Adding a Place
-Click on **Places** in the navigation bar, and fill in the creation form:
-* **Name**: The name of the landmark or location (e.g., `"Eiffel Tower"`, `"Louvre Museum"`).
-* **Coordinates (Optional)**:
-  * If you know the **Latitude** and **Longitude**, you can enter them manually.
-  * If you leave them blank, the backend will **automatically resolve the coordinates** and city name using the **OpenStreetMap Nominatim Geocoding service** based on the name you entered.
-* **Visibility**:
-  * **Private**: Only visible to you.
-  * **Public**: Available for other users to include in their own tours (useful for sharing common landmarks).
-
-### 2. Viewing & Deleting Places
-* All your created places and public places are listed in the Places view.
-* You can search, filter, or delete places you own.
-* **Database Cascade Safety**: If you delete a place that is currently part of an active tour, the system safely handles the cascade. The deleted place will be removed from your tours without crashing or corrupting the tour data.
+When you are not logged in, you only have access to public itineraries and pages. To use all the features of the platform, you must authenticate:
+* **Register**: Create a new account with a unique username, a valid email address, and a secure password.
+* **Login**: Sign in with your registered credentials. Your session is securely preserved so you remain logged in even after closing your browser.
 
 ---
 
-## 🗺️ Creating & Optimizing Tours
+## 📊 2. Dashboard
 
-A tour is an optimized route that connects at least 2 places in the shortest possible distance, returning to the starting point.
-
-### 1. Generating a New Tour
-1. From your **Dashboard**, click on the **Create Tour** button.
-2. Enter a **Name** for your trip.
-3. Select at least **2 places** from the list of available places.
-4. Click **Generate Tour**.
-
-The system will automatically solve the **Traveling Salesperson Problem (TSP)** using **Google OR-Tools** and display your optimized tour page.
-
-### 2. Reading the Route & Map
-On the tour details page, you will see two main sections:
-* **Interactive Leaflet Map**: Displays markers for all stops. Animated flow lines (polylines) show the travel direction.
-* **Step-by-Step Itinerary Card**: Displays the ordered list of stops, step numbers, and the distance between each segment.
-  * **Unified Stop IDs**: The step numbers on the map correspond exactly to the steps shown in the drop-down list and itinerary cards.
+Once logged in, the Dashboard serves as your personal workspace and displays a **complete summary of your account activity**:
+* **Itineraries Created (Itineraries published)**: The total number of tours you have saved.
+* **Kilometers Calculated (Total optimized km)**: The cumulative distance of all your optimized routes.
+* **Private Itineraries**: The number of tours configured with private visibility.
+* **Quick Access Navigation**: Easy shortcuts to discover places, plan new trips, or check your saved tours.
 
 ---
 
-## ⚙️ Advanced Route Constraints
+## 📍 3. Places to Visit
 
-Travel Planner offers powerful options to customize your itineraries:
-
-### 1. Locked Positions (Fixed Stops)
-If you have a fixed appointment (e.g., a flight at the start, or a booked museum slot at a specific index), you can **lock** places at specific stop numbers:
-1. In the tour configuration or edit screen, specify the index position you want to lock for a place.
-2. Click **Optimize**.
-3. The solver will keep the locked place exactly at that step and calculate the shortest possible route for the remaining stops around it.
-
-### 2. Clustered Hotel Layovers (Day-by-Day Loops)
-When planning a multi-day trip over long distances, you may not want to travel continuously. You can set a **Max Distance** constraint to group visits into loops around hotel hubs:
-* **Max Distance = 0 (Disabled)**: The route is a single continuous loop connecting all places.
-* **Max Distance > 0 (Enabled)**:
-  1. The starting point of your tour automatically becomes the first **Hotel**.
-  2. The algorithm clusters other places. Any place further than your configured `Max Distance` (in kilometers) triggers the election of a new nearby place as a secondary hotel hub.
-  3. The itinerary is split into **round-trips**: you start at the nearest hotel, travel to a landmark, and return to that hotel before visiting the next area.
-  4. **Hotel Markers**: Passages to/from hotels are designated with an **`H`** badge instead of a step number, and do not increment the numerical step count.
+This section is dedicated to managing and exploring destinations:
+* **Public Places List**: A list of public interest points and landmarks available to all users on the platform.
+* **My Private Places List (when logged in)**: A personal, private list of landmarks that only you can see and include in your itineraries.
+* **Adding a New Place**:
+  * Enter a place name.
+  * If you leave the coordinates blank, the system automatically resolves the **Latitude**, **Longitude**, and **City** name using the **OpenStreetMap Nominatim Geocoding API**.
+  * Choose whether the place should be public or private.
+* **Editing Owned Places (when logged in)**: You can edit the name, coordinates, city, or visibility of any place you created.
+* **Robust Place Deletion**: If you delete a place that is currently referenced by one of your tours, the backend handles the deletion gracefully via cascades. The place will be removed from your tours without corrupting or crashing the itineraries.
 
 ---
 
-## 👥 Public Sharing
+## 🎒 4. Planify Travel (Creating an Itinerary)
 
-You can share your optimized itineraries with friends or family:
+The **Planify Travel** view allows you to dynamically build and preview optimized routes:
+1. **Selecting Places**: Choose the locations you want to include in your trip by checking them in the list.
+2. **Filtering**: You can search and filter the list of places by name or city to quickly locate your desired stops.
+3. **Initial Route Generation (Preview)**: Click **Generate Tour**. The system solves the **Traveling Salesperson Problem (TSP)** using **Google OR-Tools** and calculates the shortest route starting and ending at your first chosen location.
+4. **Validation (Save)**: Inspect the optimized path on the interactive map and review the step-by-step distance breakdown. If you are satisfied with the result, click the **Save** or **Validate** button to permanently save the tour to your account.
 
-1. On the tour page, locate the **Share Controls** section.
-2. Toggle the visibility of the tour from **Private** to **Public**.
-3. Click **Copy Share Link**.
-4. Send the link to anyone! They will be able to view the interactive map and step-by-step itinerary on the public **Shared Tour** page **without needing to register or log in**.
+---
 
-> [!WARNING]
-> If you set a public tour back to **Private**, any external users attempting to access the shared link will receive a `404 Not Found` page.
+## 🗺️ 5. Tours
+
+The **Tours** view lists all itineraries:
+* **My Itineraries (when logged in)**: Lists all routes created by you (both private and public).
+* **Public Itineraries**: Browse routes published publicly by other travelers.
+* **Viewing a Tour**: Clicking on any tour opens the detailed view showing:
+  * An **Interactive Leaflet Map** with numbered pins and animated flow polylines displaying the direction of travel.
+  * A step-by-step list of stops with individual segment distances.
+* **Editing a Tour (when logged in)**: Click edit on a tour you own to modify:
+  * **Name**: Change the tour name.
+  * **Visibility**: Toggle between *Public* and *Private*.
+  * **Order of Stops**: Rearrange the stops manually, or lock/unlock specific stops at fixed indexes.
+  * **Add New Steps**: Select more places to append to your tour.
+  * **Re-optimize Route**: Request the optimizer to recalculate the shortest route after modifying the steps.
+  * **Hotel layovers constraint**: Adjust the maximum distance parameter to group nearby destinations around hotel hubs (stops serving as hotels are highlighted with a red **H** on the map/itinerary and do not increment numerical step numbers).

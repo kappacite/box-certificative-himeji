@@ -2,6 +2,10 @@
 
 Welcome to **Travel Planner**! This guide explains how to use the web application to organize places, compute optimized routes, manage advanced constraints, and share your travel itineraries.
 
+> [!TIP]
+> **Not sure how to run the application?**  
+> If you need to set up or run the application locally, please consult the installation and execution steps in the [README.md](file:///home/robyn/Documents/Programmation/box-certificative-himeji/README.md) file first.
+
 ---
 
 ## 🔑 1. Authentication (Guest View)

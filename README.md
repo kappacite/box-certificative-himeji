@@ -109,3 +109,13 @@ For more granular technical details on algorithms, database design, SOLID princi
 * 📄 **[Frontend Technical Documentation](himeji-planner/docs/TECHNICAL_DOCUMENTATION.md)**: Detail on drag-and-drop mechanics, Pinia stores layout, and Vue navigation guards.
 * 📄 **[REST API Reference](backend/docs/api_documentation.md)**: Comprehensive endpoints list and JSON payload structures.
 
+---
+
+## 👥 Authors
+
+* **Matthys BALARD**
+* **Tom EISENSCHMIDT**
+* **Eythan TOURNANT**
+* **Robyn DENOEUD**
+
+

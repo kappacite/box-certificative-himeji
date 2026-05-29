@@ -117,7 +117,7 @@ const getFriendlyErrorMessage = (code) => {
   color: #111827;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  background: linear-gradient(135deg, #af1ea8, #f63bed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -152,14 +152,14 @@ const getFriendlyErrorMessage = (code) => {
 }
 
 .auth-link {
-  color: #2563eb;
+  color: #e525eb;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.15s ease;
 }
 
 .auth-link:hover {
-  color: #1d4ed8;
+  color: #d81dc8;
   text-decoration: underline;
 }
 </style>

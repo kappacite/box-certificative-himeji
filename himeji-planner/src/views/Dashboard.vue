@@ -3,7 +3,7 @@
     <!-- Header banner -->
     <header class="dashboard-header">
       <div class="welcome-section">
-        <h1>Hello, {{ authStore.user?.username || 'Traveler' }}! 👋</h1>
+        <h1>Hello, {{ authStore.user?.username || 'Traveler' }}!</h1>
         <p class="subtitle">Welcome to your personal travel workspace. Ready to plan your next journey?</p>
       </div>
       
@@ -138,7 +138,7 @@ const handleBrowseGuides = () => {
   color: #111827;
   font-weight: 800;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  background: linear-gradient(135deg, #cc67cf 0%, #f77acd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -163,14 +163,14 @@ const handleBrowseGuides = () => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #a15aa3, #f77acd);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 1.1rem;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 4px 10px rgba(246, 59, 230, 0.2);
 }
 
 .user-details {
@@ -231,7 +231,7 @@ const handleBrowseGuides = () => {
 }
 
 .stat-card.card-highlight .stat-number {
-  color: #2563eb;
+  color: #f77acd;
 }
 
 .stat-label {
@@ -282,7 +282,7 @@ const handleBrowseGuides = () => {
 }
 
 .card-action {
-  color: #2563eb;
+  color: #f77acd;
   font-weight: 600;
   text-decoration: none;
   font-size: 0.95rem;
@@ -293,7 +293,7 @@ const handleBrowseGuides = () => {
 
 .card-action:hover {
   transform: translateX(3px);
-  color: #1d4ed8;
+  color: #c962a6;
 }
 
 @media (max-width: 640px) {

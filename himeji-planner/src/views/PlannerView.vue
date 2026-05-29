@@ -419,9 +419,9 @@ const handleSaveTour = async () => {
 }
 
 .header-badge {
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  color: #4f46e5;
+  background: rgba(201, 99, 241, 0.08);
+  border: 1px solid rgba(196, 99, 241, 0.2);
+  color: #b346e5;
   padding: 0.4rem 0.8rem;
   border-radius: 2rem;
   font-size: 0.85rem;
@@ -433,7 +433,7 @@ const handleSaveTour = async () => {
   font-size: 2.25rem;
   color: #111827;
   font-weight: 800;
-  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  background: linear-gradient(135deg, #c046e5, #c325eb);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -630,7 +630,7 @@ const handleSaveTour = async () => {
   height: 48px;
   border: 4px solid rgba(99, 102, 241, 0.1);
   border-radius: 50%;
-  border-top-color: #4f46e5;
+  border-top-color: #ab46e5;
   animation: spin 1s linear infinite;
 }
 
@@ -647,8 +647,8 @@ const handleSaveTour = async () => {
 }
 
 .tour-summary-badge {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(37, 99, 235, 0.08));
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: linear-gradient(135deg, rgba(201, 99, 241, 0.08), rgba(162, 37, 235, 0.08));
+  border: 1px solid rgba(196, 99, 241, 0.15);
   border-radius: 1rem;
   padding: 1rem;
   display: flex;
@@ -683,7 +683,7 @@ const handleSaveTour = async () => {
 
 .badge-text .value {
   font-size: 1.35rem;
-  color: #4f46e5;
+  color: #ab46e5;
   font-weight: 800;
 }
 
@@ -782,7 +782,7 @@ const handleSaveTour = async () => {
 .max-distance-val {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #4f46e5;
+  color: #a546e5;
   background: rgba(99, 102, 241, 0.08);
   padding: 0.2rem 0.6rem;
   border-radius: 0.5rem;
@@ -814,7 +814,7 @@ const handleSaveTour = async () => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #4f46e5;
+  background: #ab46e5;
   border: 2px solid white;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.1s;
@@ -873,7 +873,7 @@ const handleSaveTour = async () => {
 }
 
 .timeline-hotel .timeline-number {
-  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  background: linear-gradient(135deg, #c046e5, #bd25eb);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
@@ -934,7 +934,7 @@ const handleSaveTour = async () => {
 
 .badge-hotel {
   background-color: #e0e7ff;
-  color: #4338ca;
+  color: #9438ca;
 }
 
 .badge-locked {
@@ -957,7 +957,7 @@ const handleSaveTour = async () => {
 .hotel-desc {
   margin: 0.25rem 0 0 0;
   font-size: 0.75rem;
-  color: #4f46e5;
+  color: #9d46e5;
   font-weight: 600;
 }
 

@@ -224,7 +224,7 @@ const vClickOutside = {
 }
 
 .brand-text {
-  background: linear-gradient(135deg, #1f2937 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #a15aa3 0%, #f77acd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -254,13 +254,13 @@ const vClickOutside = {
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: #f77acd;
   transition: width 0.25s ease;
   border-radius: 2px;
 }
 
 .nav-link:hover {
-  color: #2563eb;
+  color: #f77acd;
 }
 
 .nav-link:hover::after,
@@ -269,7 +269,7 @@ const vClickOutside = {
 }
 
 .nav-link.router-link-active {
-  color: #2563eb;
+  color: #f77acd;
   font-weight: 700;
 }
 
@@ -278,17 +278,17 @@ const vClickOutside = {
   font-weight: 600;
   font-size: 0.95rem;
   padding: 0.6rem 1.25rem;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #a15aa3, #f77acd);
   color: white;
   border-radius: 0.75rem;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 10px rgba(235, 37, 202, 0.2);
   transition: all 0.25s ease;
 }
 
 .nav-btn-signup:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  background: linear-gradient(135deg, #7a447c, #e06fbb);
   transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 6px 14px rgba(235, 37, 235, 0.3);
 }
 
 .nav-btn-signup:active {
@@ -321,14 +321,14 @@ const vClickOutside = {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, #f77acd, #f77acd);
   color: white;
   font-weight: 700;
   font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 2px 6px rgba(235, 37, 209, 0.25);
 }
 
 .avatar.large {
@@ -340,7 +340,7 @@ const vClickOutside = {
 .username-text {
   font-size: 0.925rem;
   font-weight: 600;
-  color: #374151;
+  color: #513751;
 }
 
 .chevron {
@@ -507,7 +507,7 @@ const vClickOutside = {
   text-align: center;
   font-weight: 600;
   padding: 0.75rem;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #de70e2, #f77acd);
   color: white;
   border-radius: 0.75rem;
 }
